@@ -1,6 +1,16 @@
-# Modular RAG MCP Server
+# AI 驱动的自动化测试平台
 
-> 一个可插拔、可观测的模块化 RAG（检索增强生成）服务框架，通过 MCP（Model Context Protocol）协议对外暴露工具接口，支持 Copilot / Claude 等 AI 助手直接调用。同时也是一份专为**大模型相关岗位学习与面试求职**设计的实战项目与配套教学资源。
+> 一个面向测试开发岗位的 AI 自动化测试平台。项目基于 RAG（检索增强生成）和 MCP（Model Context Protocol）构建，支持测试知识库检索、测试点生成、回归评估、链路追踪与 Dashboard 可视化，目标是把需求分析、测试设计和质量评估串成可演示、可测试、可扩展的工程项目。
+
+## 当前定位
+
+本项目从原有的模块化 RAG MCP Server 演进为 **AI 驱动的自动化测试平台**。第一阶段聚焦测试开发面试最容易讲清楚的闭环：
+
+1. 输入业务需求或测试场景。
+2. 使用 RAG 检索历史缺陷、业务规则、测试模式与风险场景。
+3. 生成结构化测试点和回归建议。
+4. 通过 pytest、Golden Test Set 与评估面板验证质量。
+5. 后续扩展自然语言 UI 自动化执行与 Playwright/MCP 执行链路。
 
 ---
 
@@ -20,9 +30,9 @@
 
 ### 这个项目是什么
 
-本项目将 RAG 面试中最常见的核心环节——**检索（Hybrid Search + Rerank）**、**多模态视觉处理（Image Captioning）**、**RAG 评估（Ragas + Custom）**、**生成（LLM Response）**——以及当下热门的应用协议 **MCP（Model Context Protocol）** 串联为一个完整的、可运行的工程项目。
+本项目将测试开发场景中的核心环节——**需求解析**、**测试知识检索（Hybrid Search + Rerank）**、**测试点生成**、**回归评估（Golden Test Set + Custom/Ragas）**、**可观测追踪**——以及当下热门的应用协议 **MCP（Model Context Protocol）** 串联为一个完整的、可运行的工程项目。
 
-**项目的一大亮点是极易适配到你自己的业务中**。得益于全链路可插拔架构，你可以快速将它结合到自己已有的项目里，无论你的背景和需求如何，都能找到适合自己的使用方式。具体的使用策略会在后文 [谁适合用这个项目 & 怎么用](#-谁适合用这个项目--怎么用) 中详细展开。
+**项目的一大亮点是极易适配到测试开发业务中**。得益于全链路可插拔架构，你可以快速接入不同业务资料、历史缺陷、接口文档和测试规范，将它改造成面向需求解析、测试用例生成、知识库增强、回归评估和自动化执行规划的智能测试工作台。
 
 ### 不只是项目，更是一整套思路
 
@@ -39,6 +49,7 @@
 
 | 模块 | 能力 | 说明 |
 |------|------|------|
+| **Test Workbench** | 需求输入 → 测试点草稿 → Markdown 导出 | 面向测试开发的核心工作台，覆盖功能、边界、异常、安全、并发、回归维度 |
 | **Ingestion Pipeline** | PDF → Markdown → Chunk → Transform → Embedding → Upsert | 全链路数据摄取，支持多模态图片描述（Image Captioning） |
 | **Hybrid Search** | Dense (向量) + Sparse (BM25) + RRF Fusion + Rerank | 粗排召回 + 精排重排的两段式检索架构 |
 | **MCP Server** | 标准 MCP 协议暴露 Tools | `query_knowledge_hub`、`list_collections`、`get_document_summary` |
@@ -105,7 +116,7 @@
 
 ```bash
 git clone <repo-url>
-cd Modular-RAG-MCP-Server
+cd ai-driven-test-automation-platform
 ```
 
 ### 2. 一键配置（Setup Skill）

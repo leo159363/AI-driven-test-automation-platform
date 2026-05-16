@@ -1,65 +1,67 @@
-"""Modular RAG Dashboard – multi-page Streamlit application.
-
-Entry-point: ``streamlit run src/observability/dashboard/app.py``
-
-Pages are registered via ``st.navigation()`` and rendered by their
-respective modules under ``pages/``.  Pages not yet implemented show
-a placeholder message.
-"""
+"""Streamlit dashboard entrypoint for the AI-driven test platform."""
 
 from __future__ import annotations
 
 import streamlit as st
 
 
-# ── Page definitions ─────────────────────────────────────────────────
-
 def _page_overview() -> None:
     from src.observability.dashboard.pages.overview import render
+
+    render()
+
+
+def _page_test_workbench() -> None:
+    from src.observability.dashboard.pages.test_workbench import render
+
     render()
 
 
 def _page_data_browser() -> None:
     from src.observability.dashboard.pages.data_browser import render
+
     render()
 
 
 def _page_ingestion_manager() -> None:
     from src.observability.dashboard.pages.ingestion_manager import render
+
     render()
 
 
 def _page_ingestion_traces() -> None:
     from src.observability.dashboard.pages.ingestion_traces import render
+
     render()
 
 
 def _page_query_traces() -> None:
     from src.observability.dashboard.pages.query_traces import render
+
     render()
 
 
 def _page_evaluation_panel() -> None:
     from src.observability.dashboard.pages.evaluation_panel import render
+
     render()
 
 
-# ── Navigation ───────────────────────────────────────────────────────
-
 pages = [
-    st.Page(_page_overview, title="Overview", icon="📊", default=True),
-    st.Page(_page_data_browser, title="Data Browser", icon="🔍"),
-    st.Page(_page_ingestion_manager, title="Ingestion Manager", icon="📥"),
-    st.Page(_page_ingestion_traces, title="Ingestion Traces", icon="🔬"),
-    st.Page(_page_query_traces, title="Query Traces", icon="🔎"),
-    st.Page(_page_evaluation_panel, title="Evaluation Panel", icon="📏"),
+    st.Page(_page_overview, title="平台总览", icon="📊", default=True),
+    st.Page(_page_test_workbench, title="测试工作台", icon="🧪"),
+    st.Page(_page_data_browser, title="知识库浏览", icon="📚"),
+    st.Page(_page_ingestion_manager, title="测试资料入库", icon="📥"),
+    st.Page(_page_ingestion_traces, title="入库日志", icon="📝"),
+    st.Page(_page_query_traces, title="检索日志", icon="🔎"),
+    st.Page(_page_evaluation_panel, title="评估中心", icon="📐"),
 ]
 
 
 def main() -> None:
     st.set_page_config(
-        page_title="Modular RAG Dashboard",
-        page_icon="📊",
+        page_title="AI 驱动的自动化测试平台",
+        page_icon="🧪",
         layout="wide",
     )
 
@@ -70,5 +72,4 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 else:
-    # When run directly via `streamlit run app.py`
     main()

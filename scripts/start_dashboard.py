@@ -1,4 +1,4 @@
-"""Convenience launcher for the Modular RAG Dashboard.
+"""Convenience launcher for the AI-driven automation testing dashboard.
 
 Usage::
 
@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Start the Modular RAG Dashboard")
+    parser = argparse.ArgumentParser(description="Start the AI-driven automation testing dashboard")
     parser.add_argument("--port", type=int, default=8501, help="Port to serve the dashboard on")
     parser.add_argument("--host", type=str, default="localhost", help="Host to bind to")
     args = parser.parse_args()
@@ -31,7 +31,7 @@ def main() -> None:
         "--server.port", str(args.port),
         "--server.address", args.host,
     ]
-    print(f"Starting Dashboard: {' '.join(cmd)}")
+    print(f"Starting AI testing dashboard: {' '.join(cmd)}")
     subprocess.run(cmd)
 
 
