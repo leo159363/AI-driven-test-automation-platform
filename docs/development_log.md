@@ -17,3 +17,20 @@ Out of scope:
 
 Next stage:
 - Add `.kiro/specs/ai-test-platform/requirements.md`, `design.md`, and `tasks.md`.
+
+## Stage 2 - Formal Spec
+
+Commit goal: define the product requirements, architecture design, and staged implementation tasks for the AI-driven automation testing platform.
+
+Scope:
+- Add Kiro-style spec files under `.kiro/specs/ai-test-platform/`.
+- Keep the scope focused on requirement intake, test design generation, RAG knowledge augmentation, export, evaluation, observability, and future execution adapters.
+- Avoid binding the platform to legacy or unrelated business datasets.
+
+Out of scope:
+- Service extraction.
+- New runtime features.
+- Browser or API execution implementation.
+
+Verification:
+- Run dashboard config tests, dashboard smoke tests, and MCP initialization smoke test.

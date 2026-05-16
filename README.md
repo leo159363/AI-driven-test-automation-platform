@@ -12,6 +12,14 @@
 4. 通过 pytest、Golden Test Set 与评估面板验证质量。
 5. 后续扩展自然语言 UI 自动化执行与 Playwright/MCP 执行链路。
 
+## 开发规格
+
+第二阶段开始使用 Spec 驱动开发，规格文档位于：
+
+- [requirements.md](.kiro/specs/ai-test-platform/requirements.md)
+- [design.md](.kiro/specs/ai-test-platform/design.md)
+- [tasks.md](.kiro/specs/ai-test-platform/tasks.md)
+
 ---
 
 ## 📖 目录
