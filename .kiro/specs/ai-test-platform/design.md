@@ -197,11 +197,28 @@ Current stage behavior:
 - The tests run against a deterministic local HTTP fixture, not an external business system.
 - The dashboard shows the scenario catalog, while execution still happens via CLI.
 
-### 8. Automation Execution Adapter
+### 8. Automation Execution Planning
 
-Not implemented in Stage 2.
+New files:
 
-Reserved design:
+- `src/observability/dashboard/pages/execution_planner.py`
+- `src/observability/dashboard/services/execution_plan_service.py`
+
+Responsibilities:
+
+- Parse natural-language test steps into structured execution steps.
+- Infer a preview adapter type such as API HTTP or UI browser preview.
+- Keep execution planning visible in the dashboard before real adapters are connected.
+- Surface unsupported steps as warnings instead of pretending they are executable.
+
+Current stage behavior:
+
+- Supports a deterministic rule-based parser for common API and UI test steps.
+- Provides preset step text for built-in demo automation scenarios.
+- Shows a structured table and JSON-style execution-plan preview in the dashboard.
+- Does not execute the plan directly.
+
+Reserved adapter boundary:
 
 ```text
 Generated Test Step
@@ -261,15 +278,29 @@ class TestExecutionSummary:
 
 ### ExecutionPlan
 
-Future automation model:
+Current preview model:
 
 ```python
 @dataclass
 class ExecutionPlan:
     name: str
-    target: str
-    steps: list[dict]
     adapter: str
+    target: str
+    steps: list[ExecutionStep]
+    warnings: list[str]
+    raw_input: str
+```
+
+```python
+@dataclass
+class ExecutionStep:
+    index: int
+    raw_text: str
+    action: str
+    target: str
+    value: str
+    supported: bool
+    note: str
 ```
 
 ## Error Handling
@@ -310,5 +341,5 @@ class ExecutionPlan:
 - Stage 5: add built-in demo automation scenarios and a unified runner.
 - Stage 6: add knowledge-source taxonomy and ingestion examples.
 - Stage 7: add test-design evaluation metrics.
-- Stage 8: add automation execution planning.
+- Stage 8: add automation execution planning and preview.
 - Stage 9: add Playwright or MCP browser execution adapter.

@@ -109,10 +109,11 @@
 
 #### Acceptance Criteria
 
-1. Stage 1 and Stage 2 SHALL NOT pretend to execute real browser automation.
-2. The design SHALL reserve a module boundary for natural-language step parsing.
-3. The design SHALL reserve a module boundary for execution adapters such as Playwright or MCP browser tools.
-4. Future execution results SHOULD include status, step logs, screenshots or artifacts, and failure reason.
+1. The platform SHALL provide an execution-plan preview for natural-language test steps.
+2. The execution-plan preview SHALL parse supported steps into structured actions.
+3. Unsupported steps SHALL be surfaced as warnings instead of silently discarded.
+4. The planning page SHALL remain separate from real browser execution until an execution adapter is implemented.
+5. Future execution results SHOULD include status, step logs, screenshots or artifacts, and failure reason.
 
 ### Requirement 10: Safety and Repository Hygiene
 

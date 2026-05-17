@@ -23,6 +23,12 @@ def _page_automation_scenarios() -> None:
     render()
 
 
+def _page_execution_planner() -> None:
+    from src.observability.dashboard.pages.execution_planner import render
+
+    render()
+
+
 def _page_test_reports() -> None:
     from src.observability.dashboard.pages.test_reports import render
 
@@ -63,6 +69,7 @@ pages = [
     st.Page(_page_overview, title="平台总览", icon="📊", default=True),
     st.Page(_page_test_workbench, title="测试工作台", icon="🧪"),
     st.Page(_page_automation_scenarios, title="自动化场景", icon="⚙️"),
+    st.Page(_page_execution_planner, title="执行计划", icon="🗂️"),
     st.Page(_page_test_reports, title="测试报告", icon="📄"),
     st.Page(_page_data_browser, title="知识库浏览", icon="📎"),
     st.Page(_page_ingestion_manager, title="测试资料入库", icon="📜"),

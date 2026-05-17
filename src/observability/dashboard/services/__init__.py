@@ -7,6 +7,12 @@ from src.observability.dashboard.services.automation_scenario_service import (
     get_pytest_targets,
     list_automation_scenarios,
 )
+from src.observability.dashboard.services.execution_plan_service import (
+    ExecutionPlan,
+    ExecutionStep,
+    build_execution_plan,
+    get_execution_preset_steps,
+)
 from src.observability.dashboard.services.test_design_service import (
     KnowledgeHit,
     TestDesignDraft,
@@ -32,10 +38,14 @@ from src.observability.dashboard.services.test_design_templates import (
 
 __all__ = [
     "AutomationScenario",
+    "ExecutionPlan",
+    "ExecutionStep",
     "FOCUS_OPTIONS",
     "KnowledgeHit",
+    "build_execution_plan",
     "build_runner_command",
     "get_automation_scenario",
+    "get_execution_preset_steps",
     "get_pytest_targets",
     "list_automation_scenarios",
     "SCENARIO_BLUEPRINTS",

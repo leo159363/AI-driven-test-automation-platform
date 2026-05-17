@@ -95,3 +95,23 @@ Verification:
 - Re-run dashboard smoke tests and MCP initialize smoke test.
 - Result: `39 passed`.
 - Generated local report artifact: `reports/junit.xml`.
+
+## Stage 8 - Automation Execution Planning
+
+Commit goal: turn natural-language test steps into a structured execution-plan preview and expose it in the dashboard.
+
+Scope:
+- Add execution-plan data models and a rule-based step parser.
+- Add an execution planner dashboard page.
+- Reuse built-in demo scenarios as preset natural-language step flows.
+- Add tests for supported parsing, unsupported-step warnings, and page rendering.
+
+Out of scope:
+- Real browser execution.
+- API or browser adapters that actually run the plan.
+- Knowledge-source taxonomy and evaluation work.
+
+Verification:
+- Run execution-plan unit tests.
+- Re-run automation scenarios, report-service tests, dashboard smoke tests, and MCP initialize smoke test.
+- Result: `45 passed`.

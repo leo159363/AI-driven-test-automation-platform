@@ -74,12 +74,12 @@
 
 ## Stage 8: Automation Execution Planning
 
-- [ ] Define `ExecutionPlan` data model.
-- [ ] Add parser for natural-language test steps into structured actions.
-- [ ] Add UI section that displays execution plan preview.
-- [ ] Keep execution preview separate from real browser execution.
-- [ ] Add tests for step parsing and unsupported action handling.
-- [ ] Commit with Stage 8 explanation.
+- [x] Define `ExecutionPlan` data model.
+- [x] Add parser for natural-language test steps into structured actions.
+- [x] Add UI section that displays execution plan preview.
+- [x] Keep execution preview separate from real browser execution.
+- [x] Add tests for step parsing and unsupported action handling.
+- [x] Commit with Stage 8 explanation.
 
 ## Stage 9: Execution Adapter
 
