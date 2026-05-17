@@ -166,7 +166,29 @@ class TestDashboardSmoke:
         assert "test" in text.lower() or "测试" in text
 
     # ------------------------------------------------------------------
-    # 4. Ingestion Manager page
+    # 4. Test Reports page
+    # ------------------------------------------------------------------
+
+    @pytest.mark.e2e
+    def test_test_reports_page_renders(self) -> None:
+        """Test Reports page loads without errors."""
+        from streamlit.testing.v1 import AppTest
+
+        def page_script():
+            from src.observability.dashboard.pages.test_reports import render
+            render()
+
+        at = AppTest.from_function(page_script, default_timeout=10)
+        at.run()
+
+        assert not at.exception, (
+            f"Test Reports page raised an exception: {at.exception}"
+        )
+        text = _collect_text(at)
+        assert "report" in text.lower() or "报告" in text
+
+    # ------------------------------------------------------------------
+    # 5. Ingestion Manager page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -194,7 +216,7 @@ class TestDashboardSmoke:
         )
 
     # ------------------------------------------------------------------
-    # 5. Ingestion Traces page
+    # 6. Ingestion Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -224,7 +246,7 @@ class TestDashboardSmoke:
         assert "trace" in text.lower() or "ingestion" in text.lower()
 
     # ------------------------------------------------------------------
-    # 6. Query Traces page
+    # 7. Query Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -254,7 +276,7 @@ class TestDashboardSmoke:
         assert "query" in text.lower() or "trace" in text.lower()
 
     # ------------------------------------------------------------------
-    # 7. Evaluation Panel page
+    # 8. Evaluation Panel page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e

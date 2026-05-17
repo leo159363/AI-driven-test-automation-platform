@@ -155,7 +155,27 @@ Stage 2 keeps existing RAG evaluation intact. Later stages can add test-design-s
 - unsupported assertion rate
 - citation coverage
 
-### 6. Automation Execution Adapter
+### 6. Test Report Center
+
+New files:
+
+- `src/observability/dashboard/pages/test_reports.py`
+- `src/observability/dashboard/services/test_report_service.py`
+
+Responsibilities:
+
+- Discover common local report artifacts produced by pytest and Allure.
+- Parse JUnit XML and display a lightweight execution summary.
+- Show whether Allure result directories and HTML report directories already exist.
+- Keep report viewing separate from the future execution adapter.
+
+Current stage behavior:
+
+- Supports `pytest --junitxml=...` generated XML summaries.
+- Detects `allure-results/` and `allure-report/` style directories.
+- Does not attempt to launch an Allure web server inside the dashboard.
+
+### 7. Automation Execution Adapter
 
 Not implemented in Stage 2.
 
@@ -200,6 +220,21 @@ class TestDesignDraft:
     markdown: str
     evidence: list[KnowledgeHit]
     warnings: list[str]
+```
+
+### TestExecutionSummary
+
+```python
+@dataclass
+class TestExecutionSummary:
+    source_path: Path
+    suite_name: str
+    total: int
+    passed: int
+    failed: int
+    errors: int
+    skipped: int
+    duration_seconds: float
 ```
 
 ### ExecutionPlan
@@ -249,7 +284,8 @@ class ExecutionPlan:
 - Stage 1: project rename and positioning.
 - Stage 2: formal spec.
 - Stage 3: extract test design logic into services and unit tests.
-- Stage 4: add knowledge-source taxonomy and ingestion examples.
-- Stage 5: add test-design evaluation metrics.
-- Stage 6: add automation execution planning.
-- Stage 7: add Playwright or MCP browser execution adapter.
+- Stage 4: add a test report center for JUnit and Allure artifacts.
+- Stage 5: add knowledge-source taxonomy and ingestion examples.
+- Stage 6: add test-design evaluation metrics.
+- Stage 7: add automation execution planning.
+- Stage 8: add Playwright or MCP browser execution adapter.

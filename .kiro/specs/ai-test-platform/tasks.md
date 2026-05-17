@@ -30,41 +30,53 @@
 - [x] Run unit and dashboard smoke tests.
 - [x] Commit with Stage 3 explanation.
 
-## Stage 4: Knowledge Source Taxonomy
+## Stage 4: Test Report Center
+
+- [x] Add `src/observability/dashboard/services/test_report_service.py`.
+- [x] Add `src/observability/dashboard/pages/test_reports.py`.
+- [x] Add JUnit XML summary parsing for pytest execution reports.
+- [x] Add local Allure results/report directory discovery.
+- [x] Register the Test Reports page in the Streamlit dashboard.
+- [x] Add unit tests for JUnit parsing and report artifact discovery.
+- [x] Add dashboard smoke coverage for the Test Reports page.
+- [x] Run unit and dashboard smoke tests.
+- [x] Commit with Stage 4 explanation.
+
+## Stage 5: Knowledge Source Taxonomy
 
 - [ ] Define knowledge source types: requirement, API doc, defect, test standard, execution log.
 - [ ] Add source-type metadata handling where ingestion metadata is available.
 - [ ] Update Test Workbench retrieval UI to show source type when available.
 - [ ] Add fixture documents for generic testing knowledge, not business-specific legacy data.
 - [ ] Add tests for retrieval result rendering and source metadata fallback.
-- [ ] Commit with Stage 4 explanation.
+- [ ] Commit with Stage 5 explanation.
 
-## Stage 5: Test Design Evaluation
+## Stage 6: Test Design Evaluation
 
 - [ ] Define a small Golden Test Set for generic requirement-to-test-design scenarios.
 - [ ] Add metrics for requirement coverage, dimension coverage, citation coverage, and empty output.
 - [ ] Add a CLI or dashboard action to run test-design evaluation.
 - [ ] Save evaluation report under `data/evaluation/` only when explicitly generated.
 - [ ] Ensure generated reports are ignored unless intentionally committed as fixtures.
-- [ ] Commit with Stage 5 explanation.
+- [ ] Commit with Stage 6 explanation.
 
-## Stage 6: Automation Execution Planning
+## Stage 7: Automation Execution Planning
 
 - [ ] Define `ExecutionPlan` data model.
 - [ ] Add parser for natural-language test steps into structured actions.
 - [ ] Add UI section that displays execution plan preview.
 - [ ] Keep execution preview separate from real browser execution.
 - [ ] Add tests for step parsing and unsupported action handling.
-- [ ] Commit with Stage 6 explanation.
+- [ ] Commit with Stage 7 explanation.
 
-## Stage 7: Execution Adapter
+## Stage 8: Execution Adapter
 
 - [ ] Choose first execution adapter: Playwright or MCP browser tools.
 - [ ] Implement adapter interface.
 - [ ] Add dry-run mode.
 - [ ] Add execution result model with status, logs, artifacts, and failure reason.
 - [ ] Add at least one local deterministic execution test.
-- [ ] Commit with Stage 7 explanation.
+- [ ] Commit with Stage 8 explanation.
 
 ## Repository Hygiene
 

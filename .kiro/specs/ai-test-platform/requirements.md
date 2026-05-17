@@ -79,7 +79,19 @@
 3. The system SHOULD later record generation input, retrieval query, retrieved snippets, and generation output as trace events.
 4. Trace logging SHALL avoid storing plaintext secrets.
 
-### Requirement 7: Automation Execution Planning
+### Requirement 7: Test Execution Reporting
+
+**User Story:** 作为测试开发工程师，我希望平台能查看自动化执行结果摘要、失败情况和 Allure 工件状态，便于判断本次回归质量。
+
+#### Acceptance Criteria
+
+1. WHEN the user opens the test reports page THEN the system SHALL show a test execution reporting view in the dashboard.
+2. WHEN a valid JUnit XML file is provided THEN the system SHALL parse and display total, passed, failed, skipped, errors, and duration.
+3. WHEN common Allure result or report directories exist THEN the system SHALL show their detected paths and status.
+4. IF no local report artifacts exist THEN the system SHALL show a clear empty-state message and example commands for generating reports.
+5. The reporting page SHALL NOT claim to execute tests by itself before an execution adapter is implemented.
+
+### Requirement 8: Automation Execution Planning
 
 **User Story:** 作为测试开发工程师，我希望后续可以把自然语言测试步骤转换为自动化执行计划，并逐步接入 Playwright 或 MCP browser execution.
 
@@ -90,7 +102,7 @@
 3. The design SHALL reserve a module boundary for execution adapters such as Playwright or MCP browser tools.
 4. Future execution results SHOULD include status, step logs, screenshots or artifacts, and failure reason.
 
-### Requirement 8: Safety and Repository Hygiene
+### Requirement 9: Safety and Repository Hygiene
 
 **User Story:** 作为项目维护者，我希望提交到 GitHub 的代码不包含本地密钥、临时数据、旧实验输出或与当前阶段无关的目录。
 

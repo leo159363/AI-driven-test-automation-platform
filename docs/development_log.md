@@ -53,3 +53,23 @@ Verification:
 - Run the new test-design service unit tests.
 - Re-run dashboard smoke tests and MCP initialize smoke test.
 - Result: `25 passed`.
+
+## Stage 4 - Test Report Center
+
+Commit goal: add a dashboard report center that can summarize pytest JUnit XML reports and surface local Allure artifacts.
+
+Scope:
+- Add a report service for JUnit parsing and report discovery.
+- Add a Test Reports dashboard page.
+- Register the page in dashboard navigation.
+- Add unit tests and dashboard smoke coverage.
+
+Out of scope:
+- Executing pytest from the dashboard.
+- Launching an Allure web server.
+- Real browser or API execution adapters.
+
+Verification:
+- Run the new report-service unit tests.
+- Re-run dashboard smoke tests and MCP initialize smoke test.
+- Result: `27 passed`.
