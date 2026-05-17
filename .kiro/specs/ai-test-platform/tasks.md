@@ -20,15 +20,15 @@
 
 ## Stage 3: Test Design Service Extraction
 
-- [ ] Create `src/observability/dashboard/services/test_design_service.py`.
-- [ ] Move `KnowledgeHit` and draft-building logic out of the Streamlit page.
-- [ ] Create `src/observability/dashboard/services/test_design_templates.py`.
-- [ ] Keep Streamlit page focused on rendering and user actions.
-- [ ] Add unit tests for draft generation.
-- [ ] Add unit tests for empty requirement and empty focus fallback.
-- [ ] Add unit tests that verify no fake citations are produced when evidence is empty.
-- [ ] Run unit and dashboard smoke tests.
-- [ ] Commit with Stage 3 explanation.
+- [x] Create `src/observability/dashboard/services/test_design_service.py`.
+- [x] Move `KnowledgeHit` and draft-building logic out of the Streamlit page.
+- [x] Create `src/observability/dashboard/services/test_design_templates.py`.
+- [x] Keep Streamlit page focused on rendering and user actions.
+- [x] Add unit tests for draft generation.
+- [x] Add unit tests for empty requirement and empty focus fallback.
+- [x] Add unit tests that verify no fake citations are produced when evidence is empty.
+- [x] Run unit and dashboard smoke tests.
+- [x] Commit with Stage 3 explanation.
 
 ## Stage 4: Knowledge Source Taxonomy
 

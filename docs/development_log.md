@@ -34,3 +34,22 @@ Out of scope:
 
 Verification:
 - Run dashboard config tests, dashboard smoke tests, and MCP initialization smoke test.
+
+## Stage 3 - Test Design Service Extraction
+
+Commit goal: move test-design draft generation out of the Streamlit page and lock the behavior with focused unit tests.
+
+Scope:
+- Add reusable scenario templates and test-design draft generation services.
+- Keep `test_workbench.py` focused on UI rendering, state handling, and user actions.
+- Add unit tests for draft generation, fallback behavior, and evidence-free output.
+
+Out of scope:
+- Source-type taxonomy for ingestion metadata.
+- Golden test set for test-design evaluation.
+- Real browser execution planning or adapters.
+
+Verification:
+- Run the new test-design service unit tests.
+- Re-run dashboard smoke tests and MCP initialize smoke test.
+- Result: `25 passed`.
