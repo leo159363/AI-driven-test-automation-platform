@@ -91,7 +91,19 @@
 4. IF no local report artifacts exist THEN the system SHALL show a clear empty-state message and example commands for generating reports.
 5. The reporting page SHALL NOT claim to execute tests by itself before an execution adapter is implemented.
 
-### Requirement 8: Automation Execution Planning
+### Requirement 8: Built-in Demo Automation Scenarios
+
+**User Story:** 作为测试开发工程师，我希望平台内置多个代表性自动化场景，便于演示平台并验证执行与报告链路不是只支持单一示例。
+
+#### Acceptance Criteria
+
+1. The platform SHALL define more than one built-in demo automation scenario.
+2. The platform SHALL include at least one API scenario and at least one UI smoke scenario.
+3. The platform SHALL provide a stable command to run one scenario or all built-in scenarios.
+4. Built-in scenarios SHALL run against deterministic local fixtures or equivalent stable targets.
+5. Built-in scenarios SHALL produce report artifacts compatible with the test reporting page.
+
+### Requirement 9: Automation Execution Planning
 
 **User Story:** 作为测试开发工程师，我希望后续可以把自然语言测试步骤转换为自动化执行计划，并逐步接入 Playwright 或 MCP browser execution.
 
@@ -102,7 +114,7 @@
 3. The design SHALL reserve a module boundary for execution adapters such as Playwright or MCP browser tools.
 4. Future execution results SHOULD include status, step logs, screenshots or artifacts, and failure reason.
 
-### Requirement 9: Safety and Repository Hygiene
+### Requirement 10: Safety and Repository Hygiene
 
 **User Story:** 作为项目维护者，我希望提交到 GitHub 的代码不包含本地密钥、临时数据、旧实验输出或与当前阶段无关的目录。
 

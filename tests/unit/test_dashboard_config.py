@@ -137,6 +137,10 @@ class TestDashboardImports:
         from src.observability.dashboard.pages import test_workbench
         assert hasattr(test_workbench, "render")
 
+    def test_automation_scenarios_importable(self) -> None:
+        from src.observability.dashboard.pages import automation_scenarios
+        assert hasattr(automation_scenarios, "render")
+
     def test_test_reports_importable(self) -> None:
         from src.observability.dashboard.pages import test_reports
         assert hasattr(test_reports, "render")

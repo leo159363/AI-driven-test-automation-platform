@@ -41,6 +41,7 @@ dev = [
     "pytest-cov>=4.0",
     "pytest-asyncio>=0.21",
     "pytest-mock>=3.14",
+    "allure-pytest>=2.13",
     "ruff>=0.1.0",
     "mypy>=1.0",
     "openai>=1.0",
@@ -58,6 +59,7 @@ markers = [
     "unit: Unit tests (fast, no external dependencies)",
     "integration: Integration tests (may require external services)",
     "e2e: End-to-end tests (full system tests)",
+    "automation: Built-in demo automation scenarios for execution/report workflows",
     "llm: marks tests that require real LLM API calls (deselect with '-m \"not llm\"')",
     "slow: Slow tests that should be run less frequently",
 ]

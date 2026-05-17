@@ -175,7 +175,29 @@ Current stage behavior:
 - Detects `allure-results/` and `allure-report/` style directories.
 - Does not attempt to launch an Allure web server inside the dashboard.
 
-### 7. Automation Execution Adapter
+### 7. Demo Automation Scenario Catalog
+
+New files:
+
+- `src/observability/dashboard/pages/automation_scenarios.py`
+- `src/observability/dashboard/services/automation_scenario_service.py`
+- `scripts/run_automation_suite.py`
+- `tests/automation/*`
+
+Responsibilities:
+
+- Define a small, stable set of built-in demo automation scenarios.
+- Keep the scenario list visible inside the dashboard so the platform does not look limited to one example.
+- Provide a single CLI runner that can execute one scenario or the whole demo suite.
+- Produce JUnit XML by default and Allure artifacts when the plugin is installed.
+
+Current stage behavior:
+
+- Demo scenarios cover API login, API file upload, and UI login smoke.
+- The tests run against a deterministic local HTTP fixture, not an external business system.
+- The dashboard shows the scenario catalog, while execution still happens via CLI.
+
+### 8. Automation Execution Adapter
 
 Not implemented in Stage 2.
 
@@ -285,7 +307,8 @@ class ExecutionPlan:
 - Stage 2: formal spec.
 - Stage 3: extract test design logic into services and unit tests.
 - Stage 4: add a test report center for JUnit and Allure artifacts.
-- Stage 5: add knowledge-source taxonomy and ingestion examples.
-- Stage 6: add test-design evaluation metrics.
-- Stage 7: add automation execution planning.
-- Stage 8: add Playwright or MCP browser execution adapter.
+- Stage 5: add built-in demo automation scenarios and a unified runner.
+- Stage 6: add knowledge-source taxonomy and ingestion examples.
+- Stage 7: add test-design evaluation metrics.
+- Stage 8: add automation execution planning.
+- Stage 9: add Playwright or MCP browser execution adapter.

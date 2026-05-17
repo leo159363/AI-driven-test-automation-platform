@@ -166,7 +166,29 @@ class TestDashboardSmoke:
         assert "test" in text.lower() or "测试" in text
 
     # ------------------------------------------------------------------
-    # 4. Test Reports page
+    # 4. Automation Scenarios page
+    # ------------------------------------------------------------------
+
+    @pytest.mark.e2e
+    def test_automation_scenarios_page_renders(self) -> None:
+        """Automation Scenarios page loads without errors."""
+        from streamlit.testing.v1 import AppTest
+
+        def page_script():
+            from src.observability.dashboard.pages.automation_scenarios import render
+            render()
+
+        at = AppTest.from_function(page_script, default_timeout=10)
+        at.run()
+
+        assert not at.exception, (
+            f"Automation Scenarios page raised an exception: {at.exception}"
+        )
+        text = _collect_text(at)
+        assert "automation" in text.lower() or "场景" in text
+
+    # ------------------------------------------------------------------
+    # 5. Test Reports page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -188,7 +210,7 @@ class TestDashboardSmoke:
         assert "report" in text.lower() or "报告" in text
 
     # ------------------------------------------------------------------
-    # 5. Ingestion Manager page
+    # 6. Ingestion Manager page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -216,7 +238,7 @@ class TestDashboardSmoke:
         )
 
     # ------------------------------------------------------------------
-    # 6. Ingestion Traces page
+    # 7. Ingestion Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -246,7 +268,7 @@ class TestDashboardSmoke:
         assert "trace" in text.lower() or "ingestion" in text.lower()
 
     # ------------------------------------------------------------------
-    # 7. Query Traces page
+    # 8. Query Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -276,7 +298,7 @@ class TestDashboardSmoke:
         assert "query" in text.lower() or "trace" in text.lower()
 
     # ------------------------------------------------------------------
-    # 8. Evaluation Panel page
+    # 9. Evaluation Panel page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e

@@ -73,3 +73,25 @@ Verification:
 - Run the new report-service unit tests.
 - Re-run dashboard smoke tests and MCP initialize smoke test.
 - Result: `27 passed`.
+
+## Stage 5 - Demo Automation Scenarios
+
+Commit goal: add multiple built-in demo automation scenarios plus a unified runner so the platform can demonstrate more than one test target.
+
+Scope:
+- Add a scenario catalog service and dashboard page.
+- Add deterministic local API and UI automation scenarios.
+- Add a CLI runner that outputs JUnit XML and optional Allure artifacts.
+- Add unit tests for scenario metadata and dashboard smoke coverage.
+
+Out of scope:
+- Real browser execution adapters.
+- Running automation directly from the dashboard.
+- Knowledge-source taxonomy work.
+
+Verification:
+- Run the demo automation tests directly.
+- Run the automation runner to produce report artifacts.
+- Re-run dashboard smoke tests and MCP initialize smoke test.
+- Result: `39 passed`.
+- Generated local report artifact: `reports/junit.xml`.

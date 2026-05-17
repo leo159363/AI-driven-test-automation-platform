@@ -17,6 +17,12 @@ def _page_test_workbench() -> None:
     render()
 
 
+def _page_automation_scenarios() -> None:
+    from src.observability.dashboard.pages.automation_scenarios import render
+
+    render()
+
+
 def _page_test_reports() -> None:
     from src.observability.dashboard.pages.test_reports import render
 
@@ -56,6 +62,7 @@ def _page_evaluation_panel() -> None:
 pages = [
     st.Page(_page_overview, title="平台总览", icon="📊", default=True),
     st.Page(_page_test_workbench, title="测试工作台", icon="🧪"),
+    st.Page(_page_automation_scenarios, title="自动化场景", icon="⚙️"),
     st.Page(_page_test_reports, title="测试报告", icon="📄"),
     st.Page(_page_data_browser, title="知识库浏览", icon="📎"),
     st.Page(_page_ingestion_manager, title="测试资料入库", icon="📜"),
