@@ -83,12 +83,12 @@
 
 ## Stage 9: Execution Adapter
 
-- [ ] Choose first execution adapter: Playwright or MCP browser tools.
-- [ ] Implement adapter interface.
-- [ ] Add dry-run mode.
-- [ ] Add execution result model with status, logs, artifacts, and failure reason.
-- [ ] Add at least one local deterministic execution test.
-- [ ] Commit with Stage 9 explanation.
+- [x] Choose first execution adapter: API HTTP adapter, with browser execution reserved for a later stage.
+- [x] Implement adapter interface.
+- [x] Add dry-run mode.
+- [x] Add execution result model with status, logs, artifacts, and failure reason.
+- [x] Add at least one local deterministic execution test.
+- [x] Commit with Stage 9 explanation.
 
 ## Repository Hygiene
 

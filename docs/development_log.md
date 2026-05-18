@@ -115,3 +115,23 @@ Verification:
 - Run execution-plan unit tests.
 - Re-run automation scenarios, report-service tests, dashboard smoke tests, and MCP initialize smoke test.
 - Result: `45 passed`.
+
+## Stage 9 - API Execution Adapter
+
+Commit goal: connect API execution plans to a real adapter while keeping browser execution as a later extension.
+
+Scope:
+- Add an API HTTP execution adapter with dry-run and real execution modes.
+- Add execution result models with status, step logs, response preview, artifacts field, and failure reason.
+- Connect the execution planner dashboard page to the API adapter.
+- Add deterministic local tests for API login, file upload, dry-run, and failed assertion behavior.
+
+Out of scope:
+- Playwright or MCP browser execution.
+- Persisting execution reports from the dashboard.
+- Running arbitrary user-authenticated external systems.
+
+Verification:
+- Run API adapter unit tests.
+- Re-run execution-plan tests, automation scenarios, report-service tests, dashboard smoke tests, and MCP initialize smoke test.
+- Result: `49 passed`.

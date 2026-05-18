@@ -216,7 +216,7 @@ Current stage behavior:
 - Supports a deterministic rule-based parser for common API and UI test steps.
 - Provides preset step text for built-in demo automation scenarios.
 - Shows a structured table and JSON-style execution-plan preview in the dashboard.
-- Does not execute the plan directly.
+- API plans can now be executed through the API HTTP adapter or previewed through dry-run mode.
 
 Reserved adapter boundary:
 
@@ -232,6 +232,26 @@ Generated Test Step
 ```
 
 The adapter boundary prevents browser execution concerns from mixing with RAG retrieval and test design generation.
+
+### 9. API Execution Adapter
+
+New file:
+
+- `src/observability/dashboard/services/api_execution_adapter.py`
+
+Responsibilities:
+
+- Execute `call_api`, `wait`, `upload`, and `assert_text` steps from an `ExecutionPlan`.
+- Keep API execution behind an adapter so browser execution can be added later without rewriting planning logic.
+- Support dry-run mode, which returns step results without sending network traffic.
+- Capture status, step logs, HTTP status, response preview, artifacts field, and failure reason.
+- Use deterministic default request bodies for the built-in demo API login and file-upload scenarios.
+
+Current stage behavior:
+
+- The execution planner page exposes API dry-run and API execution controls for API plans.
+- The adapter uses Python standard-library HTTP calls to avoid adding runtime dependencies.
+- Browser/UI actions are skipped by the API adapter and remain reserved for a later browser adapter.
 
 ## Data Models
 
@@ -303,6 +323,29 @@ class ExecutionStep:
     note: str
 ```
 
+### ExecutionResult
+
+Current API adapter result model:
+
+```python
+@dataclass
+class ExecutionResult:
+    plan_name: str
+    adapter: str
+    base_url: str
+    dry_run: bool
+    status: str
+    total_steps: int
+    passed_steps: int
+    failed_steps: int
+    skipped_steps: int
+    dry_run_steps: int
+    step_results: list[ExecutionStepResult]
+    failure_reason: str | None
+    logs: list[str]
+    artifacts: dict[str, str]
+```
+
 ## Error Handling
 
 - Empty requirement: generate from scenario template.
@@ -342,4 +385,4 @@ class ExecutionStep:
 - Stage 6: add knowledge-source taxonomy and ingestion examples.
 - Stage 7: add test-design evaluation metrics.
 - Stage 8: add automation execution planning and preview.
-- Stage 9: add Playwright or MCP browser execution adapter.
+- Stage 9: add API HTTP execution adapter and reserve browser execution for a later stage.

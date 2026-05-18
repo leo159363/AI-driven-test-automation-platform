@@ -7,6 +7,12 @@ from src.observability.dashboard.services.automation_scenario_service import (
     get_pytest_targets,
     list_automation_scenarios,
 )
+from src.observability.dashboard.services.api_execution_adapter import (
+    ApiExecutionAdapter,
+    ExecutionResult,
+    ExecutionStepResult,
+    execute_plan_with_api_adapter,
+)
 from src.observability.dashboard.services.execution_plan_service import (
     ExecutionPlan,
     ExecutionStep,
@@ -38,12 +44,16 @@ from src.observability.dashboard.services.test_design_templates import (
 
 __all__ = [
     "AutomationScenario",
+    "ApiExecutionAdapter",
     "ExecutionPlan",
+    "ExecutionResult",
     "ExecutionStep",
+    "ExecutionStepResult",
     "FOCUS_OPTIONS",
     "KnowledgeHit",
     "build_execution_plan",
     "build_runner_command",
+    "execute_plan_with_api_adapter",
     "get_automation_scenario",
     "get_execution_preset_steps",
     "get_pytest_targets",

@@ -112,8 +112,12 @@
 1. The platform SHALL provide an execution-plan preview for natural-language test steps.
 2. The execution-plan preview SHALL parse supported steps into structured actions.
 3. Unsupported steps SHALL be surfaced as warnings instead of silently discarded.
-4. The planning page SHALL remain separate from real browser execution until an execution adapter is implemented.
-5. Future execution results SHOULD include status, step logs, screenshots or artifacts, and failure reason.
+4. The planning page SHALL remain separate from real browser execution until a browser adapter is implemented.
+5. The first execution adapter SHALL support API HTTP plans before browser UI execution.
+6. WHEN dry-run mode is enabled THEN the adapter SHALL produce step results without sending network requests.
+7. WHEN API execution is enabled THEN the adapter SHALL send supported API requests to a user-provided base URL and capture HTTP status and response preview.
+8. Execution results SHALL include status, step logs, artifacts field, and failure reason where available.
+9. Future browser execution results SHOULD include screenshots or equivalent UI artifacts.
 
 ### Requirement 10: Safety and Repository Hygiene
 

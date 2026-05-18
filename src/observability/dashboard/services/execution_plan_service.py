@@ -69,8 +69,8 @@ PRESET_EXECUTION_STEPS: Dict[str, str] = {
     ),
     "api_file_upload": "\n".join(
         [
-            "POST /api/upload",
             "上传 demo.txt",
+            "POST /api/upload",
             "断言看到 filename",
         ]
     ),
