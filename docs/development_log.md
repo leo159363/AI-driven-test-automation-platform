@@ -177,3 +177,22 @@ Verification:
 - Run API adapter unit tests.
 - Re-run execution-plan tests, automation scenarios, report-service tests, dashboard smoke tests, and MCP initialize smoke test.
 - Result: `49 passed`.
+
+## Stage 10 - Interview Delivery Documentation
+
+Commit goal: make the GitHub repository readable as an AI-driven automation testing platform for test-development interviews.
+
+Scope:
+- Rewrite `README.md` around the current platform capabilities, not the original generic RAG project narrative.
+- Add quick-start commands for Dashboard, automation scenarios, test-design evaluation, and core regression tests.
+- Document completed stages and repository hygiene expectations.
+- Add `docs/interview_guide.md` with demo flow, project talking points, high-frequency interview questions, resume wording, and limits that should not be overstated.
+
+Out of scope:
+- New runtime features.
+- Browser execution adapter implementation.
+- Changing local configuration or legacy experiment files.
+
+Verification:
+- Run documentation-adjacent dashboard import and smoke tests.
+- Result: `26 passed`.
