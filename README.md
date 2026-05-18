@@ -24,7 +24,7 @@
 | 自动化场景 | 内置 API 登录、API 文件上传、UI 登录冒烟场景，可生成 JUnit XML，并兼容 Allure 结果目录 | `scripts/run_automation_suite.py` |
 | 测试报告中心 | 解析 pytest JUnit XML，发现 Allure 结果目录和 HTML 报告目录 | `src/observability/dashboard/pages/test_reports.py` |
 | 执行计划 | 将自然语言步骤解析为结构化执行计划，识别 API 与 UI 计划 | `src/observability/dashboard/services/execution_plan_service.py` |
-| API 执行适配器 | 支持 API 计划 dry-run 和真实 HTTP 执行，返回步骤状态、日志、失败原因和响应预览 | `src/observability/dashboard/services/api_execution_adapter.py` |
+| API 执行适配器 | 支持 API 计划 dry-run 和真实 HTTP 执行，返回步骤状态、日志、失败原因、响应预览，并可导出 JUnit XML | `src/observability/dashboard/services/api_execution_adapter.py` |
 | RAG / MCP 基座 | 保留文档入库、Hybrid Search、MCP tools、摄取追踪、查询追踪和评估面板 | `src/` |
 
 ## 技术栈
@@ -88,7 +88,15 @@ python -m venv .venv
 
 `data/` 已在 `.gitignore` 中忽略，生成报告默认不会进入 Git 提交。
 
-### 5. 运行核心回归测试
+### 5. 运行执行计划并生成 JUnit XML
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario api_login --dry-run --junitxml reports\execution-plan-junit.xml
+```
+
+生成后可以在 Dashboard 的 `测试报告` 页面查看该 JUnit XML 汇总。
+
+### 6. 运行核心回归测试
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\unit\test_test_design_evaluation_service.py tests\unit\test_test_design_service.py tests\unit\test_api_execution_adapter.py tests\unit\test_execution_plan_service.py tests\automation tests\unit\test_automation_scenario_service.py tests\unit\test_test_report_service.py tests\unit\test_dashboard_config.py tests\e2e\test_dashboard_smoke.py tests\e2e\test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list -v
@@ -118,6 +126,8 @@ python -m venv .venv
 | Stage 7 | 增加测试设计 Golden Test Set 评估 |
 | Stage 8 | 增加自然语言执行计划预览 |
 | Stage 9 | 增加 API 执行适配器 |
+| Stage 10 | 整理 README 和面试交付文档 |
+| Stage 11 | 增加执行结果 JUnit XML 导出 |
 
 ## 面试讲法
 
@@ -131,7 +141,7 @@ python -m venv .venv
 2. **知识源分类**：把检索结果按需求、API、缺陷、规范、执行日志分类，便于测试人员判断依据来源。
 3. **质量评估闭环**：用 Golden Test Set 计算覆盖率、引用质量和空输出，避免只凭感觉判断 AI 输出。
 4. **自动化与报告链路**：pytest 场景可稳定运行，并输出 JUnit XML，Dashboard 能展示报告状态。
-5. **执行适配器边界**：先实现 API HTTP adapter，保留浏览器 UI adapter 扩展点，避免把规划逻辑和执行逻辑耦合。
+5. **执行适配器边界**：先实现 API HTTP adapter，保留浏览器 UI adapter 扩展点，避免把规划逻辑和执行逻辑耦合，并将执行结果导出为 JUnit XML 供报告中心复用。
 
 更完整的面试讲解见 [docs/interview_guide.md](docs/interview_guide.md)。
 

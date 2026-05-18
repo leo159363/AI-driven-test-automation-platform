@@ -10,6 +10,7 @@ from xml.etree import ElementTree
 
 DEFAULT_JUNIT_CANDIDATES = (
     Path("reports/junit.xml"),
+    Path("reports/execution-plan-junit.xml"),
     Path("reports/pytest-junit.xml"),
     Path("test-results/junit.xml"),
     Path("artifacts/junit.xml"),

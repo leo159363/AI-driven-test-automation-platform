@@ -19,6 +19,10 @@ from src.observability.dashboard.services.execution_plan_service import (
     build_execution_plan,
     get_execution_preset_steps,
 )
+from src.observability.dashboard.services.execution_result_report_service import (
+    DEFAULT_EXECUTION_PLAN_JUNIT_PATH,
+    write_execution_result_junit_xml,
+)
 from src.observability.dashboard.services.test_design_service import (
     KnowledgeHit,
     SOURCE_TYPE_LABELS,
@@ -79,6 +83,7 @@ __all__ = [
     "SOURCE_TYPE_LABELS",
     "DEFAULT_TEST_DESIGN_GOLDEN_SET",
     "DEFAULT_TEST_DESIGN_REPORT_DIR",
+    "DEFAULT_EXECUTION_PLAN_JUNIT_PATH",
     "TestExecutionSummary",
     "TestDesignCaseResult",
     "TestDesignEvaluationCase",
@@ -100,4 +105,5 @@ __all__ = [
     "retrieve_knowledge_hits",
     "run_test_design_evaluation",
     "write_test_design_evaluation_report",
+    "write_execution_result_junit_xml",
 ]

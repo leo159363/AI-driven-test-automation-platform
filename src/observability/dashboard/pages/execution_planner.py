@@ -7,10 +7,12 @@ import json
 import streamlit as st
 
 from src.observability.dashboard.services import (
+    DEFAULT_EXECUTION_PLAN_JUNIT_PATH,
     build_execution_plan,
     execute_plan_with_api_adapter,
     get_execution_preset_steps,
     list_automation_scenarios,
+    write_execution_result_junit_xml,
 )
 
 
@@ -125,6 +127,19 @@ def render() -> None:
 
             st.dataframe(result.to_rows(), hide_index=True, use_container_width=True)
             st.code(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), language="json")
+
+            report_path = st.text_input(
+                "JUnit XML 输出路径",
+                value=str(DEFAULT_EXECUTION_PLAN_JUNIT_PATH),
+                key="ep_junit_path",
+                help="保存后可到“测试报告”页面查看该执行计划报告。",
+            )
+            if st.button("保存 JUnit XML", key="ep_save_junit"):
+                try:
+                    written_path = write_execution_result_junit_xml(result, report_path)
+                    st.success(f"已保存：{written_path}")
+                except Exception as exc:
+                    st.error(f"保存失败：{exc}")
     else:
         st.info("当前阶段先支持 API 执行适配器；浏览器 UI 执行适配器放在后续阶段。")
 

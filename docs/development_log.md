@@ -196,3 +196,25 @@ Out of scope:
 Verification:
 - Run documentation-adjacent dashboard import and smoke tests.
 - Result: `26 passed`.
+
+## Stage 11 - Execution Result Report Export
+
+Commit goal: connect natural-language execution-plan results to the platform's standard report center through JUnit XML.
+
+Scope:
+- Add a report writer that converts `ExecutionResult` into JUnit XML.
+- Add a CLI for running built-in execution-plan presets through the API adapter and writing a JUnit report.
+- Let the execution planner dashboard page save adapter results as JUnit XML.
+- Add execution-plan JUnit XML to the report artifact discovery list.
+- Add tests that verify generated JUnit XML can be parsed by the existing report service.
+
+Out of scope:
+- Browser execution adapter.
+- Allure result generation from execution-plan adapter results.
+- Persisting reports automatically without an explicit action.
+
+Verification:
+- Run execution-result report writer tests.
+- Run execution-plan CLI in dry-run mode and generate `reports/execution-plan-junit.xml`.
+- Re-run API adapter, report-service, dashboard smoke, automation scenario, and MCP initialize tests.
+- Result: `66 passed`.

@@ -98,6 +98,15 @@
 - [x] Add an interview guide with demo flow, talking points, high-frequency questions, and resume wording.
 - [x] Commit with Stage 10 explanation.
 
+## Stage 11: Execution Result Report Export
+
+- [x] Add a JUnit XML writer for execution adapter results.
+- [x] Add a CLI that runs built-in execution plans and writes JUnit XML.
+- [x] Let the execution planner page save adapter results as JUnit XML.
+- [x] Update the report center discovery list for execution-plan JUnit output.
+- [x] Add tests that parse the generated JUnit XML through the report service.
+- [x] Commit with Stage 11 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.

@@ -97,6 +97,8 @@
 3. WHEN common Allure result or report directories exist THEN the system SHALL show their detected paths and status.
 4. IF no local report artifacts exist THEN the system SHALL show a clear empty-state message and example commands for generating reports.
 5. The reporting page SHALL NOT claim to execute tests by itself before an execution adapter is implemented.
+6. The platform SHALL convert execution adapter results into JUnit XML when explicitly requested.
+7. The test reports page SHALL discover execution-plan JUnit XML outputs from the default report directory.
 
 ### Requirement 8: Built-in Demo Automation Scenarios
 
