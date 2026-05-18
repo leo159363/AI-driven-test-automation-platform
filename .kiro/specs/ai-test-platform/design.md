@@ -186,6 +186,12 @@ The evaluator generates drafts through the existing test-design service and comp
 
 Reports are printed by default. JSON reports are written only when the CLI receives an explicit `--output` path under `data/evaluation/`, which remains ignored by default.
 
+Stage 12 exposes the same deterministic evaluator in the dashboard:
+
+- `src/observability/dashboard/pages/test_design_evaluation.py`
+
+The page loads the Golden Test Set, previews cases, runs evaluation on demand, displays aggregate metrics and per-case rows, and can explicitly save a JSON report under `data/evaluation/`.
+
 ### 6. Test Report Center
 
 New files:

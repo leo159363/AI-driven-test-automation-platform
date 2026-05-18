@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | 测试工作台 | 输入需求，按功能、边界、异常、安全、并发、回归维度生成测试点草稿，并可导出 Markdown | `src/observability/dashboard/pages/test_workbench.py` |
 | 知识源分类 | 将检索片段归类为需求文档、API 文档、缺陷记录、测试规范、执行日志或未知来源 | `src/observability/dashboard/services/test_design_service.py` |
-| 测试设计评估 | 使用 Golden Test Set 评估需求覆盖率、维度覆盖率、引用覆盖率和空输出 | `scripts/evaluate_test_design.py` |
+| 测试设计评估 | 使用 Golden Test Set 评估需求覆盖率、维度覆盖率、引用覆盖率和空输出，支持 CLI 与 Dashboard 展示 | `src/observability/dashboard/pages/test_design_evaluation.py` |
 | 自动化场景 | 内置 API 登录、API 文件上传、UI 登录冒烟场景，可生成 JUnit XML，并兼容 Allure 结果目录 | `scripts/run_automation_suite.py` |
 | 测试报告中心 | 解析 pytest JUnit XML，发现 Allure 结果目录和 HTML 报告目录 | `src/observability/dashboard/pages/test_reports.py` |
 | 执行计划 | 将自然语言步骤解析为结构化执行计划，识别 API 与 UI 计划 | `src/observability/dashboard/services/execution_plan_service.py` |
@@ -61,7 +61,8 @@ python -m venv .venv
 2. `自动化场景`：查看内置 API / UI 自动化示例。
 3. `执行计划`：选择 API 登录场景，生成自然语言步骤对应的执行计划，可开启 dry-run。
 4. `测试报告`：查看 JUnit XML 和 Allure 目录状态。
-5. `评估中心`：说明已有 RAG 评估入口。
+5. `测试设计评估`：运行 Golden Test Set，展示测试点生成质量指标。
+6. `评估中心`：说明已有 RAG 评估入口。
 
 ### 3. 运行内置自动化场景
 
@@ -128,6 +129,7 @@ python -m venv .venv
 | Stage 9 | 增加 API 执行适配器 |
 | Stage 10 | 整理 README 和面试交付文档 |
 | Stage 11 | 增加执行结果 JUnit XML 导出 |
+| Stage 12 | 增加测试设计评估 Dashboard 页面 |
 
 ## 面试讲法
 
@@ -139,7 +141,7 @@ python -m venv .venv
 
 1. **RAG 增强测试设计**：不是凭模板生成，而是支持从历史缺陷、API 文档、测试规范里召回证据。
 2. **知识源分类**：把检索结果按需求、API、缺陷、规范、执行日志分类，便于测试人员判断依据来源。
-3. **质量评估闭环**：用 Golden Test Set 计算覆盖率、引用质量和空输出，避免只凭感觉判断 AI 输出。
+3. **质量评估闭环**：用 Golden Test Set 在 Dashboard 中展示覆盖率、引用质量和空输出，避免只凭感觉判断 AI 输出。
 4. **自动化与报告链路**：pytest 场景可稳定运行，并输出 JUnit XML，Dashboard 能展示报告状态。
 5. **执行适配器边界**：先实现 API HTTP adapter，保留浏览器 UI adapter 扩展点，避免把规划逻辑和执行逻辑耦合，并将执行结果导出为 JUnit XML 供报告中心复用。
 

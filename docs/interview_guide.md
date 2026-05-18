@@ -40,13 +40,13 @@
 .\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario api_login --dry-run --junitxml reports\execution-plan-junit.xml
 ```
 
-8. 运行测试设计评估：
+8. 进入 `测试设计评估`，点击运行 Golden Test Set，展示需求覆盖率、维度覆盖率、引用覆盖率和空输出指标。也可以用 CLI 运行：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\evaluate_test_design.py
 ```
 
-说明这个项目不是只看 AI 输出好不好，而是用固定样例做质量回归。
+说明这个项目不是只看 AI 输出好不好，而是用固定样例做质量回归，并且评估结果可以直接在 Dashboard 中展示。
 
 ## 可以重点讲的设计
 
@@ -67,7 +67,7 @@ AI 生成质量不能只靠肉眼感觉。项目用固定需求样例评估：
 - citation coverage：应该引用的证据是否出现；
 - non-empty output：是否出现空输出。
 
-这些指标虽然简单，但足够作为第一版回归基线。
+这些指标虽然简单，但足够作为第一版回归基线。项目现在同时提供 CLI 和 Dashboard 页面，便于本地回归和面试演示。
 
 ### 为什么先做 API adapter，不直接做 Playwright
 

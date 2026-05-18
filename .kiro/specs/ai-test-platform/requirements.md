@@ -74,6 +74,7 @@
 7. The test-design evaluator SHALL compute requirement coverage, dimension coverage, citation coverage, and non-empty output metrics.
 8. WHEN a test-design evaluation report is written THEN it SHALL be written under `data/evaluation/` only after an explicit CLI output argument.
 9. Generated test-design evaluation reports SHALL remain ignored by default unless promoted into committed fixtures.
+10. The dashboard SHALL provide a test-design evaluation page that displays aggregate metrics and per-case results.
 
 ### Requirement 6: Observability
 

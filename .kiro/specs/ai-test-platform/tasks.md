@@ -107,6 +107,15 @@
 - [x] Add tests that parse the generated JUnit XML through the report service.
 - [x] Commit with Stage 11 explanation.
 
+## Stage 12: Test Design Evaluation Dashboard
+
+- [x] Add a dashboard page for deterministic test-design evaluation.
+- [x] Register the page in Streamlit navigation.
+- [x] Display Golden Test Set preview, aggregate metrics, per-case rows, and generated markdown details.
+- [x] Allow explicit JSON report saving under `data/evaluation/`.
+- [x] Add import and smoke tests for the new page.
+- [x] Commit with Stage 12 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.

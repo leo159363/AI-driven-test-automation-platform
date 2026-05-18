@@ -218,3 +218,25 @@ Verification:
 - Run execution-plan CLI in dry-run mode and generate `reports/execution-plan-junit.xml`.
 - Re-run API adapter, report-service, dashboard smoke, automation scenario, and MCP initialize tests.
 - Result: `66 passed`.
+
+## Stage 12 - Test Design Evaluation Dashboard
+
+Commit goal: make test-design quality evaluation directly visible in the dashboard for interview demos.
+
+Scope:
+- Add a `测试设计评估` dashboard page.
+- Load and preview the test-design Golden Test Set.
+- Run deterministic evaluation on demand and display aggregate metrics plus per-case rows.
+- Show generated Markdown details for each evaluated case.
+- Allow explicit JSON report saving under `data/evaluation/`.
+- Register the page in Streamlit navigation and add smoke/import tests.
+
+Out of scope:
+- LLM-as-judge scoring.
+- Automatic scheduled evaluation runs.
+- Writing reports without a user action.
+
+Verification:
+- Run dashboard import tests and the new page smoke test.
+- Re-run full staged regression before commit.
+- Result: `68 passed`.
