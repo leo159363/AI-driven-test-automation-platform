@@ -96,6 +96,26 @@ Verification:
 - Result: `39 passed`.
 - Generated local report artifact: `reports/junit.xml`.
 
+## Stage 6 - Knowledge Source Taxonomy
+
+Commit goal: classify retrieved knowledge so the test workbench can distinguish requirements, API docs, defects, standards, and execution logs.
+
+Scope:
+- Add source-type normalization and fallback inference in the test-design service layer.
+- Show source type labels in Test Workbench retrieval results and generated drafts.
+- Add generic fixture documents for requirement, API document, defect, test standard, and execution log sources.
+- Add unit tests for metadata preference, path fallback, rendering titles, and fixture coverage.
+
+Out of scope:
+- Source-type filtering in the retrieval query itself.
+- Re-ingesting existing local vector databases.
+- Business-specific legacy fixture promotion.
+
+Verification:
+- Run test-design service unit tests.
+- Re-run dashboard config tests, dashboard smoke tests, and MCP initialize smoke test.
+- Result: `58 passed`.
+
 ## Stage 8 - Automation Execution Planning
 
 Commit goal: turn natural-language test steps into a structured execution-plan preview and expose it in the dashboard.

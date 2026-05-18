@@ -56,12 +56,12 @@
 
 ## Stage 6: Knowledge Source Taxonomy
 
-- [ ] Define knowledge source types: requirement, API doc, defect, test standard, execution log.
-- [ ] Add source-type metadata handling where ingestion metadata is available.
-- [ ] Update Test Workbench retrieval UI to show source type when available.
-- [ ] Add fixture documents for generic testing knowledge, not business-specific legacy data.
-- [ ] Add tests for retrieval result rendering and source metadata fallback.
-- [ ] Commit with Stage 6 explanation.
+- [x] Define knowledge source types: requirement, API doc, defect, test standard, execution log.
+- [x] Add source-type metadata handling where ingestion metadata is available.
+- [x] Update Test Workbench retrieval UI to show source type when available.
+- [x] Add fixture documents for generic testing knowledge, not business-specific legacy data.
+- [x] Add tests for retrieval result rendering and source metadata fallback.
+- [x] Commit with Stage 6 explanation.
 
 ## Stage 7: Test Design Evaluation
 

@@ -111,7 +111,22 @@ Future behavior:
 
 - Move retrieval into a service class.
 - Add query trace logging for test workbench generation.
-- Add source filtering by document type: PRD, defect, API doc, test standard.
+- Add source filtering by document type: requirement, API doc, defect, test standard, execution log.
+
+### 3.1 Knowledge Source Taxonomy
+
+Current files:
+
+- `src/observability/dashboard/services/test_design_service.py`
+- `tests/fixtures/test_knowledge_sources/*`
+
+Responsibilities:
+
+- Normalize source types into `requirement`, `api_doc`, `defect`, `test_standard`, `execution_log`, or `unknown`.
+- Prefer explicit ingestion metadata fields such as `source_type`, `document_type`, `doc_type`, `type`, or `category`.
+- Fall back to path, title, summary, and tags when explicit metadata is missing.
+- Display the human-readable source type in Test Workbench retrieval results and generated drafts.
+- Keep fixture documents generic so the platform is not tied to any legacy business project.
 
 ### 4. Draft Builder
 
@@ -264,6 +279,7 @@ class KnowledgeHit:
     source_path: str
     score: float
     snippet: str
+    source_type: str
 ```
 
 ### TestDesignDraft

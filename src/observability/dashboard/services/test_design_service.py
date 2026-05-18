@@ -3,10 +3,143 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Sequence, Tuple
+import re
+from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 from src.observability.dashboard.services.test_design_templates import (
     SCENARIO_BLUEPRINTS,
+)
+
+SOURCE_TYPE_LABELS: Dict[str, str] = {
+    "requirement": "需求文档",
+    "api_doc": "API 文档",
+    "defect": "缺陷记录",
+    "test_standard": "测试规范",
+    "execution_log": "执行日志",
+    "unknown": "未知来源",
+}
+
+SOURCE_TYPE_ALIASES: Dict[str, str] = {
+    "requirement": "requirement",
+    "requirements": "requirement",
+    "prd": "requirement",
+    "product_requirement": "requirement",
+    "user_story": "requirement",
+    "story": "requirement",
+    "需求": "requirement",
+    "需求文档": "requirement",
+    "需求_文档": "requirement",
+    "api": "api_doc",
+    "api_doc": "api_doc",
+    "api_document": "api_doc",
+    "openapi": "api_doc",
+    "swagger": "api_doc",
+    "interface": "api_doc",
+    "接口": "api_doc",
+    "接口文档": "api_doc",
+    "接口_文档": "api_doc",
+    "api_文档": "api_doc",
+    "defect": "defect",
+    "bug": "defect",
+    "issue": "defect",
+    "jira": "defect",
+    "缺陷": "defect",
+    "缺陷记录": "defect",
+    "缺陷_记录": "defect",
+    "test_standard": "test_standard",
+    "standard": "test_standard",
+    "testing_standard": "test_standard",
+    "guideline": "test_standard",
+    "checklist": "test_standard",
+    "测试规范": "test_standard",
+    "测试_规范": "test_standard",
+    "规范": "test_standard",
+    "execution_log": "execution_log",
+    "execution": "execution_log",
+    "log": "execution_log",
+    "report": "execution_log",
+    "junit": "execution_log",
+    "allure": "execution_log",
+    "trace": "execution_log",
+    "执行日志": "execution_log",
+    "执行_日志": "execution_log",
+    "测试报告": "execution_log",
+    "测试_报告": "execution_log",
+    "unknown": "unknown",
+}
+
+SOURCE_TYPE_METADATA_KEYS: Tuple[str, ...] = (
+    "source_type",
+    "document_type",
+    "doc_type",
+    "type",
+    "category",
+    "source_category",
+)
+
+SOURCE_TYPE_PATH_HINTS: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
+    (
+        "requirement",
+        (
+            "requirement",
+            "requirements",
+            "prd",
+            "product_requirement",
+            "user_story",
+            "story",
+            "需求",
+        ),
+    ),
+    (
+        "test_standard",
+        (
+            "test_standard",
+            "testing_standard",
+            "standard",
+            "guideline",
+            "checklist",
+            "测试规范",
+            "规范",
+            "准入",
+        ),
+    ),
+    (
+        "api_doc",
+        (
+            "api_doc",
+            "api",
+            "openapi",
+            "swagger",
+            "interface",
+            "接口",
+        ),
+    ),
+    (
+        "defect",
+        (
+            "defect",
+            "bug",
+            "issue",
+            "jira",
+            "incident",
+            "缺陷",
+            "故障",
+        ),
+    ),
+    (
+        "execution_log",
+        (
+            "execution_log",
+            "execution",
+            "log",
+            "report",
+            "junit",
+            "allure",
+            "trace",
+            "执行日志",
+            "测试报告",
+        ),
+    ),
 )
 
 
@@ -18,6 +151,12 @@ class KnowledgeHit:
     source_path: str
     score: float
     snippet: str
+    source_type: str = "unknown"
+
+    @property
+    def source_type_label(self) -> str:
+        """Return the human-readable source type label."""
+        return SOURCE_TYPE_LABELS.get(self.source_type, SOURCE_TYPE_LABELS["unknown"])
 
 
 @dataclass(frozen=True)
@@ -29,6 +168,73 @@ class TestDesignDraft:
     focus_areas: List[str]
     markdown: str
     evidence: List[KnowledgeHit]
+
+
+def normalize_source_type(value: object) -> str:
+    """Normalize user-provided or metadata-provided source type values."""
+    if value is None:
+        return "unknown"
+
+    raw_value = str(value).strip()
+    if not raw_value:
+        return "unknown"
+
+    normalized = (
+        raw_value.lower()
+        .replace("-", "_")
+        .replace(" ", "_")
+        .replace(".", "_")
+        .replace("/", "_")
+    )
+    return SOURCE_TYPE_ALIASES.get(normalized) or SOURCE_TYPE_ALIASES.get(
+        raw_value,
+        "unknown",
+    )
+
+
+def infer_source_type(
+    metadata: Mapping[str, Any] | None = None,
+    source_path: str = "",
+) -> str:
+    """Infer source type from metadata first, then from path/title hints."""
+    metadata = metadata or {}
+
+    for key in SOURCE_TYPE_METADATA_KEYS:
+        source_type = normalize_source_type(metadata.get(key))
+        if source_type != "unknown":
+            return source_type
+
+    hint_parts: List[str] = [source_path]
+    for key in ("source_path", "title", "summary", "tags"):
+        value = metadata.get(key)
+        if isinstance(value, (list, tuple, set)):
+            hint_parts.extend(str(item) for item in value)
+        elif value is not None:
+            hint_parts.append(str(value))
+
+    normalized_hints = " ".join(hint_parts).lower().replace("\\", "/")
+    for source_type, hints in SOURCE_TYPE_PATH_HINTS:
+        if any(_matches_source_hint(normalized_hints, hint) for hint in hints):
+            return source_type
+    return "unknown"
+
+
+def _matches_source_hint(text: str, hint: str) -> bool:
+    """Return whether a source hint is present without broad substring matches."""
+    if any("\u4e00" <= char <= "\u9fff" for char in hint):
+        return hint in text
+
+    tokens = set(re.split(r"[^a-z0-9]+", text.replace("_", " ")))
+    hint_tokens = [token for token in hint.replace("_", " ").split(" ") if token]
+    return bool(hint_tokens) and all(token in tokens for token in hint_tokens)
+
+
+def format_knowledge_hit_title(index: int, hit: KnowledgeHit) -> str:
+    """Return the title used by the workbench retrieval result expander."""
+    return (
+        f"[{index}] {hit.source_type_label} | {hit.source_path} | "
+        f"score={hit.score:.3f}"
+    )
 
 
 def get_scenario_blueprint(scenario: str) -> Dict[str, Any]:
@@ -125,7 +331,8 @@ def build_test_outline(
         lines.append("## 5. 关联知识片段")
         for idx, hit in enumerate(evidence[:5], start=1):
             lines.append(
-                f"- [{idx}] `{hit.source_path}` | score={hit.score:.3f} | {hit.snippet}"
+                f"- [{idx}] `{hit.source_type_label}` | `{hit.source_path}` | "
+                f"score={hit.score:.3f} | {hit.snippet}"
             )
         lines.append("")
 
@@ -187,15 +394,19 @@ def retrieve_knowledge_hits(
             )
 
         results = hybrid_search.search(query=query, top_k=top_k)
-        hits = [
-            KnowledgeHit(
-                chunk_id=result.chunk_id,
-                source_path=str(result.metadata.get("source_path", "unknown")),
-                score=float(result.score),
-                snippet=result.text.strip().replace("\n", " ")[:180],
+        hits: List[KnowledgeHit] = []
+        for result in results:
+            metadata = result.metadata or {}
+            source_path = str(metadata.get("source_path", "unknown"))
+            hits.append(
+                KnowledgeHit(
+                    chunk_id=result.chunk_id,
+                    source_path=source_path,
+                    score=float(result.score),
+                    snippet=result.text.strip().replace("\n", " ")[:180],
+                    source_type=infer_source_type(metadata, source_path),
+                )
             )
-            for result in results
-        ]
         if not hits:
             return [], "未检索到相关知识片段，可以换一个 Query 或先导入资料。"
         return hits, None

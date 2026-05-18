@@ -10,6 +10,7 @@ from src.observability.dashboard.services import (
     FOCUS_OPTIONS,
     KnowledgeHit,
     SCENARIO_BLUEPRINTS,
+    format_knowledge_hit_title,
     generate_test_design_draft,
     get_default_query,
     retrieve_knowledge_hits,
@@ -26,10 +27,10 @@ def _render_hits(hits: List[KnowledgeHit]) -> None:
 
     for idx, hit in enumerate(hits, start=1):
         with st.expander(
-            f"[{idx}] {hit.source_path} | score={hit.score:.3f}",
+            format_knowledge_hit_title(idx, hit),
             expanded=(idx == 1),
         ):
-            st.caption(f"chunk_id: {hit.chunk_id}")
+            st.caption(f"source_type: {hit.source_type} | chunk_id: {hit.chunk_id}")
             st.write(hit.snippet)
 
 

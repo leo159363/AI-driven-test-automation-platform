@@ -45,6 +45,9 @@
 3. WHEN retrieval succeeds during draft generation THEN the system SHALL append related knowledge snippets to the generated Markdown draft.
 4. IF the knowledge base is unavailable THEN the system SHALL show a readable warning and still generate a template-based draft.
 5. IF no relevant knowledge is found THEN the system SHALL show an empty-result message and SHALL NOT fabricate citations.
+6. The platform SHALL normalize knowledge source types into requirement, API doc, defect, test standard, execution log, or unknown.
+7. WHEN retrieved metadata includes source type or document type THEN the system SHALL display the normalized source type.
+8. WHEN source-type metadata is missing THEN the system SHALL infer a best-effort source type from source path, title, summary, or tags, and fall back to unknown.
 
 ### Requirement 4: Export
 
