@@ -170,6 +170,22 @@ Stage 2 keeps existing RAG evaluation intact. Later stages can add test-design-s
 - unsupported assertion rate
 - citation coverage
 
+Stage 7 adds deterministic test-design evaluation without requiring a live LLM:
+
+- `tests/fixtures/test_design_golden_set.json`
+- `src/observability/dashboard/services/test_design_evaluation_service.py`
+- `scripts/evaluate_test_design.py`
+
+The evaluator generates drafts through the existing test-design service and computes:
+
+- `requirement_coverage`: expected requirement keywords found in the generated draft.
+- `dimension_coverage`: expected focus dimensions included as generated sections.
+- `citation_coverage`: expected evidence sources present, with no fake citation section when no evidence is expected.
+- `non_empty_output`: generated Markdown is not empty.
+- `overall_score`: average of the core metrics.
+
+Reports are printed by default. JSON reports are written only when the CLI receives an explicit `--output` path under `data/evaluation/`, which remains ignored by default.
+
 ### 6. Test Report Center
 
 New files:
@@ -295,6 +311,18 @@ class TestDesignDraft:
     markdown: str
     evidence: list[KnowledgeHit]
     warnings: list[str]
+```
+
+### TestDesignEvaluationReport
+
+```python
+@dataclass
+class TestDesignEvaluationReport:
+    test_set_path: str
+    version: str
+    case_results: list[TestDesignCaseResult]
+    aggregate_metrics: dict[str, float]
+    total_elapsed_ms: float
 ```
 
 ### TestExecutionSummary

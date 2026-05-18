@@ -116,6 +116,28 @@ Verification:
 - Re-run dashboard config tests, dashboard smoke tests, and MCP initialize smoke test.
 - Result: `58 passed`.
 
+## Stage 7 - Test Design Evaluation
+
+Commit goal: add deterministic quality evaluation for requirement-to-test-design generation.
+
+Scope:
+- Add a generic test-design Golden Test Set for API, UI, RAG knowledge, and regression-evaluation scenarios.
+- Add a service that computes requirement coverage, dimension coverage, citation coverage, non-empty output, and overall score.
+- Add a CLI entry point for running the test-design evaluation.
+- Allow JSON report writing only when explicitly requested under `data/evaluation/`.
+- Add unit tests for loading, scoring, fake-citation prevention, row output, and report path safety.
+
+Out of scope:
+- LLM-as-judge scoring for generated test cases.
+- Persisting reports automatically from the dashboard.
+- Committing generated evaluation reports.
+
+Verification:
+- Run test-design evaluation service unit tests.
+- Run `python scripts/evaluate_test_design.py`.
+- Re-run test-design, source taxonomy, API adapter, execution plan, automation scenario, report-service, dashboard smoke, and MCP initialize tests.
+- Result: `63 passed`.
+
 ## Stage 8 - Automation Execution Planning
 
 Commit goal: turn natural-language test steps into a structured execution-plan preview and expose it in the dashboard.

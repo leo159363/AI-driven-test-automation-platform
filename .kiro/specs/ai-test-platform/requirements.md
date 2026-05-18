@@ -70,6 +70,10 @@
 3. The system SHOULD track Hit Rate, MRR, and faithfulness-style indicators where data is available.
 4. WHEN evaluation data is missing THEN the system SHALL provide a clear setup or empty-state message.
 5. Future generated test-case quality metrics SHALL be added without breaking existing RAG evaluation tests.
+6. The platform SHALL provide a deterministic Golden Test Set for requirement-to-test-design evaluation.
+7. The test-design evaluator SHALL compute requirement coverage, dimension coverage, citation coverage, and non-empty output metrics.
+8. WHEN a test-design evaluation report is written THEN it SHALL be written under `data/evaluation/` only after an explicit CLI output argument.
+9. Generated test-design evaluation reports SHALL remain ignored by default unless promoted into committed fixtures.
 
 ### Requirement 6: Observability
 

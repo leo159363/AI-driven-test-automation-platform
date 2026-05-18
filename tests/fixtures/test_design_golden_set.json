@@ -1,0 +1,92 @@
+{
+  "description": "Golden Test Set for deterministic requirement-to-test-design evaluation in the AI test platform.",
+  "version": "1.0",
+  "test_cases": [
+    {
+      "id": "api-login-security",
+      "scenario": "接口测试设计",
+      "requirement": "登录接口需要支持用户名密码认证，连续五次失败后临时锁定账户，并且错误提示不能泄露账号是否存在。",
+      "focus_areas": ["功能", "异常", "安全"],
+      "expected_focus_areas": ["功能", "异常", "安全"],
+      "expected_keywords": ["登录接口", "状态码", "错误提示", "Token", "未认证", "权限不足"],
+      "evidence": [
+        {
+          "chunk_id": "api-auth-login",
+          "source_path": "tests/fixtures/test_knowledge_sources/api_authentication.md",
+          "score": 0.96,
+          "snippet": "POST /api/login returns token on success and returns 401 when credentials are invalid.",
+          "source_type": "api_doc"
+        },
+        {
+          "chunk_id": "defect-login-lockout",
+          "source_path": "tests/fixtures/test_knowledge_sources/defect_login_lockout.md",
+          "score": 0.91,
+          "snippet": "The failed-login counter was not reset after a successful login.",
+          "source_type": "defect"
+        }
+      ],
+      "expected_citation_sources": [
+        "tests/fixtures/test_knowledge_sources/api_authentication.md",
+        "tests/fixtures/test_knowledge_sources/defect_login_lockout.md"
+      ]
+    },
+    {
+      "id": "web-upload-form",
+      "scenario": "Web UI 自动化",
+      "requirement": "文件上传页面需要校验文件类型、大小限制、重复点击上传按钮以及上传失败后的页面提示。",
+      "focus_areas": ["功能", "边界", "异常"],
+      "expected_focus_areas": ["功能", "边界", "异常"],
+      "expected_keywords": ["文件上传", "页面入口", "按钮点击", "非法格式", "重复点击", "失败提示"],
+      "evidence": [],
+      "expected_citation_sources": []
+    },
+    {
+      "id": "rag-defect-knowledge",
+      "scenario": "知识库增强",
+      "requirement": "根据历史缺陷和测试规范补充登录模块的回归测试点，并且不能编造不存在的引用。",
+      "focus_areas": ["功能", "异常", "回归"],
+      "expected_focus_areas": ["功能", "异常", "回归"],
+      "expected_keywords": ["历史缺陷", "测试规范", "不编造引用", "Golden Test Set", "回归"],
+      "evidence": [
+        {
+          "chunk_id": "standard-api-error",
+          "source_path": "tests/fixtures/test_knowledge_sources/test_standard_api_error_handling.md",
+          "score": 0.89,
+          "snippet": "API tests should cover status code, response schema, error code, error message, and trace id.",
+          "source_type": "test_standard"
+        },
+        {
+          "chunk_id": "execution-login-regression",
+          "source_path": "tests/fixtures/test_knowledge_sources/execution_log_regression.md",
+          "score": 0.84,
+          "snippet": "test_login_lockout_counter_resets failed because the account remained locked after a successful login.",
+          "source_type": "execution_log"
+        }
+      ],
+      "expected_citation_sources": [
+        "tests/fixtures/test_knowledge_sources/test_standard_api_error_handling.md",
+        "tests/fixtures/test_knowledge_sources/execution_log_regression.md"
+      ]
+    },
+    {
+      "id": "regression-quality-baseline",
+      "scenario": "回归评估",
+      "requirement": "平台需要用固定测试集评估测试设计生成质量，关注覆盖率、引用质量、空输出和报告生成。",
+      "focus_areas": ["功能", "边界", "异常", "回归"],
+      "expected_focus_areas": ["功能", "边界", "异常", "回归"],
+      "expected_keywords": ["固定测试集", "覆盖率", "引用质量", "空输出", "评估报告"],
+      "evidence": [
+        {
+          "chunk_id": "requirement-login-security",
+          "source_path": "tests/fixtures/test_knowledge_sources/requirement_login_security.md",
+          "score": 0.86,
+          "snippet": "Login module requirements include successful login, invalid credential handling, and audit logging.",
+          "source_type": "requirement"
+        }
+      ],
+      "expected_citation_sources": [
+        "tests/fixtures/test_knowledge_sources/requirement_login_security.md"
+      ]
+    }
+  ]
+}

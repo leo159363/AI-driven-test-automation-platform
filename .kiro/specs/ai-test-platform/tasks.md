@@ -65,12 +65,12 @@
 
 ## Stage 7: Test Design Evaluation
 
-- [ ] Define a small Golden Test Set for generic requirement-to-test-design scenarios.
-- [ ] Add metrics for requirement coverage, dimension coverage, citation coverage, and empty output.
-- [ ] Add a CLI or dashboard action to run test-design evaluation.
-- [ ] Save evaluation report under `data/evaluation/` only when explicitly generated.
-- [ ] Ensure generated reports are ignored unless intentionally committed as fixtures.
-- [ ] Commit with Stage 7 explanation.
+- [x] Define a small Golden Test Set for generic requirement-to-test-design scenarios.
+- [x] Add metrics for requirement coverage, dimension coverage, citation coverage, and empty output.
+- [x] Add a CLI or dashboard action to run test-design evaluation.
+- [x] Save evaluation report under `data/evaluation/` only when explicitly generated.
+- [x] Ensure generated reports are ignored unless intentionally committed as fixtures.
+- [x] Commit with Stage 7 explanation.
 
 ## Stage 8: Automation Execution Planning
 
