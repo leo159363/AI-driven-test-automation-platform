@@ -6,7 +6,10 @@ from src.observability.dashboard.services.execution_history_service import (
     ExecutionHistoryRecord,
 )
 from src.observability.dashboard.services.traceability_service import (
+    apply_review_statuses,
     build_traceability_report,
+    export_traceability_csv,
+    export_traceability_markdown,
     extract_requirement_items,
     extract_test_points,
 )
@@ -106,3 +109,44 @@ class TestTraceabilityService:
         assert row.risk_level == "high"
         assert "missing_test_design" in row.gaps
         assert "missing_automation" in row.gaps
+
+    def test_review_statuses_can_be_applied_without_changing_metrics(self) -> None:
+        report = build_traceability_report(
+            requirement_text="登录接口需要支持用户名密码认证。",
+            test_design_markdown="""
+# 接口测试设计
+## 3. 测试点
+### 功能
+- 验证登录接口成功时返回 200 和 token。
+            """,
+            execution_records=[],
+        )
+
+        updated = apply_review_statuses(report, {"REQ-001": "confirmed"})
+
+        assert updated.requirement_count == report.requirement_count
+        assert updated.coverage_rate == report.coverage_rate
+        assert updated.rows[0].review_status == "confirmed"
+
+    def test_export_traceability_csv_and_markdown(self) -> None:
+        report = build_traceability_report(
+            requirement_text="登录接口需要支持用户名密码认证。",
+            test_design_markdown="""
+# 接口测试设计
+## 3. 测试点
+### 功能
+- 验证登录接口成功时返回 200 和 token。
+            """,
+            execution_records=[_record("api_login", "passed", "2026-05-19T08:00:00+00:00")],
+            review_statuses={"REQ-001": "confirmed"},
+        )
+
+        csv_text = export_traceability_csv(report)
+        markdown = export_traceability_markdown(report)
+
+        assert "Requirement ID,Requirement,Review Status" in csv_text
+        assert "REQ-001" in csv_text
+        assert "已确认" in csv_text
+        assert "# Traceability Matrix" in markdown
+        assert "| Requirement ID | Review Status | Risk |" in markdown
+        assert "api_login: passed" in markdown

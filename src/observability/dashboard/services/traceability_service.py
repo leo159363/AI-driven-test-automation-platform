@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import csv
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+from io import StringIO
 import re
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
@@ -114,6 +116,16 @@ SCENARIO_EXTRA_KEYWORDS: Mapping[str, Sequence[str]] = {
     "ui_login_smoke": ("ui", "browser", "login", "页面", "表单", "登录", "浏览器", "冒烟"),
 }
 
+REVIEW_STATUS_LABELS: Mapping[str, str] = {
+    "unreviewed": "未评审",
+    "confirmed": "已确认",
+    "needs_test_design": "需补测试设计",
+    "needs_automation": "需补自动化",
+    "blocked": "阻塞待处理",
+}
+
+REVIEW_STATUS_OPTIONS = tuple(REVIEW_STATUS_LABELS.keys())
+
 
 @dataclass(frozen=True)
 class TraceabilityRequirement:
@@ -169,6 +181,7 @@ class TraceabilityRow:
     automation: List[TraceabilityAutomationLink]
     latest_status: str
     risk_level: str
+    review_status: str
     gaps: List[str]
 
     def to_dict(self) -> Dict[str, Any]:
@@ -182,6 +195,7 @@ class TraceabilityRow:
             "automation": [link.to_dict() for link in self.automation],
             "latest_status": self.latest_status,
             "risk_level": self.risk_level,
+            "review_status": self.review_status,
             "gaps": self.gaps,
         }
 
@@ -195,6 +209,7 @@ class TraceabilityRow:
             "Automation": ", ".join(link.scenario_id for link in self.automation) or "None",
             "Latest Status": self.latest_status,
             "Risk": self.risk_level,
+            "Review Status": REVIEW_STATUS_LABELS.get(self.review_status, self.review_status),
             "Gaps": "; ".join(self.gaps) or "None",
         }
 
@@ -247,6 +262,7 @@ def build_traceability_report(
     test_design_markdown: str,
     execution_records: Iterable[ExecutionHistoryRecord] = (),
     scenarios: Sequence[AutomationScenario] | None = None,
+    review_statuses: Mapping[str, str] | None = None,
 ) -> TraceabilityReport:
     """Build a deterministic requirements-to-test-to-execution matrix."""
     requirements = extract_requirement_items(requirement_text)
@@ -265,6 +281,12 @@ def build_traceability_report(
         dimensions = _unique(point.dimension for point in matched_points if point.dimension)
         latest_status = _summarize_latest_status(automation_links)
         gaps = _build_gaps(matched_points, automation_links, latest_status)
+        review_status = _resolve_review_status(
+            requirement.requirement_id,
+            review_statuses or {},
+            gaps,
+            latest_status,
+        )
         rows.append(
             TraceabilityRow(
                 requirement_id=requirement.requirement_id,
@@ -275,6 +297,7 @@ def build_traceability_report(
                 automation=automation_links,
                 latest_status=latest_status,
                 risk_level=_risk_level(gaps, latest_status),
+                review_status=review_status,
                 gaps=gaps,
             )
         )
@@ -286,6 +309,127 @@ def build_traceability_report(
         passed_requirement_count=sum(1 for row in rows if row.latest_status == "passed"),
         rows=rows,
     )
+
+
+def apply_review_statuses(
+    report: TraceabilityReport,
+    review_statuses: Mapping[str, str],
+) -> TraceabilityReport:
+    """Return a copy of a traceability report with updated review statuses."""
+    rows = [
+        TraceabilityRow(
+            requirement_id=row.requirement_id,
+            requirement=row.requirement,
+            keywords=row.keywords,
+            dimensions=row.dimensions,
+            test_points=row.test_points,
+            automation=row.automation,
+            latest_status=row.latest_status,
+            risk_level=row.risk_level,
+            review_status=_normalize_review_status(
+                review_statuses.get(row.requirement_id, row.review_status)
+            ),
+            gaps=row.gaps,
+        )
+        for row in report.rows
+    ]
+    return TraceabilityReport(
+        requirement_count=report.requirement_count,
+        covered_requirement_count=report.covered_requirement_count,
+        automated_requirement_count=report.automated_requirement_count,
+        passed_requirement_count=report.passed_requirement_count,
+        rows=rows,
+    )
+
+
+def export_traceability_csv(report: TraceabilityReport) -> str:
+    """Export a traceability report as CSV text."""
+    output = StringIO()
+    fieldnames = [
+        "Requirement ID",
+        "Requirement",
+        "Review Status",
+        "Dimensions",
+        "Test Points",
+        "Automation",
+        "Latest Status",
+        "Risk",
+        "Gaps",
+    ]
+    writer = csv.DictWriter(output, fieldnames=fieldnames, lineterminator="\n")
+    writer.writeheader()
+    for row in report.to_rows():
+        writer.writerow({key: row.get(key, "") for key in fieldnames})
+    return output.getvalue()
+
+
+def export_traceability_markdown(report: TraceabilityReport) -> str:
+    """Export a traceability report as Markdown text."""
+    lines = [
+        "# Traceability Matrix",
+        "",
+        "## Summary",
+        "",
+        f"- Requirements: {report.requirement_count}",
+        f"- Covered: {report.coverage_rate * 100:.1f}%",
+        f"- Automated: {report.automation_rate * 100:.1f}%",
+        f"- Passed: {report.passed_rate * 100:.1f}%",
+        "",
+        "## Matrix",
+        "",
+        "| Requirement ID | Review Status | Risk | Latest Status | Test Points | Automation | Gaps |",
+        "| --- | --- | --- | --- | ---: | --- | --- |",
+    ]
+    for row in report.rows:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _escape_markdown_cell(row.requirement_id),
+                    _escape_markdown_cell(
+                        REVIEW_STATUS_LABELS.get(row.review_status, row.review_status)
+                    ),
+                    _escape_markdown_cell(row.risk_level),
+                    _escape_markdown_cell(row.latest_status),
+                    str(len(row.test_points)),
+                    _escape_markdown_cell(
+                        ", ".join(link.scenario_id for link in row.automation) or "None"
+                    ),
+                    _escape_markdown_cell("; ".join(row.gaps) or "None"),
+                ]
+            )
+            + " |"
+        )
+
+    lines.extend(["", "## Details", ""])
+    for row in report.rows:
+        lines.extend(
+            [
+                f"### {row.requirement_id}: {row.requirement}",
+                "",
+                f"- Review status: {REVIEW_STATUS_LABELS.get(row.review_status, row.review_status)}",
+                f"- Risk: {row.risk_level}",
+                f"- Latest status: {row.latest_status}",
+                f"- Gaps: {'; '.join(row.gaps) or 'None'}",
+                "",
+                "Test points:",
+            ]
+        )
+        if row.test_points:
+            for point in row.test_points:
+                lines.append(f"- [{point.dimension}] {point.text}")
+        else:
+            lines.append("- None")
+
+        lines.append("")
+        lines.append("Automation:")
+        if row.automation:
+            for link in row.automation:
+                lines.append(f"- {link.scenario_id}: {link.status}")
+        else:
+            lines.append("- None")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def extract_requirement_items(requirement_text: str) -> List[TraceabilityRequirement]:
@@ -430,6 +574,32 @@ def _risk_level(gaps: Sequence[str], latest_status: str) -> str:
     return "low"
 
 
+def _resolve_review_status(
+    requirement_id: str,
+    review_statuses: Mapping[str, str],
+    gaps: Sequence[str],
+    latest_status: str,
+) -> str:
+    provided = _normalize_review_status(review_statuses.get(requirement_id, ""))
+    if provided != "unreviewed":
+        return provided
+    if "missing_test_design" in gaps:
+        return "needs_test_design"
+    if "missing_automation" in gaps or "automation_not_run" in gaps or "only_dry_run" in gaps:
+        return "needs_automation"
+    if latest_status == "failed":
+        return "blocked"
+    return "unreviewed"
+
+
+def _normalize_review_status(value: object) -> str:
+    normalized = str(value or "").strip()
+    if normalized in REVIEW_STATUS_LABELS:
+        return normalized
+    reverse_labels = {label: key for key, label in REVIEW_STATUS_LABELS.items()}
+    return reverse_labels.get(normalized, "unreviewed")
+
+
 def _summarize_latest_status(automation_links: Sequence[TraceabilityAutomationLink]) -> str:
     if not automation_links:
         return "not_automated"
@@ -555,3 +725,7 @@ def _parse_created_at(value: str) -> datetime:
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed
+
+
+def _escape_markdown_cell(value: object) -> str:
+    return str(value).replace("|", "\\|").replace("\n", " ")

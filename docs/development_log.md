@@ -391,4 +391,26 @@ Out of scope:
 Verification:
 - Run focused traceability-service, dashboard import, and page smoke tests.
 - Re-run full staged regression before commit.
+- Result: `93 passed`.
 - Result: `91 passed`.
+
+## Stage 19 - Traceability Export and Review Status
+
+Commit goal: make the traceability matrix usable as review material by adding manual review status and Markdown / CSV export.
+
+Scope:
+- Add review status values for each requirement row: unreviewed, confirmed, needs test design, needs automation, and blocked.
+- Add service-level helpers to apply review statuses without changing matrix metrics.
+- Add Markdown export with summary, matrix table, and per-requirement details.
+- Add CSV export with stable columns for spreadsheet-style analysis.
+- Add review-status selectors and download buttons to the Traceability Matrix dashboard page.
+- Add unit tests for status application and export output.
+
+Out of scope:
+- Persisting review status to disk or a database.
+- Multi-user review workflows.
+- Editing requirement text or generated test points from the matrix page.
+
+Verification:
+- Run focused traceability-service, dashboard import, and page smoke tests.
+- Re-run full staged regression before commit.

@@ -189,6 +189,17 @@
 - [x] Include traceability and test-design review tests in CI.
 - [x] Commit with Stage 18 explanation.
 
+## Stage 19: Traceability Export and Review Status
+
+- [x] Add per-requirement traceability review statuses.
+- [x] Add service-level Markdown export for traceability review material.
+- [x] Add service-level CSV export for spreadsheet-style analysis.
+- [x] Add dashboard review-status selectors.
+- [x] Add dashboard download buttons for Markdown and CSV.
+- [x] Add unit tests for status application and export output.
+- [x] Re-run the staged regression suite.
+- [x] Commit with Stage 19 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.

@@ -8,7 +8,12 @@ import streamlit as st
 
 from src.observability.dashboard.services import (
     DEFAULT_EXECUTION_HISTORY_PATH,
+    REVIEW_STATUS_LABELS,
+    REVIEW_STATUS_OPTIONS,
+    apply_review_statuses,
     build_traceability_report,
+    export_traceability_csv,
+    export_traceability_markdown,
     load_execution_history_records,
 )
 
@@ -85,12 +90,20 @@ def render() -> None:
             requirement_text=requirement_text,
             test_design_markdown=test_design_markdown,
             execution_records=records,
+            review_statuses=st.session_state.get("tm_review_statuses", {}),
         )
 
     report = st.session_state.get("tm_report")
     if not report:
         st.info("Build the matrix to see coverage, automation linkage, and execution gaps.")
         return
+
+    review_statuses = dict(st.session_state.get("tm_review_statuses", {}))
+    for row in report.rows:
+        review_statuses.setdefault(row.requirement_id, row.review_status)
+    report = apply_review_statuses(report, review_statuses)
+    st.session_state["tm_report"] = report
+    st.session_state["tm_review_statuses"] = review_statuses
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Requirements", report.requirement_count)
@@ -100,6 +113,48 @@ def render() -> None:
 
     st.subheader("Matrix")
     st.dataframe(report.to_rows(), hide_index=True, use_container_width=True)
+
+    st.subheader("Review Status")
+    status_columns = st.columns(2)
+    for index, row in enumerate(report.rows):
+        with status_columns[index % 2]:
+            current_status = review_statuses.get(row.requirement_id, row.review_status)
+            try:
+                status_index = list(REVIEW_STATUS_OPTIONS).index(current_status)
+            except ValueError:
+                status_index = 0
+            selected_status = st.selectbox(
+                f"{row.requirement_id} review",
+                options=list(REVIEW_STATUS_OPTIONS),
+                index=status_index,
+                format_func=lambda key: REVIEW_STATUS_LABELS[key],
+                key=f"tm_review_status_{row.requirement_id}",
+            )
+            review_statuses[row.requirement_id] = selected_status
+    report = apply_review_statuses(report, review_statuses)
+    st.session_state["tm_report"] = report
+    st.session_state["tm_review_statuses"] = review_statuses
+
+    st.subheader("Export")
+    export_col1, export_col2 = st.columns(2)
+    with export_col1:
+        st.download_button(
+            "Download Markdown",
+            data=export_traceability_markdown(report),
+            file_name="traceability_matrix.md",
+            mime="text/markdown",
+            use_container_width=True,
+            key="tm_download_markdown",
+        )
+    with export_col2:
+        st.download_button(
+            "Download CSV",
+            data=export_traceability_csv(report),
+            file_name="traceability_matrix.csv",
+            mime="text/csv",
+            use_container_width=True,
+            key="tm_download_csv",
+        )
 
     st.subheader("Requirement Details")
     for row in report.rows:

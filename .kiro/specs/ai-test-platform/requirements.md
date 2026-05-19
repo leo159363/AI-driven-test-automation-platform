@@ -179,3 +179,5 @@
 6. The matrix SHALL use execution history records to show the latest status for matched automation scenarios.
 7. The matrix SHALL surface gaps such as missing test design, missing automation, automation not run, dry-run only, and latest execution failed.
 8. The matrix SHALL provide table-friendly rows and JSON output for interview demos and later export.
+9. The matrix SHALL support per-requirement review statuses such as unreviewed, confirmed, needs test design, needs automation, and blocked.
+10. The matrix SHALL export Markdown for review discussion and CSV for spreadsheet-style analysis.

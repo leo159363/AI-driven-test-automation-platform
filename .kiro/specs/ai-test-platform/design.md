@@ -407,6 +407,13 @@ Current stage behavior:
 - The matrix displays requirement count, test-design coverage rate, automation-link rate, passed-execution rate, table rows, details, and JSON output.
 - The implementation is deterministic and local; it does not depend on external LLM calls.
 
+Stage 19 adds review-ready exports:
+
+- Per-requirement review status labels: unreviewed, confirmed, needs test design, needs automation, and blocked.
+- Markdown export for review discussion.
+- CSV export for spreadsheet-style analysis.
+- Export functions live in the service layer so they can be tested without Streamlit.
+
 ## Data Models
 
 ### KnowledgeHit
@@ -537,6 +544,8 @@ class TraceabilityReport:
     rows: list[TraceabilityRow]
 ```
 
+Review status is stored on `TraceabilityRow` as a lightweight field. The current dashboard keeps manual selections in Streamlit session state; persistent storage is reserved for a later stage.
+
 ## Error Handling
 
 - Empty requirement: generate from scenario template.
@@ -590,3 +599,4 @@ class TraceabilityReport:
 - Stage 16: add execution quality trends and failure reason analysis.
 - Stage 17: add test-design review checks and interview testing answer documentation.
 - Stage 18: add requirements-to-test-to-execution traceability matrix.
+- Stage 19: add traceability review status and Markdown/CSV exports.
