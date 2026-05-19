@@ -41,7 +41,9 @@
 .\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario ui_login_smoke --adapter browser --dry-run --junitxml reports\execution-plan-junit.xml --allure-results reports\execution-plan-allure-results
 ```
 
-8. 进入 `测试设计评估`，点击运行 Golden Test Set，展示需求覆盖率、维度覆盖率、引用覆盖率和空输出指标。也可以用 CLI 运行：
+8. 打开 GitHub Actions，说明每次 push/PR 会自动跑核心回归并上传 `reports/` artifact。
+
+9. 进入 `测试设计评估`，点击运行 Golden Test Set，展示需求覆盖率、维度覆盖率、引用覆盖率和空输出指标。也可以用 CLI 运行：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\evaluate_test_design.py
@@ -78,6 +80,10 @@ AI 生成质量不能只靠肉眼感觉。项目用固定需求样例评估：
 
 测试开发不只是写脚本，还要看执行质量。项目的报告中心能解析 JUnit XML，并发现 Allure 目录。自动化场景和执行计划 adapter 都可以产生 JUnit XML；执行计划结果还能生成最小 Allure results，这样可以把自动化执行、自然语言执行计划和测试报告展示串起来，面试时能讲完整链路。
 
+### CI/CD 怎么讲
+
+当前完成的是 CI，也就是持续集成：push 或 pull request 后由 GitHub Actions 自动安装依赖、运行核心回归、生成 JUnit XML 和执行计划报告 artifact。CD 暂时没有做，因为这个面试项目还不需要自动部署 Dashboard；后续可以把 Allure HTML 或 Streamlit 演示环境发布出去。
+
 ## 高频追问与回答
 
 ### 这个项目和普通自动化测试框架有什么区别？
@@ -98,7 +104,7 @@ AI 生成质量不能只靠肉眼感觉。项目用固定需求样例评估：
 
 ### 如果继续扩展，你会先做什么？
 
-优先接入 CI，让自动化场景、执行计划 dry-run 和测试设计评估在 GitHub Actions 中稳定运行。下一步再接 MCP browser 工具或真实业务测试站点，扩展更复杂的 UI 交互、截图和 trace。
+下一步优先做执行历史和质量趋势，把每次自动化执行、评估分数、失败原因和报告路径保存下来。之后再接 MCP browser 工具或真实业务测试站点，扩展更复杂的 UI 交互、截图和 trace。
 
 ## 简历写法参考
 
@@ -112,6 +118,7 @@ AI 驱动的自动化测试平台
 - 内置 API 登录、文件上传和 UI 登录冒烟自动化场景，支持 pytest 执行、JUnit XML 输出和 Allure 目录发现。
 - 设计自然语言执行计划解析与 API HTTP / Browser UI adapter，支持 dry-run、真实 HTTP 执行、可选 Playwright UI 执行、步骤日志、响应预览、失败截图和失败原因记录。
 - 将执行适配器结果转换为 JUnit XML / Allure results，使自然语言执行计划结果能进入统一测试报告中心展示。
+- 接入 GitHub Actions CI，在 push/PR 后自动运行核心回归并上传测试报告 artifact，提升项目交付可信度。
 ```
 
 ## 不建议夸大的点
@@ -120,3 +127,4 @@ AI 驱动的自动化测试平台
 - 不要说 UI 真执行不需要环境准备；真实 Browser adapter 需要安装 Playwright 和浏览器依赖，dry-run 可直接演示。
 - 不要说 RAG 检索质量已经在大规模业务数据上验证，当前只完成通用 fixture 和评估框架。
 - 不要说自动化报告已完整集成 Allure 服务端，当前是生成/发现本地 Allure results 和报告目录。
+- 不要说已经完成 CD 自动部署，当前完成的是 GitHub Actions 持续集成和报告 artifact。

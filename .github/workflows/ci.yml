@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-regression:
+    name: Core regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      PYTHONUTF8: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run core regression tests
+        run: |
+          mkdir -p reports
+          python -m pytest \
+            tests/unit/test_browser_execution_adapter.py \
+            tests/unit/test_execution_result_report_service.py \
+            tests/unit/test_run_execution_plan_script.py \
+            tests/unit/test_test_design_evaluation_service.py \
+            tests/unit/test_test_design_service.py \
+            tests/unit/test_api_execution_adapter.py \
+            tests/unit/test_execution_plan_service.py \
+            tests/automation \
+            tests/unit/test_automation_scenario_service.py \
+            tests/unit/test_test_report_service.py \
+            tests/unit/test_dashboard_config.py \
+            tests/e2e/test_dashboard_smoke.py \
+            tests/e2e/test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list \
+            -v \
+            --junitxml=reports/ci-junit.xml
+
+      - name: Generate execution-plan report artifacts
+        if: always()
+        run: |
+          python scripts/run_execution_plan.py \
+            --scenario ui_login_smoke \
+            --adapter browser \
+            --dry-run \
+            --junitxml reports/execution-plan-junit.xml \
+            --allure-results reports/execution-plan-allure-results
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-test-platform-reports
+          path: reports/
+          if-no-files-found: warn

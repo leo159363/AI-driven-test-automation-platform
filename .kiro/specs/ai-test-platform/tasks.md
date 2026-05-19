@@ -129,6 +129,17 @@
 - [x] Add focused unit tests for browser adapter behavior, Allure output, and UI CLI dry-run.
 - [x] Commit with Stage 13 explanation.
 
+## Stage 14: GitHub Actions CI
+
+- [x] Add `.github/workflows/ci.yml`.
+- [x] Run the core regression suite on push and pull request to `main`.
+- [x] Generate pytest JUnit XML under `reports/ci-junit.xml`.
+- [x] Generate execution-plan dry-run JUnit XML and Allure results.
+- [x] Upload `reports/` as a CI artifact.
+- [x] Add README CI badge and CI usage notes.
+- [x] Document CI behavior in the spec and development log.
+- [x] Commit with Stage 14 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.

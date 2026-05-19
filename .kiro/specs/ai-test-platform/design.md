@@ -327,6 +327,26 @@ Responsibilities:
 - Provide a CLI path for running a built-in execution plan and writing `reports/execution-plan-junit.xml`.
 - Keep reporting output explicit and local; generated reports stay ignored by repository hygiene rules.
 
+### 12. Continuous Integration
+
+New file:
+
+- `.github/workflows/ci.yml`
+
+Responsibilities:
+
+- Run the platform's core regression suite on pushes and pull requests targeting `main`.
+- Install project runtime and dev dependencies in a clean GitHub-hosted Python environment.
+- Generate `reports/ci-junit.xml` from pytest so failures remain consumable by report tooling.
+- Generate execution-plan dry-run artifacts, including JUnit XML and Allure results.
+- Upload the `reports/` directory as a CI artifact for inspection after each run.
+
+Current stage behavior:
+
+- CI uses Python 3.11 on `ubuntu-latest`.
+- CI does not require secrets or external services.
+- Browser UI execution remains in dry-run mode in CI, so Playwright browser installation is not required.
+
 ## Data Models
 
 ### KnowledgeHit
@@ -477,3 +497,4 @@ class ExecutionResult:
 - Stage 11: export execution results as JUnit XML.
 - Stage 12: expose test-design evaluation in the dashboard.
 - Stage 13: add Browser UI execution adapter and Allure result export.
+- Stage 14: add GitHub Actions CI and report artifact upload.

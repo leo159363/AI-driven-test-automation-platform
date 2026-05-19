@@ -267,3 +267,31 @@ Verification:
 - Re-run full staged regression before commit.
 - Result: `73 passed`.
 - Generated local report artifacts: `reports/execution-plan-junit.xml` and `reports/execution-plan-allure-results/`.
+
+## Stage 14 - GitHub Actions CI
+
+Commit goal: add continuous integration so the GitHub repository automatically runs the platform's core regression suite and publishes test-report artifacts.
+
+Scope:
+- Add `.github/workflows/ci.yml`.
+- Run CI on pushes and pull requests targeting `main`, plus manual dispatch.
+- Install runtime and dev dependencies in Python 3.11.
+- Run the same core regression suite used for local staged verification.
+- Generate `reports/ci-junit.xml` through pytest.
+- Run the UI execution-plan dry-run CLI and generate execution-plan JUnit XML plus Allure results.
+- Upload the `reports/` directory as a GitHub Actions artifact.
+- Add a CI badge and short CI explanation to README.
+- Update spec requirements, design, and tasks for continuous integration.
+
+Out of scope:
+- Deploying the Streamlit dashboard.
+- Publishing Allure HTML through GitHub Pages.
+- Running real Playwright browsers in CI.
+- Requiring secrets or external services in the default CI path.
+
+Verification:
+- Validate the workflow YAML can be parsed.
+- Re-run full staged regression locally.
+- The first remote GitHub Actions run will start after this commit is pushed.
+- Result: `73 passed`.
+- Local workflow-equivalent execution-plan artifact command completed successfully.

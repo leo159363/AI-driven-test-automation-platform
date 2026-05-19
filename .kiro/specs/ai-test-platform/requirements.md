@@ -144,3 +144,17 @@
 2. Stage commits SHALL include only files relevant to the current stage.
 3. Local experimental outputs SHALL remain untracked unless explicitly promoted into the project.
 4. Each stage SHALL include a short commit message and a development log entry.
+
+### Requirement 11: Continuous Integration
+
+**User Story:** As a test-development engineer, I want every GitHub push or pull request to run the platform's core regression suite automatically, so reviewers can trust that the automation platform still works.
+
+#### Acceptance Criteria
+
+1. The repository SHALL provide a GitHub Actions workflow for pushes and pull requests targeting `main`.
+2. The workflow SHALL install project runtime and dev dependencies in a clean Python environment.
+3. The workflow SHALL run the core regression suite used by the staged local verification.
+4. The workflow SHALL generate a JUnit XML report under `reports/`.
+5. The workflow SHALL generate execution-plan dry-run report artifacts under `reports/`.
+6. The workflow SHALL upload `reports/` as a CI artifact even when tests fail.
+7. The workflow SHALL NOT require plaintext secrets for the default regression path.
