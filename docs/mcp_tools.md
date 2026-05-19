@@ -16,6 +16,7 @@ workflow.
 | `generate_test_cases` | Generate structured test cases from a requirement and optional RAG context. | `requirement`, `project`, `module`, `version`, `source_types`, `dimensions`, `case_count`, `top_k` | Structured JSON with `test_cases`, `context_summary`, priorities, steps, expected results, and pytest automation hints. |
 | `run_api_tests` | Run API automation scenarios and write test reports. | `scenario_id`, `base_url`, `dry_run`, `execution_mode`, `step_text`, `junitxml`, `allure_results`, `record_history` | Structured JSON with `run_id`, status summary, step results, logs, and report paths. |
 | `get_test_report` | Parse JUnit/Allure report artifacts after test execution. | `run_id`, `report_path`, `project_root`, `allure_results`, `include_failed_cases` | Structured JSON with status, summary, suites, failed cases, and artifact paths. |
+| `query_failed_cases` | Query failed/error/skipped cases from a parsed test report. | `run_id`, `report_path`, `project_root`, `statuses`, `keyword`, `classname`, `case_name`, `limit`, `include_details` | Structured JSON with filtered cases, failure category, failure signature, and recommended next tools. |
 
 ## Source Type Metadata
 
@@ -311,6 +312,100 @@ Or:
   -> generate_test_cases
   -> run_api_tests
   -> get_test_report
+  -> query_failed_cases
+  -> analyze_failure
+  -> generate_bug_report
+```
+
+## query_failed_cases
+
+### Purpose
+
+`query_failed_cases` reads the same JUnit report used by `get_test_report`, then
+filters the failure evidence that should be sent to failure analysis or bug
+report generation.
+
+The default status filter returns only `failure` and `error`. Add `skipped` when
+you want to inspect skipped cases too.
+
+### Input Example
+
+```json
+{
+  "run_id": "api-api_login-1a2b3c4d",
+  "project_root": ".",
+  "statuses": ["failure", "error"],
+  "keyword": "token",
+  "limit": 10,
+  "include_details": true
+}
+```
+
+Or:
+
+```json
+{
+  "report_path": "reports/mcp-api-login-junit.xml",
+  "statuses": ["skipped"],
+  "classname": "api_login"
+}
+```
+
+### Output Example
+
+```json
+{
+  "run_id": "api-api_login-1a2b3c4d",
+  "report_path": "reports/mcp-api-tests/api-api_login-1a2b3c4d/junit.xml",
+  "status": "cases_found",
+  "report_status": "failed",
+  "filters": {
+    "statuses": ["failure", "error"],
+    "keyword": "token",
+    "classname": "",
+    "case_name": "",
+    "limit": 10,
+    "include_details": true
+  },
+  "case_count": 1,
+  "returned_count": 1,
+  "truncated": false,
+  "cases": [
+    {
+      "case_id": "FC-001",
+      "classname": "api_http.api_login",
+      "name": "step_02_assert_token",
+      "status": "failure",
+      "message": "Response does not contain expected text: token",
+      "duration_seconds": 0.05,
+      "failure_category": "auth_or_permission",
+      "failure_signature": "Response does not contain expected text: token",
+      "recommended_usage": ["failure_analysis", "bug_report_generation"],
+      "details": "status=failed\nmessage=Response does not contain expected text: token"
+    }
+  ],
+  "recommended_next_tools": [
+    {
+      "tool": "analyze_failure",
+      "reason": "Combine failed-case evidence with RAG context to identify likely root cause."
+    },
+    {
+      "tool": "generate_bug_report",
+      "reason": "Convert confirmed reproducible failures into a structured defect report."
+    }
+  ]
+}
+```
+
+### Workflow Position
+
+```text
+document ingestion
+  -> retrieve_test_context
+  -> generate_test_cases
+  -> run_api_tests
+  -> get_test_report
+  -> query_failed_cases
   -> analyze_failure
   -> generate_bug_report
 ```

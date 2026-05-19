@@ -40,6 +40,13 @@ from src.mcp_server.tools.get_test_report import (
     get_test_report_handler,
     register_tool as register_get_test_report,
 )
+from src.mcp_server.tools.query_failed_cases import (
+    TOOL_NAME as QUERY_FAILED_CASES_NAME,
+    TOOL_DESCRIPTION as QUERY_FAILED_CASES_DESCRIPTION,
+    TOOL_INPUT_SCHEMA as QUERY_FAILED_CASES_SCHEMA,
+    query_failed_cases_handler,
+    register_tool as register_query_failed_cases,
+)
 
 __all__ = [
     "QUERY_KNOWLEDGE_HUB_NAME",
@@ -68,4 +75,9 @@ __all__ = [
     "GET_TEST_REPORT_SCHEMA",
     "get_test_report_handler",
     "register_get_test_report",
+    "QUERY_FAILED_CASES_NAME",
+    "QUERY_FAILED_CASES_DESCRIPTION",
+    "QUERY_FAILED_CASES_SCHEMA",
+    "query_failed_cases_handler",
+    "register_query_failed_cases",
 ]

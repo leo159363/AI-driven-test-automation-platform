@@ -223,6 +223,10 @@ def _register_default_tools(protocol_handler: ProtocolHandler) -> None:
     from src.mcp_server.tools.get_test_report import register_tool as register_report_tool
     register_report_tool(protocol_handler)
 
+    # Import and register query_failed_cases tool
+    from src.mcp_server.tools.query_failed_cases import register_tool as register_failed_cases_tool
+    register_failed_cases_tool(protocol_handler)
+
 
 def create_mcp_server(
     server_name: str,
