@@ -347,6 +347,27 @@ Current stage behavior:
 - CI does not require secrets or external services.
 - Browser UI execution remains in dry-run mode in CI, so Playwright browser installation is not required.
 
+### 13. Execution History
+
+New files:
+
+- `src/observability/dashboard/services/execution_history_service.py`
+- `src/observability/dashboard/pages/execution_history.py`
+
+Responsibilities:
+
+- Persist execution-plan summaries as JSONL records under `data/execution_history/`.
+- Record plan name, scenario id, adapter, status, step counts, failure reason, artifacts, and report paths.
+- Let the execution planner save a history record after API or UI execution.
+- Let the execution-plan CLI append a record through `--record-history`.
+- Display recent records and aggregate status counts in the dashboard.
+
+Current stage behavior:
+
+- History writes are explicit, not automatic.
+- Generated history stays ignored by default because `data/` is ignored.
+- CI writes a workflow artifact history file under `reports/execution-history.jsonl`.
+
 ## Data Models
 
 ### KnowledgeHit
@@ -498,3 +519,4 @@ class ExecutionResult:
 - Stage 12: expose test-design evaluation in the dashboard.
 - Stage 13: add Browser UI execution adapter and Allure result export.
 - Stage 14: add GitHub Actions CI and report artifact upload.
+- Stage 15: add execution history and test task records.

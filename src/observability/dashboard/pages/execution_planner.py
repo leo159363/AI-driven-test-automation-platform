@@ -7,9 +7,12 @@ import json
 import streamlit as st
 
 from src.observability.dashboard.services import (
+    DEFAULT_EXECUTION_HISTORY_PATH,
     DEFAULT_EXECUTION_PLAN_ALLURE_RESULTS_DIR,
     DEFAULT_EXECUTION_PLAN_JUNIT_PATH,
+    append_execution_history_record,
     build_execution_plan,
+    build_execution_history_record,
     execute_plan_with_browser_adapter,
     execute_plan_with_api_adapter,
     get_execution_preset_steps,
@@ -48,6 +51,7 @@ def _render_execution_result(result, key_prefix: str) -> None:
     if st.button("Save JUnit XML", key=f"{key_prefix}_save_junit"):
         try:
             written_path = write_execution_result_junit_xml(result, report_path)
+            st.session_state[f"{key_prefix}_last_junit_path"] = str(written_path)
             st.success(f"Saved: {written_path}")
         except Exception as exc:
             st.error(f"Save failed: {exc}")
@@ -61,6 +65,32 @@ def _render_execution_result(result, key_prefix: str) -> None:
     if st.button("Save Allure Results", key=f"{key_prefix}_save_allure"):
         try:
             written_path = write_execution_result_allure_results(result, allure_dir)
+            st.session_state[f"{key_prefix}_last_allure_result"] = str(written_path)
+            st.success(f"Saved: {written_path}")
+        except Exception as exc:
+            st.error(f"Save failed: {exc}")
+
+    history_path = st.text_input(
+        "Execution history path",
+        value=str(DEFAULT_EXECUTION_HISTORY_PATH),
+        key=f"{key_prefix}_history_path",
+        help="Saved history can be viewed on the Execution History page.",
+    )
+    if st.button("Save Execution History", key=f"{key_prefix}_save_history"):
+        try:
+            report_paths = {}
+            junit_path = st.session_state.get(f"{key_prefix}_last_junit_path")
+            allure_path = st.session_state.get(f"{key_prefix}_last_allure_result")
+            if junit_path:
+                report_paths["junitxml"] = junit_path
+            if allure_path:
+                report_paths["allure_result"] = allure_path
+            record = build_execution_history_record(
+                result,
+                trigger="dashboard",
+                report_paths=report_paths,
+            )
+            written_path = append_execution_history_record(record, history_path)
             st.success(f"Saved: {written_path}")
         except Exception as exc:
             st.error(f"Save failed: {exc}")

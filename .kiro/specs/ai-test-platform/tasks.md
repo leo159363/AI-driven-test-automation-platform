@@ -140,6 +140,19 @@
 - [x] Document CI behavior in the spec and development log.
 - [x] Commit with Stage 14 explanation.
 
+## Stage 15: Execution History and Test Task Records
+
+- [x] Add an execution history service backed by JSONL storage.
+- [x] Build history records from adapter execution results.
+- [x] Persist scenario id, adapter, status, step counts, failure reason, artifacts, and report paths.
+- [x] Add CLI `--record-history` and `--history-path` options.
+- [x] Let the execution planner save execution history records explicitly.
+- [x] Add an `Execution History` dashboard page.
+- [x] Register the page in Streamlit navigation.
+- [x] Include execution history in CI report artifacts.
+- [x] Add unit and dashboard smoke tests for history behavior.
+- [x] Commit with Stage 15 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.

@@ -210,7 +210,29 @@ class TestDashboardSmoke:
         assert "execution" in text.lower() or "计划" in text
 
     # ------------------------------------------------------------------
-    # 6. Test Reports page
+    # 6. Execution History page
+    # ------------------------------------------------------------------
+
+    @pytest.mark.e2e
+    def test_execution_history_page_renders(self) -> None:
+        """Execution History page loads without errors."""
+        from streamlit.testing.v1 import AppTest
+
+        def page_script():
+            from src.observability.dashboard.pages.execution_history import render
+            render()
+
+        at = AppTest.from_function(page_script, default_timeout=10)
+        at.run()
+
+        assert not at.exception, (
+            f"Execution History page raised an exception: {at.exception}"
+        )
+        text = _collect_text(at)
+        assert "execution" in text.lower() or "history" in text.lower()
+
+    # ------------------------------------------------------------------
+    # 7. Test Reports page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -232,7 +254,7 @@ class TestDashboardSmoke:
         assert "report" in text.lower() or "报告" in text
 
     # ------------------------------------------------------------------
-    # 7. Test Design Evaluation page
+    # 8. Test Design Evaluation page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -254,7 +276,7 @@ class TestDashboardSmoke:
         assert "评估" in text or "evaluation" in text.lower()
 
     # ------------------------------------------------------------------
-    # 8. Ingestion Manager page
+    # 9. Ingestion Manager page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -282,7 +304,7 @@ class TestDashboardSmoke:
         )
 
     # ------------------------------------------------------------------
-    # 9. Ingestion Traces page
+    # 10. Ingestion Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -312,7 +334,7 @@ class TestDashboardSmoke:
         assert "trace" in text.lower() or "ingestion" in text.lower()
 
     # ------------------------------------------------------------------
-    # 10. Query Traces page
+    # 11. Query Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -342,7 +364,7 @@ class TestDashboardSmoke:
         assert "query" in text.lower() or "trace" in text.lower()
 
     # ------------------------------------------------------------------
-    # 11. Evaluation Panel page
+    # 12. Evaluation Panel page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e

@@ -42,6 +42,7 @@ jobs:
           python -m pytest \
             tests/unit/test_browser_execution_adapter.py \
             tests/unit/test_execution_result_report_service.py \
+            tests/unit/test_execution_history_service.py \
             tests/unit/test_run_execution_plan_script.py \
             tests/unit/test_test_design_evaluation_service.py \
             tests/unit/test_test_design_service.py \
@@ -64,7 +65,9 @@ jobs:
             --adapter browser \
             --dry-run \
             --junitxml reports/execution-plan-junit.xml \
-            --allure-results reports/execution-plan-allure-results
+            --allure-results reports/execution-plan-allure-results \
+            --record-history \
+            --history-path reports/execution-history.jsonl
 
       - name: Upload test reports
         if: always()

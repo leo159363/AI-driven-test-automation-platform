@@ -19,9 +19,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.observability.dashboard.services import (  # noqa: E402
+    DEFAULT_EXECUTION_HISTORY_PATH,
     DEFAULT_EXECUTION_PLAN_ALLURE_RESULTS_DIR,
     DEFAULT_EXECUTION_PLAN_JUNIT_PATH,
+    append_execution_history_record,
     build_execution_plan,
+    build_execution_history_record,
     execute_plan_with_browser_adapter,
     execute_plan_with_api_adapter,
     get_execution_preset_steps,
@@ -76,6 +79,16 @@ def parse_args() -> argparse.Namespace:
         help="Directory for browser failure screenshots.",
     )
     parser.add_argument(
+        "--record-history",
+        action="store_true",
+        help="Append this execution summary to the local execution history JSONL file.",
+    )
+    parser.add_argument(
+        "--history-path",
+        default=str(DEFAULT_EXECUTION_HISTORY_PATH),
+        help="Execution history JSONL output path.",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Print full execution result JSON.",
@@ -116,6 +129,22 @@ def main() -> int:
     if allure_results:
         allure_path = write_execution_result_allure_results(result, allure_results)
 
+    history_path = None
+    if getattr(args, "record_history", False):
+        report_paths = {"junitxml": str(report_path)}
+        if allure_path:
+            report_paths["allure_result"] = str(allure_path)
+        history_record = build_execution_history_record(
+            result,
+            scenario_id=args.scenario,
+            trigger="cli",
+            report_paths=report_paths,
+        )
+        history_path = append_execution_history_record(
+            history_record,
+            getattr(args, "history_path", str(DEFAULT_EXECUTION_HISTORY_PATH)),
+        )
+
     if args.json:
         print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
     else:
@@ -130,6 +159,8 @@ def main() -> int:
         print(f"junitxml={report_path}")
         if allure_path:
             print(f"allure_result={allure_path}")
+        if history_path:
+            print(f"history={history_path}")
         if result.failure_reason:
             print(f"failure_reason={result.failure_reason}")
 

@@ -102,6 +102,9 @@
 7. The test reports page SHALL discover execution-plan JUnit XML outputs from the default report directory.
 8. The platform SHALL convert execution adapter results into minimal Allure results when explicitly requested.
 9. The test reports page SHALL discover execution-plan Allure result outputs from the default report directory.
+10. The platform SHALL save execution history records when explicitly requested by the dashboard or CLI.
+11. Execution history records SHALL include scenario, adapter, status, step counts, failure reason, artifacts, and report paths.
+12. The dashboard SHALL provide an execution history page that lists recent saved records and aggregate status counts.
 
 ### Requirement 8: Built-in Demo Automation Scenarios
 

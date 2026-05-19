@@ -67,3 +67,33 @@ class TestRunExecutionPlanScript:
         assert summary.failed == 0
         assert summary.skipped == 5
         assert any(allure_dir.glob("*-result.json"))
+
+    def test_main_records_execution_history(self, tmp_path: Path, monkeypatch) -> None:
+        report_path = tmp_path / "execution-plan-junit.xml"
+        history_path = tmp_path / "records.jsonl"
+        monkeypatch.setattr(
+            run_execution_plan,
+            "parse_args",
+            lambda: type(
+                "Args",
+                (),
+                {
+                    "scenario": "api_login",
+                    "base_url": "http://127.0.0.1:1",
+                    "adapter": "auto",
+                    "dry_run": True,
+                    "junitxml": str(report_path),
+                    "allure_results": "",
+                    "screenshot_dir": str(tmp_path / "screenshots"),
+                    "record_history": True,
+                    "history_path": str(history_path),
+                    "json": False,
+                },
+            )(),
+        )
+
+        exit_code = run_execution_plan.main()
+
+        assert exit_code == 0
+        assert history_path.exists()
+        assert "api_login" in history_path.read_text(encoding="utf-8")

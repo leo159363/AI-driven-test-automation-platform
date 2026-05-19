@@ -145,6 +145,10 @@ class TestDashboardImports:
         from src.observability.dashboard.pages import execution_planner
         assert hasattr(execution_planner, "render")
 
+    def test_execution_history_importable(self) -> None:
+        from src.observability.dashboard.pages import execution_history
+        assert hasattr(execution_history, "render")
+
     def test_test_reports_importable(self) -> None:
         from src.observability.dashboard.pages import test_reports
         assert hasattr(test_reports, "render")

@@ -295,3 +295,31 @@ Verification:
 - The first remote GitHub Actions run will start after this commit is pushed.
 - Result: `73 passed`.
 - Local workflow-equivalent execution-plan artifact command completed successfully.
+
+## Stage 15 - Execution History and Test Task Records
+
+Commit goal: add persistent execution records so the platform can show what has been run, when it ran, what failed, and where the reports are.
+
+Scope:
+- Add a JSONL-backed execution history service under `data/execution_history/`.
+- Build history records from shared `ExecutionResult` objects.
+- Record scenario id, adapter, status, step counts, dry-run flag, failure reason, artifacts, and report paths.
+- Add CLI `--record-history` and `--history-path` options.
+- Let the execution planner page explicitly save execution history.
+- Add an Execution History dashboard page with aggregate counts, table rows, and per-record JSON details.
+- Register the new page in the dashboard navigation.
+- Include `reports/execution-history.jsonl` in CI artifacts.
+- Add unit tests and dashboard smoke coverage.
+
+Out of scope:
+- Database-backed task management.
+- Scheduled execution.
+- User/project permissions.
+- Trend charts across long-term history.
+
+Verification:
+- Run focused execution-history, CLI, dashboard import, and page smoke tests.
+- Run the execution-plan CLI with `--record-history`.
+- Re-run full staged regression before commit.
+- Result: `79 passed`.
+- Generated local history artifact: `data/execution_history/records.jsonl`.
