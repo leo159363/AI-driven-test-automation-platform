@@ -54,6 +54,13 @@ from src.mcp_server.tools.analyze_failure import (
     analyze_failure_handler,
     register_tool as register_analyze_failure,
 )
+from src.mcp_server.tools.generate_bug_report import (
+    TOOL_NAME as GENERATE_BUG_REPORT_NAME,
+    TOOL_DESCRIPTION as GENERATE_BUG_REPORT_DESCRIPTION,
+    TOOL_INPUT_SCHEMA as GENERATE_BUG_REPORT_SCHEMA,
+    generate_bug_report_handler,
+    register_tool as register_generate_bug_report,
+)
 
 __all__ = [
     "QUERY_KNOWLEDGE_HUB_NAME",
@@ -92,4 +99,9 @@ __all__ = [
     "ANALYZE_FAILURE_SCHEMA",
     "analyze_failure_handler",
     "register_analyze_failure",
+    "GENERATE_BUG_REPORT_NAME",
+    "GENERATE_BUG_REPORT_DESCRIPTION",
+    "GENERATE_BUG_REPORT_SCHEMA",
+    "generate_bug_report_handler",
+    "register_generate_bug_report",
 ]

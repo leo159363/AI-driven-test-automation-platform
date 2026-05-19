@@ -193,7 +193,7 @@ def test_mcp_server_tools_list_stdio() -> None:
     assert "tools" in tools_response["result"]
     # Should have core knowledge and test-context tools registered
     assert isinstance(tools_response["result"]["tools"], list)
-    assert len(tools_response["result"]["tools"]) >= 9
+    assert len(tools_response["result"]["tools"]) >= 10
     
     # Verify registered tools are present
     tool_names = [t["name"] for t in tools_response["result"]["tools"]]
@@ -206,6 +206,7 @@ def test_mcp_server_tools_list_stdio() -> None:
     assert "get_test_report" in tool_names
     assert "query_failed_cases" in tool_names
     assert "analyze_failure" in tool_names
+    assert "generate_bug_report" in tool_names
 
 
 # =============================================================================

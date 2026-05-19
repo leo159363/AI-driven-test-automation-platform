@@ -231,6 +231,10 @@ def _register_default_tools(protocol_handler: ProtocolHandler) -> None:
     from src.mcp_server.tools.analyze_failure import register_tool as register_failure_analysis_tool
     register_failure_analysis_tool(protocol_handler)
 
+    # Import and register generate_bug_report tool
+    from src.mcp_server.tools.generate_bug_report import register_tool as register_bug_report_tool
+    register_bug_report_tool(protocol_handler)
+
 
 def create_mcp_server(
     server_name: str,

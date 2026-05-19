@@ -18,6 +18,7 @@ workflow.
 | `get_test_report` | Parse JUnit/Allure report artifacts after test execution. | `run_id`, `report_path`, `project_root`, `allure_results`, `include_failed_cases` | Structured JSON with status, summary, suites, failed cases, and artifact paths. |
 | `query_failed_cases` | Query failed/error/skipped cases from a parsed test report. | `run_id`, `report_path`, `project_root`, `statuses`, `keyword`, `classname`, `case_name`, `limit`, `include_details` | Structured JSON with filtered cases, failure category, failure signature, and recommended next tools. |
 | `analyze_failure` | Analyze failed cases and produce root-cause hints. | `run_id`, `report_path`, `project_root`, `failed_cases`, `contexts`, `statuses`, `keyword`, `classname`, `case_name`, `limit`, `project`, `module`, `version`, `analysis_depth` | Structured JSON with likely root cause, confidence, evidence, suggested fixes, and bug-report candidates. |
+| `generate_bug_report` | Generate structured defect report drafts from failure analysis. | `run_id`, `report_path`, `project_root`, `analyses`, `failed_cases`, `contexts`, `statuses`, `keyword`, `classname`, `case_name`, `limit`, `project`, `module`, `version`, `environment`, `reporter`, `severity`, `priority` | Structured JSON and Markdown bug drafts with title, severity, priority, repro steps, expected/actual result, evidence, labels, and attachments. |
 
 ## Source Type Metadata
 
@@ -520,6 +521,130 @@ Or pass failed cases directly:
       "reason": "Convert confirmed bug candidates into a structured defect report."
     }
   ]
+}
+```
+
+### Workflow Position
+
+```text
+document ingestion
+  -> retrieve_test_context
+  -> generate_test_cases
+  -> run_api_tests
+  -> get_test_report
+  -> query_failed_cases
+  -> analyze_failure
+  -> generate_bug_report
+```
+
+## generate_bug_report
+
+### Purpose
+
+`generate_bug_report` is the final tool in the current QualityPilot testing
+workflow. It consumes `analyze_failure` output, or it can internally call the
+failure analysis flow from a JUnit report. The output is a draft defect report
+that can be reviewed and pasted into Jira, GitHub Issues, TAPD, ZenTao, or a
+team test report.
+
+This tool does not create an external ticket. It only generates a structured
+draft, which is safer for interview demo and CI.
+
+### Input Example
+
+```json
+{
+  "run_id": "api-api_login-1a2b3c4d",
+  "project_root": ".",
+  "keyword": "token",
+  "project": "qualitypilot-demo",
+  "module": "auth",
+  "version": "v1",
+  "environment": "staging",
+  "reporter": "QualityPilot",
+  "include_markdown": true
+}
+```
+
+Or pass analyses directly:
+
+```json
+{
+  "analyses": [
+    {
+      "analysis_id": "FA-001",
+      "case_id": "FC-001",
+      "classname": "api_http.api_login",
+      "name": "step_02_assert_token",
+      "status": "failure",
+      "failure_signature": "Response does not contain expected text: token",
+      "root_cause_type": "product_bug_or_contract_mismatch",
+      "likely_root_cause": "Authentication behavior differs from the expected API contract.",
+      "confidence": 0.7,
+      "should_create_bug": true,
+      "evidence": [
+        {
+          "type": "junit_message",
+          "value": "Response does not contain expected text: token"
+        }
+      ],
+      "reproduction_steps": [
+        "Run testcase api_http.api_login.step_02_assert_token",
+        "Capture request, response, logs, and generated report artifacts."
+      ]
+    }
+  ],
+  "project": "qualitypilot-demo",
+  "module": "auth",
+  "version": "v1",
+  "severity": "high",
+  "priority": "P1"
+}
+```
+
+### Output Example
+
+```json
+{
+  "status": "generated",
+  "run_id": "api-api_login-1a2b3c4d",
+  "report_path": "reports/mcp-api-tests/api-api_login-1a2b3c4d/junit.xml",
+  "project": "qualitypilot-demo",
+  "module": "auth",
+  "version": "v1",
+  "environment": "staging",
+  "reporter": "QualityPilot",
+  "analysis_count": 1,
+  "bug_count": 1,
+  "bug_reports": [
+    {
+      "bug_id": "BUG-001",
+      "status": "draft",
+      "title": "[auth] step_02_assert_token failed: Response does not contain expected text: token",
+      "severity": "high",
+      "priority": "P1",
+      "summary": "Authentication behavior differs from the expected API contract. Confidence: 0.7.",
+      "preconditions": [
+        "Test environment is staging.",
+        "The target service and required test data are available.",
+        "The same automation scenario can be rerun with report artifacts enabled."
+      ],
+      "reproduction_steps": [
+        "Run testcase api_http.api_login.step_02_assert_token",
+        "Capture request, response, logs, and generated report artifacts."
+      ],
+      "expected_result": "Behavior should match the requirement, API contract, and test case expected result.",
+      "actual_result": "Response does not contain expected text: token",
+      "labels": [
+        "qualitypilot",
+        "automated-test",
+        "bug-candidate",
+        "product_bug_or_contract_mismatch",
+        "auth"
+      ]
+    }
+  ],
+  "markdown": "# [auth] step_02_assert_token failed: Response does not contain expected text: token\n..."
 }
 ```
 

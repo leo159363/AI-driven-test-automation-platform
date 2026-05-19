@@ -207,6 +207,7 @@ class TestMCPClientE2E:
         assert "get_test_report" in tool_names
         assert "query_failed_cases" in tool_names
         assert "analyze_failure" in tool_names
+        assert "generate_bug_report" in tool_names
 
         # Each tool must declare a valid inputSchema
         for tool in tools:
