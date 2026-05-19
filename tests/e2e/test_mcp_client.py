@@ -202,6 +202,7 @@ class TestMCPClientE2E:
         assert "list_collections" in tool_names
         assert "get_document_summary" in tool_names
         assert "retrieve_test_context" in tool_names
+        assert "generate_test_cases" in tool_names
 
         # Each tool must declare a valid inputSchema
         for tool in tools:

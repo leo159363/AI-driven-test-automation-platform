@@ -19,6 +19,13 @@ from src.mcp_server.tools.retrieve_test_context import (
     retrieve_test_context_handler,
     register_tool as register_retrieve_test_context,
 )
+from src.mcp_server.tools.generate_test_cases import (
+    TOOL_NAME as GENERATE_TEST_CASES_NAME,
+    TOOL_DESCRIPTION as GENERATE_TEST_CASES_DESCRIPTION,
+    TOOL_INPUT_SCHEMA as GENERATE_TEST_CASES_SCHEMA,
+    generate_test_cases_handler,
+    register_tool as register_generate_test_cases,
+)
 
 __all__ = [
     "QUERY_KNOWLEDGE_HUB_NAME",
@@ -32,4 +39,9 @@ __all__ = [
     "RETRIEVE_TEST_CONTEXT_SCHEMA",
     "retrieve_test_context_handler",
     "register_retrieve_test_context",
+    "GENERATE_TEST_CASES_NAME",
+    "GENERATE_TEST_CASES_DESCRIPTION",
+    "GENERATE_TEST_CASES_SCHEMA",
+    "generate_test_cases_handler",
+    "register_generate_test_cases",
 ]
