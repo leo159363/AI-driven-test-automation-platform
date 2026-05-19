@@ -207,6 +207,10 @@ def _register_default_tools(protocol_handler: ProtocolHandler) -> None:
     from src.mcp_server.tools.get_document_summary import register_tool as register_summary_tool
     register_summary_tool(protocol_handler)
 
+    # Import and register retrieve_test_context tool
+    from src.mcp_server.tools.retrieve_test_context import register_tool as register_context_tool
+    register_context_tool(protocol_handler)
+
 
 def create_mcp_server(
     server_name: str,
@@ -236,7 +240,7 @@ def create_mcp_server(
         )
 
     # Register default tools if requested
-    if register_tools:
+    if register_tools and not protocol_handler.tools:
         _register_default_tools(protocol_handler)
 
     # Create low-level server

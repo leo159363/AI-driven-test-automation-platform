@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     pass
 
 
-SERVER_NAME = "ai-driven-test-automation-platform"
+SERVER_NAME = "qualitypilot"
 SERVER_VERSION = "0.1.0"
 
 

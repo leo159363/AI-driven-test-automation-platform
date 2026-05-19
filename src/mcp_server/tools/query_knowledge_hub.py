@@ -33,6 +33,18 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+SUPPORTED_SOURCE_TYPES = {
+    "requirement",
+    "api_doc",
+    "db_schema",
+    "test_case",
+    "bug",
+    "test_report",
+    "log",
+    "standard",
+}
+
+
 # Tool metadata
 TOOL_NAME = "query_knowledge_hub"
 TOOL_DESCRIPTION = """Search the knowledge base for relevant documents.
@@ -44,6 +56,7 @@ Parameters:
 - query: Your search question or keywords
 - top_k: Maximum number of results (default: 5)
 - collection: Limit search to a specific document collection
+- project/module/version/source_types: Optional metadata filters for test-development context
 """
 
 TOOL_INPUT_SCHEMA: Dict[str, Any] = {
@@ -64,6 +77,35 @@ TOOL_INPUT_SCHEMA: Dict[str, Any] = {
             "type": "string",
             "description": "Optional collection name to limit the search scope.",
         },
+        "project": {
+            "type": "string",
+            "description": "Optional project metadata filter.",
+        },
+        "module": {
+            "type": "string",
+            "description": "Optional module metadata filter.",
+        },
+        "version": {
+            "type": "string",
+            "description": "Optional version metadata filter.",
+        },
+        "source_types": {
+            "type": "array",
+            "description": "Optional source type filters for test context retrieval.",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "requirement",
+                    "api_doc",
+                    "db_schema",
+                    "test_case",
+                    "bug",
+                    "test_report",
+                    "log",
+                    "standard",
+                ],
+            },
+        },
     },
     "required": ["query"],
 }
@@ -81,7 +123,7 @@ class QueryKnowledgeHubConfig:
     """
     default_top_k: int = 5
     max_top_k: int = 20
-    default_collection: str = "default"
+    default_collection: str = "knowledge_hub"
     enable_rerank: bool = True
 
 
@@ -221,6 +263,10 @@ class QueryKnowledgeHubTool:
         query: str,
         top_k: Optional[int] = None,
         collection: Optional[str] = None,
+        project: Optional[str] = None,
+        module: Optional[str] = None,
+        version: Optional[str] = None,
+        source_types: Optional[List[str]] = None,
     ) -> MCPToolResponse:
         """Execute the query_knowledge_hub tool.
         
@@ -228,6 +274,10 @@ class QueryKnowledgeHubTool:
             query: Search query string.
             top_k: Maximum results to return.
             collection: Target collection name.
+            project: Optional project metadata filter.
+            module: Optional module metadata filter.
+            version: Optional version metadata filter.
+            source_types: Optional list of source_type metadata filters.
             
         Returns:
             MCPToolResponse with formatted content and citations.
@@ -245,16 +295,24 @@ class QueryKnowledgeHubTool:
             self.config.max_top_k
         )
         effective_collection = collection or self.config.default_collection
+        metadata_filters = self._build_metadata_filters(
+            project=project,
+            module=module,
+            version=version,
+            source_types=source_types,
+        )
         
         logger.info(
             f"Executing query_knowledge_hub: query='{query[:50]}...', "
-            f"top_k={effective_top_k}, collection={effective_collection}"
+            f"top_k={effective_top_k}, collection={effective_collection}, "
+            f"filters={metadata_filters}"
         )
         
         trace = TraceContext(trace_type="query")
         trace.metadata["query"] = query[:200]
         trace.metadata["top_k"] = effective_top_k
         trace.metadata["collection"] = effective_collection
+        trace.metadata["filters"] = metadata_filters
         trace.metadata["source"] = "mcp"
 
         try:
@@ -272,7 +330,7 @@ class QueryKnowledgeHubTool:
             
             # Perform hybrid search (blocking: embedding API + DB queries)
             results = await asyncio.to_thread(
-                self._perform_search, query, effective_top_k, trace,
+                self._perform_search, query, effective_top_k, metadata_filters, trace,
             )
             
             # Apply reranking if enabled (may call LLM API)
@@ -287,6 +345,12 @@ class QueryKnowledgeHubTool:
                 query=query,
                 collection=effective_collection,
             )
+            response.structured_content = self._build_structured_payload(
+                query=query,
+                results=results,
+                collection=effective_collection,
+                filters=metadata_filters,
+            )
             
             # Store final results in trace for dashboard display
             trace.metadata["final_results"] = [
@@ -295,6 +359,8 @@ class QueryKnowledgeHubTool:
                     "score": round(r.score, 4),
                     "text": r.text or "",
                     "source": r.metadata.get("source_path", r.metadata.get("source", "")),
+                    "source_id": r.metadata.get("source_id", r.metadata.get("source_ref", "")),
+                    "source_type": r.metadata.get("source_type", ""),
                     "title": r.metadata.get("title", ""),
                 }
                 for r in results
@@ -318,6 +384,7 @@ class QueryKnowledgeHubTool:
         self,
         query: str,
         top_k: int,
+        filters: Optional[Dict[str, Any]],
         trace: Optional[Any] = None,
     ) -> List[RetrievalResult]:
         """Perform hybrid search.
@@ -340,7 +407,7 @@ class QueryKnowledgeHubTool:
             results = self._hybrid_search.search(
                 query=query,
                 top_k=initial_top_k,
-                filters=None,
+                filters=filters,
                 trace=trace,
                 return_details=False,
             )
@@ -387,6 +454,71 @@ class QueryKnowledgeHubTool:
         except Exception as e:
             logger.warning(f"Reranking failed, using original order: {e}")
             return results[:top_k]
+
+    def _build_metadata_filters(
+        self,
+        project: Optional[str] = None,
+        module: Optional[str] = None,
+        version: Optional[str] = None,
+        source_types: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Build metadata filters for test-development RAG context."""
+        filters: Dict[str, Any] = {}
+        if project:
+            filters["project"] = project
+        if module:
+            filters["module"] = module
+        if version:
+            filters["version"] = version
+
+        normalized_source_types = self._normalize_source_types(source_types)
+        if normalized_source_types:
+            filters["source_type"] = normalized_source_types
+        return filters
+
+    def _normalize_source_types(self, source_types: Optional[List[str]]) -> List[str]:
+        """Keep only supported source_type values."""
+        if not source_types:
+            return []
+
+        normalized: List[str] = []
+        for source_type in source_types:
+            if not isinstance(source_type, str):
+                continue
+            value = source_type.strip().lower()
+            if value in SUPPORTED_SOURCE_TYPES and value not in normalized:
+                normalized.append(value)
+        return normalized
+
+    def _build_structured_payload(
+        self,
+        query: str,
+        results: List[RetrievalResult],
+        collection: str,
+        filters: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Build structured JSON payload for MCP clients."""
+        contexts = []
+        for result in results:
+            metadata = result.metadata or {}
+            contexts.append(
+                {
+                    "chunk_id": result.chunk_id,
+                    "source_id": metadata.get("source_id", metadata.get("source_ref", "")),
+                    "source_type": metadata.get("source_type", "standard"),
+                    "title": metadata.get("title", ""),
+                    "content": result.text,
+                    "score": round(float(result.score), 4),
+                    "metadata": metadata,
+                }
+            )
+
+        return {
+            "query": query,
+            "collection": collection,
+            "filters": filters,
+            "contexts": contexts,
+        }
     
     def _build_error_response(
         self,
@@ -421,6 +553,12 @@ class QueryKnowledgeHubTool:
                 "collection": collection,
                 "error": error_message,
             },
+            structured_content={
+                "query": query,
+                "collection": collection,
+                "contexts": [],
+                "error": error_message,
+            },
             is_empty=True,
         )
 
@@ -448,6 +586,10 @@ async def query_knowledge_hub_handler(
     query: str,
     top_k: int = 5,
     collection: Optional[str] = None,
+    project: Optional[str] = None,
+    module: Optional[str] = None,
+    version: Optional[str] = None,
+    source_types: Optional[List[str]] = None,
 ) -> types.CallToolResult:
     """Handler function for MCP tool registration.
     
@@ -461,6 +603,10 @@ async def query_knowledge_hub_handler(
         query: Search query string.
         top_k: Maximum number of results.
         collection: Optional collection name.
+        project: Optional project metadata filter.
+        module: Optional module metadata filter.
+        version: Optional version metadata filter.
+        source_types: Optional source_type filters.
         
     Returns:
         MCP CallToolResult with content blocks (text and optionally images).
@@ -472,6 +618,10 @@ async def query_knowledge_hub_handler(
             query=query,
             top_k=top_k,
             collection=collection,
+            project=project,
+            module=module,
+            version=version,
+            source_types=source_types,
         )
         
         # Use to_mcp_content() which handles multimodal (text + images)

@@ -31,6 +31,18 @@ if TYPE_CHECKING:
     from src.core.settings import Settings
 
 
+SUPPORTED_TEST_SOURCE_TYPES = {
+    "requirement",
+    "api_doc",
+    "db_schema",
+    "test_case",
+    "bug",
+    "test_report",
+    "log",
+    "standard",
+}
+
+
 class DocumentChunker:
     """Converts Documents into Chunks with business-level enrichment.
     
@@ -219,6 +231,13 @@ class DocumentChunker:
         # Add chunk-specific fields
         chunk_metadata["chunk_index"] = chunk_index
         chunk_metadata["source_ref"] = document.id
+        chunk_metadata.setdefault("project", "default")
+        chunk_metadata.setdefault("module", "general")
+        chunk_metadata.setdefault("version", "unversioned")
+        chunk_metadata["source_type"] = self._normalize_source_type(
+            chunk_metadata.get("source_type")
+        )
+        chunk_metadata.setdefault("source_id", document.id)
         
         # Extract image_refs from chunk text by finding [IMAGE: xxx] placeholders
         image_refs = []
@@ -247,3 +266,11 @@ class DocumentChunker:
             chunk_metadata["page_num"] = chunk_images[0].get("page")
         
         return chunk_metadata
+
+    def _normalize_source_type(self, source_type: object) -> str:
+        """Normalize document source type for test-development RAG filtering."""
+        if isinstance(source_type, str):
+            normalized = source_type.strip().lower()
+            if normalized in SUPPORTED_TEST_SOURCE_TYPES:
+                return normalized
+        return "standard"

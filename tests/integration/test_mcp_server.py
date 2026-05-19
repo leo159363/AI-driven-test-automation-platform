@@ -191,14 +191,16 @@ def test_mcp_server_tools_list_stdio() -> None:
     assert tools_response["id"] == 2
     assert "result" in tools_response
     assert "tools" in tools_response["result"]
-    # Should have at least query_knowledge_hub and list_collections tools registered
+    # Should have core knowledge and test-context tools registered
     assert isinstance(tools_response["result"]["tools"], list)
-    assert len(tools_response["result"]["tools"]) >= 2
+    assert len(tools_response["result"]["tools"]) >= 4
     
     # Verify registered tools are present
     tool_names = [t["name"] for t in tools_response["result"]["tools"]]
     assert "query_knowledge_hub" in tool_names
     assert "list_collections" in tool_names
+    assert "get_document_summary" in tool_names
+    assert "retrieve_test_context" in tool_names
 
 
 # =============================================================================

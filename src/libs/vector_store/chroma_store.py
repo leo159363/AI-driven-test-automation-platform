@@ -420,18 +420,22 @@ class ChromaStore(BaseVectorStore):
             For simplicity, we currently support only exact equality matches.
             Future enhancement: support complex filters.
         """
-        # Simple implementation: exact equality matches only
-        # For complex filters (e.g., {'score': {'$gt': 0.5}}), extend this method
-        where = {}
+        clauses = []
         for key, value in filters.items():
             if isinstance(value, dict):
                 # Already in ChromaDB operator format (e.g., {'$eq': 'value'})
-                where[key] = value
+                clauses.append({key: value})
+            elif isinstance(value, (list, tuple, set)):
+                clauses.append({key: {"$in": list(value)}})
             else:
                 # Simple equality
-                where[key] = value
+                clauses.append({key: value})
         
-        return where
+        if not clauses:
+            return {}
+        if len(clauses) == 1:
+            return clauses[0]
+        return {"$and": clauses}
     
     def get_collection_stats(self) -> Dict[str, Any]:
         """Get statistics about the current collection.

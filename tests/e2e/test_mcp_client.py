@@ -168,7 +168,7 @@ class TestMCPClientE2E:
 
     @pytest.mark.e2e
     def test_initialize_and_tools_list(self, mcp_server: subprocess.Popen) -> None:
-        """Server responds to initialize and tools/list with all 3 registered tools."""
+        """Server responds to initialize and tools/list with registered tools."""
         messages = [
             INIT_REQUEST,
             INITIALIZED_NOTIFICATION,
@@ -201,6 +201,7 @@ class TestMCPClientE2E:
         assert "query_knowledge_hub" in tool_names
         assert "list_collections" in tool_names
         assert "get_document_summary" in tool_names
+        assert "retrieve_test_context" in tool_names
 
         # Each tool must declare a valid inputSchema
         for tool in tools:

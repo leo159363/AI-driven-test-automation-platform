@@ -187,6 +187,47 @@ def test_metadata_with_empty_document_metadata(chunker):
     assert chunks[0].metadata["source_path"] == "minimal.txt"
 
 
+def test_test_context_metadata_defaults_are_added(chunker):
+    """Test-development metadata should be present even with minimal documents."""
+    doc = Document(
+        id="doc_minimal",
+        text="Paragraph 1.",
+        metadata={"source_path": "minimal.txt"},
+    )
+
+    chunk = chunker.split_document(doc)[0]
+
+    assert chunk.metadata["project"] == "default"
+    assert chunk.metadata["module"] == "general"
+    assert chunk.metadata["version"] == "unversioned"
+    assert chunk.metadata["source_type"] == "standard"
+    assert chunk.metadata["source_id"] == "doc_minimal"
+
+
+def test_test_context_metadata_is_preserved(chunker):
+    """Explicit project/module/version/source metadata should survive chunking."""
+    doc = Document(
+        id="auth-api-v1",
+        text="Login API returns 401 for wrong password.",
+        metadata={
+            "source_path": "auth-api.md",
+            "project": "qualitypilot-demo",
+            "module": "auth",
+            "version": "v1",
+            "source_type": "api_doc",
+            "source_id": "auth-api-v1",
+        },
+    )
+
+    chunk = chunker.split_document(doc)[0]
+
+    assert chunk.metadata["project"] == "qualitypilot-demo"
+    assert chunk.metadata["module"] == "auth"
+    assert chunk.metadata["version"] == "v1"
+    assert chunk.metadata["source_type"] == "api_doc"
+    assert chunk.metadata["source_id"] == "auth-api-v1"
+
+
 # =============================================================================
 # Test 3: chunk_index - Sequential Position Tracking
 # =============================================================================

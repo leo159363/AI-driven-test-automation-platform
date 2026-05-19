@@ -32,6 +32,7 @@ class MCPToolResponse:
     content: str
     citations: List[Citation] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    structured_content: Dict[str, Any] = field(default_factory=dict)
     is_empty: bool = False
     image_contents: List[types.ImageContent] = field(default_factory=list)
     
@@ -43,11 +44,7 @@ class MCPToolResponse:
         """
         return {
             "content": self.content,
-            "structuredContent": {
-                "citations": [c.to_dict() for c in self.citations],
-                "metadata": self.metadata,
-                "isEmpty": self.is_empty,
-            }
+            "structuredContent": self._build_structured_payload(),
         }
     
     def to_mcp_content(self) -> List[Union[types.TextContent, types.ImageContent]]:
@@ -69,22 +66,30 @@ class MCPToolResponse:
             blocks.extend(self.image_contents)
         
         # Add structured data as a separate text block (JSON format)
-        if self.citations or self.metadata:
+        if self.citations or self.metadata or self.structured_content:
             import json
-            structured = {
-                "citations": [c.to_dict() for c in self.citations],
-                "metadata": self.metadata,
-                "has_images": len(self.image_contents) > 0,
-                "image_count": len(self.image_contents),
-            }
+            structured = self._build_structured_payload()
+            structured["has_images"] = len(self.image_contents) > 0
+            structured["image_count"] = len(self.image_contents)
             blocks.append(
                 types.TextContent(
                     type="text",
-                    text=f"\n---\n**References (JSON):**\n```json\n{json.dumps(structured, ensure_ascii=False, indent=2)}\n```",
+                    text=f"\n---\n**Structured Result (JSON):**\n```json\n{json.dumps(structured, ensure_ascii=False, indent=2)}\n```",
                 )
             )
         
         return blocks
+
+    def _build_structured_payload(self) -> Dict[str, Any]:
+        """Build machine-readable payload while preserving existing fields."""
+        payload: Dict[str, Any] = {
+            "citations": [c.to_dict() for c in self.citations],
+            "metadata": self.metadata,
+            "isEmpty": self.is_empty,
+        }
+        if self.structured_content:
+            payload.update(self.structured_content)
+        return payload
     
     @property
     def has_images(self) -> bool:

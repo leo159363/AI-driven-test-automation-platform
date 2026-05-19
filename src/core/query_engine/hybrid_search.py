@@ -740,8 +740,14 @@ class HybridSearch:
                 if value not in source:
                     return False
             else:
-                # Generic exact match
-                if metadata.get(key) != value:
+                meta_value = metadata.get(key)
+                if isinstance(value, dict) and "$in" in value:
+                    if meta_value not in value["$in"]:
+                        return False
+                elif isinstance(value, (list, tuple, set)):
+                    if meta_value not in value:
+                        return False
+                elif meta_value != value:
                     return False
         
         return True
