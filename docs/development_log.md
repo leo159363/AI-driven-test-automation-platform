@@ -367,3 +367,28 @@ Verification:
 - Run focused review-service, dashboard import, and page smoke tests.
 - Re-run full staged regression before commit.
 - Result: `85 passed`.
+
+## Stage 18 - Traceability Matrix
+
+Commit goal: add a requirements-to-test-to-execution matrix so the platform can explain coverage and gaps instead of only showing isolated drafts or execution records.
+
+Scope:
+- Add a traceability service that extracts requirement items and Markdown test points.
+- Preserve test dimensions when extracting generated test points.
+- Link requirements to matching test points through deterministic keyword overlap.
+- Link requirements to built-in automation scenarios such as API login, API file upload, and UI login smoke.
+- Use execution history records to show the latest status for matched automation scenarios.
+- Add a Traceability Matrix dashboard page with metrics, rows, details, and JSON output.
+- Add unit tests, dashboard import tests, and smoke coverage.
+- Add traceability and test-design review tests to GitHub Actions CI.
+
+Out of scope:
+- Full test-case management with owners, priorities, manual approval, or baseline versions.
+- Database-backed traceability storage.
+- LLM-based semantic matching.
+- CSV or Markdown export.
+
+Verification:
+- Run focused traceability-service, dashboard import, and page smoke tests.
+- Re-run full staged regression before commit.
+- Result: `91 passed`.

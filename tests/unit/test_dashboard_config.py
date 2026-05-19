@@ -161,6 +161,10 @@ class TestDashboardImports:
         from src.observability.dashboard.pages import test_design_review
         assert hasattr(test_design_review, "render")
 
+    def test_traceability_matrix_importable(self) -> None:
+        from src.observability.dashboard.pages import traceability_matrix
+        assert hasattr(traceability_matrix, "render")
+
     def test_app_file_exists(self) -> None:
         app_path = Path("src/observability/dashboard/app.py")
         assert app_path.exists()

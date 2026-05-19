@@ -176,6 +176,19 @@
 - [x] Re-run the staged regression suite.
 - [x] Commit with Stage 17 explanation.
 
+## Stage 18: Traceability Matrix
+
+- [x] Add a traceability service for requirement, test-point, automation, and execution-status linkage.
+- [x] Extract requirement items from lines, bullets, and short sentence separators.
+- [x] Extract Markdown test points while preserving testing dimensions.
+- [x] Link requirements to built-in automation scenarios through deterministic keyword overlap.
+- [x] Use execution history to show latest matched scenario status.
+- [x] Add a Traceability Matrix dashboard page.
+- [x] Register the page in Streamlit navigation.
+- [x] Add unit tests and dashboard smoke coverage.
+- [x] Include traceability and test-design review tests in CI.
+- [x] Commit with Stage 18 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.

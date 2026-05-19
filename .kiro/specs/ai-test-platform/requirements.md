@@ -164,3 +164,18 @@
 5. The workflow SHALL generate execution-plan dry-run report artifacts under `reports/`.
 6. The workflow SHALL upload `reports/` as a CI artifact even when tests fail.
 7. The workflow SHALL NOT require plaintext secrets for the default regression path.
+
+### Requirement 12: Traceability Matrix
+
+**User Story:** As a test-development engineer, I want to trace each requirement item to generated test points, automation scenarios, and latest execution status, so I can explain coverage and gaps during review or interviews.
+
+#### Acceptance Criteria
+
+1. The dashboard SHALL provide a traceability matrix page.
+2. The traceability service SHALL extract requirement items from lines, bullets, or short sentence separators.
+3. The traceability service SHALL extract test points from the generated Markdown test-design section and preserve testing dimensions.
+4. The matrix SHALL link requirements to matching test points through deterministic keyword overlap.
+5. The matrix SHALL link requirements to built-in automation scenarios where domain keywords match.
+6. The matrix SHALL use execution history records to show the latest status for matched automation scenarios.
+7. The matrix SHALL surface gaps such as missing test design, missing automation, automation not run, dry-run only, and latest execution failed.
+8. The matrix SHALL provide table-friendly rows and JSON output for interview demos and later export.

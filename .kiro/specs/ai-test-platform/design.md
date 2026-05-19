@@ -384,6 +384,29 @@ Current stage behavior:
 - CI writes a workflow artifact history file under `reports/execution-history.jsonl`.
 - The history page derives quality trends from saved records: daily status counts, pass/failure/dry-run rates, adapter distribution, and top failure reasons.
 
+### 14. Traceability Matrix
+
+New files:
+
+- `src/observability/dashboard/services/traceability_service.py`
+- `src/observability/dashboard/pages/traceability_matrix.py`
+
+Responsibilities:
+
+- Extract requirement items from line-based or sentence-based user input.
+- Extract bullet test points from the generated Markdown `测试点` section while preserving dimensions such as 功能, 边界, 异常, 安全, 回归, 性能, 界面, 兼容, 易用, 弱网, and 并发.
+- Link requirements to test points through deterministic keyword overlap.
+- Link requirements to built-in automation scenarios through domain keywords and scenario metadata.
+- Use execution history records to show the latest status for matched scenarios.
+- Surface coverage gaps such as missing test design, missing automation, automation not run, dry-run only, or latest execution failed.
+
+Current stage behavior:
+
+- The page can reuse `tw_requirement` and `tw_draft` from the Test Workbench session state.
+- If no workbench data exists, the page provides a login/API sample so it can still be demonstrated.
+- The matrix displays requirement count, test-design coverage rate, automation-link rate, passed-execution rate, table rows, details, and JSON output.
+- The implementation is deterministic and local; it does not depend on external LLM calls.
+
 ## Data Models
 
 ### KnowledgeHit
@@ -502,6 +525,18 @@ class ExecutionResult:
     artifacts: dict[str, str]
 ```
 
+### TraceabilityReport
+
+```python
+@dataclass
+class TraceabilityReport:
+    requirement_count: int
+    covered_requirement_count: int
+    automated_requirement_count: int
+    passed_requirement_count: int
+    rows: list[TraceabilityRow]
+```
+
 ## Error Handling
 
 - Empty requirement: generate from scenario template.
@@ -519,8 +554,10 @@ class ExecutionResult:
   - Dashboard config service import and workbench page import.
 - `tests/unit/test_test_design_review_service.py`
   - Deterministic test-design review checks for covered dimensions, vague wording, untestable assertions, and empty drafts.
+- `tests/unit/test_traceability_service.py`
+  - Requirement extraction, test-point extraction, execution-history linkage, and gap detection.
 - `tests/e2e/test_dashboard_smoke.py`
-  - Streamlit page smoke rendering, including Test Workbench and Test Design Review.
+  - Streamlit page smoke rendering, including Test Workbench, Test Design Review, and Traceability Matrix.
 - `tests/e2e/test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list`
   - MCP server still initializes and lists tools after project rename.
 
@@ -552,3 +589,4 @@ class ExecutionResult:
 - Stage 15: add execution history and test task records.
 - Stage 16: add execution quality trends and failure reason analysis.
 - Stage 17: add test-design review checks and interview testing answer documentation.
+- Stage 18: add requirements-to-test-to-execution traceability matrix.

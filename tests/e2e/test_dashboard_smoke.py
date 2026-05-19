@@ -298,7 +298,29 @@ class TestDashboardSmoke:
         assert "review" in text.lower() or "risk" in text.lower()
 
     # ------------------------------------------------------------------
-    # 10. Ingestion Manager page
+    # 10. Traceability Matrix page
+    # ------------------------------------------------------------------
+
+    @pytest.mark.e2e
+    def test_traceability_matrix_page_renders(self) -> None:
+        """Traceability Matrix page loads without errors."""
+        from streamlit.testing.v1 import AppTest
+
+        def page_script():
+            from src.observability.dashboard.pages.traceability_matrix import render
+            render()
+
+        at = AppTest.from_function(page_script, default_timeout=10)
+        at.run()
+
+        assert not at.exception, (
+            f"Traceability Matrix page raised an exception: {at.exception}"
+        )
+        text = _collect_text(at)
+        assert "traceability" in text.lower() or "matrix" in text.lower()
+
+    # ------------------------------------------------------------------
+    # 11. Ingestion Manager page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -326,7 +348,7 @@ class TestDashboardSmoke:
         )
 
     # ------------------------------------------------------------------
-    # 11. Ingestion Traces page
+    # 12. Ingestion Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -356,7 +378,7 @@ class TestDashboardSmoke:
         assert "trace" in text.lower() or "ingestion" in text.lower()
 
     # ------------------------------------------------------------------
-    # 12. Query Traces page
+    # 13. Query Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -386,7 +408,7 @@ class TestDashboardSmoke:
         assert "query" in text.lower() or "trace" in text.lower()
 
     # ------------------------------------------------------------------
-    # 13. Evaluation Panel page
+    # 14. Evaluation Panel page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
