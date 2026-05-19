@@ -156,3 +156,76 @@ def summarize_execution_history(records: Iterable[ExecutionHistoryRecord]) -> Di
         "failed": sum(1 for record in snapshot if record.status == "failed"),
         "dry_run": sum(1 for record in snapshot if record.status == "dry_run"),
     }
+
+
+def build_execution_quality_trends(
+    records: Iterable[ExecutionHistoryRecord],
+) -> Dict[str, Any]:
+    """Build chart-friendly quality trends from execution history."""
+    snapshot = sorted(list(records), key=lambda record: _parse_created_at(record.created_at))
+    daily: Dict[str, Dict[str, Any]] = {}
+    status_counts: Dict[str, int] = {}
+    adapter_counts: Dict[str, int] = {}
+    failure_reasons: Dict[str, int] = {}
+
+    for record in snapshot:
+        day = _parse_created_at(record.created_at).date().isoformat()
+        bucket = daily.setdefault(
+            day,
+            {
+                "date": day,
+                "total": 0,
+                "passed": 0,
+                "failed": 0,
+                "dry_run": 0,
+                "skipped": 0,
+                "pass_rate": 0.0,
+            },
+        )
+        bucket["total"] += 1
+        bucket[record.status] = int(bucket.get(record.status, 0)) + 1
+        status_counts[record.status] = status_counts.get(record.status, 0) + 1
+        adapter_counts[record.adapter] = adapter_counts.get(record.adapter, 0) + 1
+        if record.failure_reason:
+            failure_reasons[record.failure_reason] = failure_reasons.get(record.failure_reason, 0) + 1
+
+    daily_rows = list(daily.values())
+    for row in daily_rows:
+        total = int(row["total"])
+        row["pass_rate"] = round(int(row.get("passed", 0)) / total, 4) if total else 0.0
+
+    total_records = len(snapshot)
+    passed_records = status_counts.get("passed", 0)
+    failed_records = status_counts.get("failed", 0)
+    dry_run_records = status_counts.get("dry_run", 0)
+
+    return {
+        "daily_rows": daily_rows,
+        "status_rows": _count_rows(status_counts, "status"),
+        "adapter_rows": _count_rows(adapter_counts, "adapter"),
+        "failure_rows": _count_rows(failure_reasons, "failure_reason"),
+        "total": total_records,
+        "pass_rate": round(passed_records / total_records, 4) if total_records else 0.0,
+        "failure_rate": round(failed_records / total_records, 4) if total_records else 0.0,
+        "dry_run_rate": round(dry_run_records / total_records, 4) if total_records else 0.0,
+    }
+
+
+def _count_rows(counts: Mapping[str, int], label_key: str) -> List[Dict[str, Any]]:
+    return [
+        {label_key: key or "unknown", "count": value}
+        for key, value in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    ]
+
+
+def _parse_created_at(value: str) -> datetime:
+    if not value:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    normalized = value.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed

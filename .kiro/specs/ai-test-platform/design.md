@@ -367,6 +367,7 @@ Current stage behavior:
 - History writes are explicit, not automatic.
 - Generated history stays ignored by default because `data/` is ignored.
 - CI writes a workflow artifact history file under `reports/execution-history.jsonl`.
+- The history page derives quality trends from saved records: daily status counts, pass/failure/dry-run rates, adapter distribution, and top failure reasons.
 
 ## Data Models
 
@@ -520,3 +521,4 @@ class ExecutionResult:
 - Stage 13: add Browser UI execution adapter and Allure result export.
 - Stage 14: add GitHub Actions CI and report artifact upload.
 - Stage 15: add execution history and test task records.
+- Stage 16: add execution quality trends and failure reason analysis.

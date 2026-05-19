@@ -9,7 +9,9 @@ from src.observability.dashboard.services.browser_execution_adapter import (
 )
 from src.observability.dashboard.services.execution_history_service import (
     append_execution_history_record,
+    build_execution_quality_trends,
     build_execution_history_record,
+    ExecutionHistoryRecord,
     load_execution_history_records,
     summarize_execution_history,
 )
@@ -74,3 +76,69 @@ class TestExecutionHistoryService:
             "failed": 0,
             "dry_run": 1,
         }
+
+    def test_build_quality_trends(self) -> None:
+        records = [
+            ExecutionHistoryRecord(
+                record_id="1",
+                created_at="2026-05-19T01:00:00+00:00",
+                plan_name="API Login",
+                adapter="api_http",
+                status="passed",
+                base_url="http://127.0.0.1:8000",
+                dry_run=False,
+                total_steps=3,
+                passed_steps=3,
+                failed_steps=0,
+                skipped_steps=0,
+                dry_run_steps=0,
+                duration_ms=120.0,
+                scenario_id="api_login",
+            ),
+            ExecutionHistoryRecord(
+                record_id="2",
+                created_at="2026-05-19T02:00:00+00:00",
+                plan_name="UI Login",
+                adapter="ui_browser",
+                status="failed",
+                base_url="http://127.0.0.1:8000",
+                dry_run=False,
+                total_steps=5,
+                passed_steps=3,
+                failed_steps=1,
+                skipped_steps=1,
+                dry_run_steps=0,
+                duration_ms=200.0,
+                failure_reason="Button not found",
+                scenario_id="ui_login_smoke",
+            ),
+            ExecutionHistoryRecord(
+                record_id="3",
+                created_at="2026-05-20T01:00:00+00:00",
+                plan_name="UI Login Dry",
+                adapter="ui_browser",
+                status="dry_run",
+                base_url="http://127.0.0.1:8000",
+                dry_run=True,
+                total_steps=5,
+                passed_steps=0,
+                failed_steps=0,
+                skipped_steps=0,
+                dry_run_steps=5,
+                duration_ms=0.0,
+                scenario_id="ui_login_smoke",
+            ),
+        ]
+
+        trends = build_execution_quality_trends(records)
+
+        assert trends["total"] == 3
+        assert trends["pass_rate"] == 0.3333
+        assert trends["failure_rate"] == 0.3333
+        assert trends["dry_run_rate"] == 0.3333
+        assert trends["daily_rows"][0]["date"] == "2026-05-19"
+        assert trends["daily_rows"][0]["passed"] == 1
+        assert trends["daily_rows"][0]["failed"] == 1
+        assert trends["daily_rows"][1]["dry_run"] == 1
+        assert trends["adapter_rows"][0] == {"adapter": "ui_browser", "count": 2}
+        assert trends["failure_rows"][0] == {"failure_reason": "Button not found", "count": 1}

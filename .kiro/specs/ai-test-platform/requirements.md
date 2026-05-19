@@ -105,6 +105,7 @@
 10. The platform SHALL save execution history records when explicitly requested by the dashboard or CLI.
 11. Execution history records SHALL include scenario, adapter, status, step counts, failure reason, artifacts, and report paths.
 12. The dashboard SHALL provide an execution history page that lists recent saved records and aggregate status counts.
+13. The execution history page SHALL display quality trends including pass rate, failure rate, dry-run rate, daily status counts, adapter distribution, and top failure reasons.
 
 ### Requirement 8: Built-in Demo Automation Scenarios
 

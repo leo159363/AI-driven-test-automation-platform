@@ -323,3 +323,25 @@ Verification:
 - Re-run full staged regression before commit.
 - Result: `79 passed`.
 - Generated local history artifact: `data/execution_history/records.jsonl`.
+
+## Stage 16 - Execution Quality Trends
+
+Commit goal: turn saved execution history into a small quality dashboard that can show trend and failure analysis, not just raw records.
+
+Scope:
+- Add trend aggregation on top of execution history records.
+- Compute pass rate, failure rate, dry-run rate, daily status rows, adapter distribution, and top failure reasons.
+- Render trend metrics, a daily status line chart, status/adapter distribution tables, and failure reason rows in the Execution History page.
+- Add unit tests for trend aggregation.
+- Re-run dashboard smoke coverage for the Execution History page.
+
+Out of scope:
+- Long-term database storage.
+- Cross-run flaky-test detection.
+- CI duration trend ingestion from GitHub Actions API.
+- Test-design Golden Set trend charts.
+
+Verification:
+- Run execution history service tests, dashboard import tests, and Execution History page smoke test.
+- Re-run full staged regression before commit.
+- Result: `80 passed`.

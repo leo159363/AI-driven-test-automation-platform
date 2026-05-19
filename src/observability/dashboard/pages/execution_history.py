@@ -8,6 +8,7 @@ import streamlit as st
 
 from src.observability.dashboard.services import (
     DEFAULT_EXECUTION_HISTORY_PATH,
+    build_execution_quality_trends,
     load_execution_history_records,
     summarize_execution_history,
 )
@@ -58,6 +59,35 @@ def render() -> None:
     col2.metric("Passed", summary["passed"])
     col3.metric("Failed", summary["failed"])
     col4.metric("Dry-run", summary["dry_run"])
+
+    trends = build_execution_quality_trends(records)
+    trend_col1, trend_col2, trend_col3 = st.columns(3)
+    trend_col1.metric("Pass rate", f"{trends['pass_rate'] * 100:.1f}%")
+    trend_col2.metric("Failure rate", f"{trends['failure_rate'] * 100:.1f}%")
+    trend_col3.metric("Dry-run rate", f"{trends['dry_run_rate'] * 100:.1f}%")
+
+    st.subheader("Quality Trends")
+    if trends["daily_rows"]:
+        st.line_chart(
+            trends["daily_rows"],
+            x="date",
+            y=["passed", "failed", "dry_run"],
+            use_container_width=True,
+        )
+        st.dataframe(trends["daily_rows"], hide_index=True, use_container_width=True)
+
+    trend_left, trend_right = st.columns(2)
+    with trend_left:
+        st.markdown("Status distribution")
+        st.dataframe(trends["status_rows"], hide_index=True, use_container_width=True)
+        st.markdown("Adapter distribution")
+        st.dataframe(trends["adapter_rows"], hide_index=True, use_container_width=True)
+    with trend_right:
+        st.markdown("Top failure reasons")
+        if trends["failure_rows"]:
+            st.dataframe(trends["failure_rows"], hide_index=True, use_container_width=True)
+        else:
+            st.info("No failure reasons recorded.")
 
     st.subheader("Records")
     st.dataframe([record.to_row() for record in records], hide_index=True, use_container_width=True)

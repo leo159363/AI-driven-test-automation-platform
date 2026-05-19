@@ -153,6 +153,17 @@
 - [x] Add unit and dashboard smoke tests for history behavior.
 - [x] Commit with Stage 15 explanation.
 
+## Stage 16: Execution Quality Trends
+
+- [x] Add quality-trend aggregation for execution history records.
+- [x] Compute pass rate, failure rate, and dry-run rate.
+- [x] Compute daily status rows for trend charts.
+- [x] Compute adapter distribution and top failure reasons.
+- [x] Render trend metrics, chart, and distribution tables in the Execution History page.
+- [x] Add unit tests for trend aggregation.
+- [x] Re-run dashboard smoke coverage for the history page.
+- [x] Commit with Stage 16 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.
