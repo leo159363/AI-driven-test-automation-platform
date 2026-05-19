@@ -56,6 +56,7 @@ jobs:
             tests/unit/test_dashboard_config.py \
             tests/e2e/test_dashboard_smoke.py \
             tests/e2e/test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list \
+            tests/e2e/test_mcp_qualitypilot_workflow.py \
             -v \
             --junitxml=reports/ci-junit.xml
 
