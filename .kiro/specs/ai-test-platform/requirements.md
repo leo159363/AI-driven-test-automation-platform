@@ -100,6 +100,8 @@
 5. The reporting page SHALL NOT claim to execute tests by itself before an execution adapter is implemented.
 6. The platform SHALL convert execution adapter results into JUnit XML when explicitly requested.
 7. The test reports page SHALL discover execution-plan JUnit XML outputs from the default report directory.
+8. The platform SHALL convert execution adapter results into minimal Allure results when explicitly requested.
+9. The test reports page SHALL discover execution-plan Allure result outputs from the default report directory.
 
 ### Requirement 8: Built-in Demo Automation Scenarios
 
@@ -128,6 +130,9 @@
 7. WHEN API execution is enabled THEN the adapter SHALL send supported API requests to a user-provided base URL and capture HTTP status and response preview.
 8. Execution results SHALL include status, step logs, artifacts field, and failure reason where available.
 9. Future browser execution results SHOULD include screenshots or equivalent UI artifacts.
+10. The browser adapter SHALL support UI execution-plan dry-run without requiring Playwright to be installed.
+11. WHEN Playwright is available THEN the browser adapter SHOULD execute supported open, input, click, submit, upload, wait, and assert-text UI actions.
+12. WHEN a browser step fails THEN the browser adapter SHOULD capture a failure screenshot artifact where possible.
 
 ### Requirement 10: Safety and Repository Hygiene
 

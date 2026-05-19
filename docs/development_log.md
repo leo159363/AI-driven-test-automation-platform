@@ -240,3 +240,30 @@ Verification:
 - Run dashboard import tests and the new page smoke test.
 - Re-run full staged regression before commit.
 - Result: `68 passed`.
+
+## Stage 13 - Browser UI Adapter and Allure Export
+
+Commit goal: extend natural-language execution plans from API-only execution to UI browser dry-run/optional Playwright execution, and add Allure-compatible result export.
+
+Scope:
+- Add a Browser UI execution adapter that supports `open`, `input`, `click`, `submit`, `upload`, `wait`, and `assert_text` steps.
+- Keep browser dry-run deterministic and available without installing Playwright.
+- Keep real Playwright execution optional through the `browser` extra.
+- Capture failure screenshots as execution artifacts where possible.
+- Connect UI plans in the execution planner page to the browser adapter.
+- Extend `scripts/run_execution_plan.py` with adapter selection, UI dry-run, screenshot directory, and optional Allure results output.
+- Add minimal Allure result JSON writing for execution adapter results.
+- Add execution-plan Allure result discovery to the report center.
+- Add unit tests for browser adapter execution, failure artifacts, Allure output, and CLI UI dry-run.
+
+Out of scope:
+- Installing Playwright browsers automatically.
+- Building a full Allure HTML server or report generator inside the dashboard.
+- Supporting every browser interaction type such as drag-and-drop, iframe switching, or visual assertions.
+
+Verification:
+- Run browser adapter, execution-result report writer, execution-plan CLI, and execution-plan parser tests.
+- Run the execution-plan CLI for UI dry-run and write JUnit XML plus Allure results.
+- Re-run full staged regression before commit.
+- Result: `73 passed`.
+- Generated local report artifacts: `reports/execution-plan-junit.xml` and `reports/execution-plan-allure-results/`.

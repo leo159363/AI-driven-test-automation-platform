@@ -9,7 +9,7 @@
   -> 测试设计质量评估
   -> 自动化场景执行
   -> JUnit / Allure 报告查看
-  -> 自然语言执行计划与 API 执行适配
+  -> 自然语言执行计划与 API / UI 执行适配
 ```
 
 这个项目不是完整的企业级 TestOps SaaS，而是一个适合面试讲解的工程化闭环：能说明测试设计、RAG 检索、自动化执行、报告分析、质量评估和 MCP 工具化扩展如何组合在一起。
@@ -24,14 +24,15 @@
 | 自动化场景 | 内置 API 登录、API 文件上传、UI 登录冒烟场景，可生成 JUnit XML，并兼容 Allure 结果目录 | `scripts/run_automation_suite.py` |
 | 测试报告中心 | 解析 pytest JUnit XML，发现 Allure 结果目录和 HTML 报告目录 | `src/observability/dashboard/pages/test_reports.py` |
 | 执行计划 | 将自然语言步骤解析为结构化执行计划，识别 API 与 UI 计划 | `src/observability/dashboard/services/execution_plan_service.py` |
-| API 执行适配器 | 支持 API 计划 dry-run 和真实 HTTP 执行，返回步骤状态、日志、失败原因、响应预览，并可导出 JUnit XML | `src/observability/dashboard/services/api_execution_adapter.py` |
+| API 执行适配器 | 支持 API 计划 dry-run 和真实 HTTP 执行，返回步骤状态、日志、失败原因、响应预览，并可导出 JUnit XML / Allure results | `src/observability/dashboard/services/api_execution_adapter.py` |
+| Browser UI 执行适配器 | 支持 UI 计划 dry-run、可选 Playwright 真执行、失败截图和统一报告导出 | `src/observability/dashboard/services/browser_execution_adapter.py` |
 | RAG / MCP 基座 | 保留文档入库、Hybrid Search、MCP tools、摄取追踪、查询追踪和评估面板 | `src/` |
 
 ## 技术栈
 
 - Python 3.10+
 - Streamlit Dashboard
-- pytest / JUnit XML / optional Allure
+- pytest / JUnit XML / optional Allure / optional Playwright
 - RAG ingestion pipeline
 - Dense retrieval + BM25 sparse retrieval + RRF fusion + optional rerank
 - ChromaDB vector store
@@ -59,7 +60,7 @@ python -m venv .venv
 
 1. `测试工作台`：输入一段需求，生成测试点草稿。
 2. `自动化场景`：查看内置 API / UI 自动化示例。
-3. `执行计划`：选择 API 登录场景，生成自然语言步骤对应的执行计划，可开启 dry-run。
+3. `执行计划`：选择 API 登录或 UI 登录场景，生成自然语言步骤对应的执行计划，可开启 dry-run。
 4. `测试报告`：查看 JUnit XML 和 Allure 目录状态。
 5. `测试设计评估`：运行 Golden Test Set，展示测试点生成质量指标。
 6. `评估中心`：说明已有 RAG 评估入口。
@@ -89,21 +90,29 @@ python -m venv .venv
 
 `data/` 已在 `.gitignore` 中忽略，生成报告默认不会进入 Git 提交。
 
-### 5. 运行执行计划并生成 JUnit XML
+### 5. 运行执行计划并生成 JUnit XML / Allure Results
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario api_login --dry-run --junitxml reports\execution-plan-junit.xml
+.\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario ui_login_smoke --adapter browser --dry-run --junitxml reports\execution-plan-junit.xml --allure-results reports\execution-plan-allure-results
 ```
 
 生成后可以在 Dashboard 的 `测试报告` 页面查看该 JUnit XML 汇总。
 
+Browser UI 真执行需要额外安装 Playwright 浏览器依赖；dry-run 不需要：
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[browser]"
+.\.venv\Scripts\python.exe -m playwright install chromium
+```
+
 ### 6. 运行核心回归测试
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests\unit\test_test_design_evaluation_service.py tests\unit\test_test_design_service.py tests\unit\test_api_execution_adapter.py tests\unit\test_execution_plan_service.py tests\automation tests\unit\test_automation_scenario_service.py tests\unit\test_test_report_service.py tests\unit\test_dashboard_config.py tests\e2e\test_dashboard_smoke.py tests\e2e\test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list -v
+.\.venv\Scripts\python.exe -m pytest tests\unit\test_browser_execution_adapter.py tests\unit\test_execution_result_report_service.py tests\unit\test_run_execution_plan_script.py tests\unit\test_test_design_evaluation_service.py tests\unit\test_test_design_service.py tests\unit\test_api_execution_adapter.py tests\unit\test_execution_plan_service.py tests\automation tests\unit\test_automation_scenario_service.py tests\unit\test_test_report_service.py tests\unit\test_dashboard_config.py tests\e2e\test_dashboard_smoke.py tests\e2e\test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list -v
 ```
 
-最近一次阶段回归结果：`63 passed`。
+最近一次阶段回归结果：`73 passed`。
 
 ## Spec 与阶段记录
 
@@ -130,12 +139,13 @@ python -m venv .venv
 | Stage 10 | 整理 README 和面试交付文档 |
 | Stage 11 | 增加执行结果 JUnit XML 导出 |
 | Stage 12 | 增加测试设计评估 Dashboard 页面 |
+| Stage 13 | 增加 Browser UI 执行适配器和 Allure 结果导出 |
 
 ## 面试讲法
 
 可以用下面这段作为 1 分钟介绍：
 
-> 我这个项目是一个面向测试开发场景的 AI 自动化测试平台。它不是只做一个页面 demo，而是把需求输入、RAG 知识检索、测试点生成、质量评估、自动化场景执行、测试报告展示和执行计划适配串成一个闭环。核心思路是：测试人员输入需求或接口说明后，系统结合需求文档、API 文档、缺陷记录、测试规范和执行日志生成结构化测试点；再用 Golden Test Set 评估生成质量；自动化侧内置 API 和 UI 场景，能输出 JUnit / Allure 兼容报告；最后通过自然语言执行计划和 API adapter 展示后续扩展到真实执行的路径。
+> 我这个项目是一个面向测试开发场景的 AI 自动化测试平台。它不是只做一个页面 demo，而是把需求输入、RAG 知识检索、测试点生成、质量评估、自动化场景执行、测试报告展示和执行计划适配串成一个闭环。核心思路是：测试人员输入需求或接口说明后，系统结合需求文档、API 文档、缺陷记录、测试规范和执行日志生成结构化测试点；再用 Golden Test Set 评估生成质量；自动化侧内置 API 和 UI 场景，能输出 JUnit / Allure 兼容报告；最后通过自然语言执行计划接入 API HTTP adapter 和 Browser UI adapter，展示从“生成计划”到“执行结果进报告中心”的路径。
 
 重点可以讲 5 个技术点：
 
@@ -143,7 +153,7 @@ python -m venv .venv
 2. **知识源分类**：把检索结果按需求、API、缺陷、规范、执行日志分类，便于测试人员判断依据来源。
 3. **质量评估闭环**：用 Golden Test Set 在 Dashboard 中展示覆盖率、引用质量和空输出，避免只凭感觉判断 AI 输出。
 4. **自动化与报告链路**：pytest 场景可稳定运行，并输出 JUnit XML，Dashboard 能展示报告状态。
-5. **执行适配器边界**：先实现 API HTTP adapter，保留浏览器 UI adapter 扩展点，避免把规划逻辑和执行逻辑耦合，并将执行结果导出为 JUnit XML 供报告中心复用。
+5. **执行适配器边界**：API HTTP adapter 和 Browser UI adapter 都复用同一套 ExecutionPlan / ExecutionResult 模型，避免把规划逻辑和执行逻辑耦合，并将执行结果导出为 JUnit XML / Allure results 供报告中心复用。
 
 更完整的面试讲解见 [docs/interview_guide.md](docs/interview_guide.md)。
 
@@ -155,8 +165,8 @@ python -m venv .venv
 
 ## 下一步可扩展方向
 
-- 增加 Playwright 浏览器执行适配器。
-- 将 API adapter 执行结果转成 JUnit XML 或 Allure result。
+- 接入 MCP browser 工具或真实业务测试站点，补齐更复杂 UI 操作。
+- 在 CI 中运行执行计划 dry-run、自动化场景和评估基线。
 - 给测试设计评估增加重复测试点、不可执行断言、风险覆盖等指标。
 - 给知识检索增加 source type 过滤器。
 - 增加 Docker / CI，使自动化场景和评估在 GitHub Actions 中运行。

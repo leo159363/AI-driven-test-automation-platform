@@ -116,7 +116,7 @@ def _parse_supported_step(index: int, line: str) -> ExecutionStep:
         )
 
     input_match = re.match(
-        r"^(?:输入|填写)\s+(.+?)(?:\s*(?:=|为|:)\s*|\s+)(.+)$",
+        r"^(?:输入|填写|input|fill)\s+(.+?)(?:\s*(?:=|为|:)\s*|\s+)(.+)$",
         stripped,
         re.IGNORECASE,
     )

@@ -7,11 +7,14 @@ import json
 import streamlit as st
 
 from src.observability.dashboard.services import (
+    DEFAULT_EXECUTION_PLAN_ALLURE_RESULTS_DIR,
     DEFAULT_EXECUTION_PLAN_JUNIT_PATH,
     build_execution_plan,
+    execute_plan_with_browser_adapter,
     execute_plan_with_api_adapter,
     get_execution_preset_steps,
     list_automation_scenarios,
+    write_execution_result_allure_results,
     write_execution_result_junit_xml,
 )
 
@@ -21,6 +24,46 @@ def _scenario_options() -> dict[str, str]:
     for scenario in list_automation_scenarios():
         options[scenario.scenario_id] = scenario.name
     return options
+
+
+def _render_execution_result(result, key_prefix: str) -> None:
+    result_col1, result_col2, result_col3, result_col4 = st.columns(4)
+    result_col1.metric("Status", result.status)
+    result_col2.metric("Passed", result.passed_steps)
+    result_col3.metric("Failed", result.failed_steps)
+    result_col4.metric("Skipped / Dry-run", result.skipped_steps + result.dry_run_steps)
+
+    if result.failure_reason:
+        st.error(result.failure_reason)
+
+    st.dataframe(result.to_rows(), hide_index=True, use_container_width=True)
+    st.code(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), language="json")
+
+    report_path = st.text_input(
+        "JUnit XML output path",
+        value=str(DEFAULT_EXECUTION_PLAN_JUNIT_PATH),
+        key=f"{key_prefix}_junit_path",
+        help="Saved reports can be viewed on the Test Reports page.",
+    )
+    if st.button("Save JUnit XML", key=f"{key_prefix}_save_junit"):
+        try:
+            written_path = write_execution_result_junit_xml(result, report_path)
+            st.success(f"Saved: {written_path}")
+        except Exception as exc:
+            st.error(f"Save failed: {exc}")
+
+    allure_dir = st.text_input(
+        "Allure results directory",
+        value=str(DEFAULT_EXECUTION_PLAN_ALLURE_RESULTS_DIR),
+        key=f"{key_prefix}_allure_dir",
+        help="Writes minimal Allure result JSON and attachments for the execution plan.",
+    )
+    if st.button("Save Allure Results", key=f"{key_prefix}_save_allure"):
+        try:
+            written_path = write_execution_result_allure_results(result, allure_dir)
+            st.success(f"Saved: {written_path}")
+        except Exception as exc:
+            st.error(f"Save failed: {exc}")
 
 
 def render() -> None:
@@ -116,31 +159,42 @@ def render() -> None:
 
         result = st.session_state.get("execution_plan_result")
         if result:
-            result_col1, result_col2, result_col3, result_col4 = st.columns(4)
-            result_col1.metric("状态", result.status)
-            result_col2.metric("通过", result.passed_steps)
-            result_col3.metric("失败", result.failed_steps)
-            result_col4.metric("跳过/预演", result.skipped_steps + result.dry_run_steps)
+            _render_execution_result(result, "ep_api")
+    elif plan.adapter == "ui_browser_preview":
+        st.subheader("Browser UI execution adapter")
+        ui_base_url = st.text_input(
+            "UI Base URL",
+            value="http://127.0.0.1:8000",
+            key="ep_ui_base_url",
+            help="Dry-run does not open the browser. Real execution requires optional Playwright setup.",
+        )
+        dry_run = st.checkbox(
+            "Dry run",
+            value=True,
+            key="ep_ui_dry_run",
+            help="Preview browser execution without launching Playwright.",
+        )
+        screenshot_dir = st.text_input(
+            "Failure screenshot directory",
+            value="reports/screenshots",
+            key="ep_ui_screenshot_dir",
+        )
 
-            if result.failure_reason:
-                st.error(result.failure_reason)
+        if st.button("Execute UI plan", key="ep_run_ui_plan"):
+            if not ui_base_url.strip():
+                st.error("UI Base URL cannot be empty.")
+            else:
+                st.session_state["execution_plan_result"] = execute_plan_with_browser_adapter(
+                    plan,
+                    ui_base_url,
+                    dry_run=dry_run,
+                    screenshot_dir=screenshot_dir,
+                )
 
-            st.dataframe(result.to_rows(), hide_index=True, use_container_width=True)
-            st.code(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), language="json")
-
-            report_path = st.text_input(
-                "JUnit XML 输出路径",
-                value=str(DEFAULT_EXECUTION_PLAN_JUNIT_PATH),
-                key="ep_junit_path",
-                help="保存后可到“测试报告”页面查看该执行计划报告。",
-            )
-            if st.button("保存 JUnit XML", key="ep_save_junit"):
-                try:
-                    written_path = write_execution_result_junit_xml(result, report_path)
-                    st.success(f"已保存：{written_path}")
-                except Exception as exc:
-                    st.error(f"保存失败：{exc}")
+        result = st.session_state.get("execution_plan_result")
+        if result:
+            _render_execution_result(result, "ep_ui")
     else:
-        st.info("当前阶段先支持 API 执行适配器；浏览器 UI 执行适配器放在后续阶段。")
+        st.info("当前计划类型暂未绑定可执行适配器。请使用 API 或 UI 预设步骤。")
 
-    st.caption("执行适配器现在支持 API 计划的 dry-run 和本地 HTTP 执行；浏览器执行会在后续阶段接入。")
+    st.caption("执行适配器现在支持 API HTTP 与 Browser UI 计划；UI 真执行需要可选 Playwright 环境，dry-run 可直接演示。")

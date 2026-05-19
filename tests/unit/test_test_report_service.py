@@ -63,6 +63,10 @@ class TestTestReportService:
         junit_report.parent.mkdir(parents=True)
         junit_report.write_text("<testsuite tests='1' />", encoding="utf-8")
 
+        execution_plan_allure = tmp_path / "reports" / "execution-plan-allure-results"
+        execution_plan_allure.mkdir(parents=True)
+        (execution_plan_allure / "plan-result.json").write_text("{}", encoding="utf-8")
+
         allure_results = tmp_path / "reports" / "allure-results"
         allure_results.mkdir(parents=True)
         (allure_results / "case-1-result.json").write_text("{}", encoding="utf-8")
@@ -83,6 +87,14 @@ class TestTestReportService:
         assert any(
             artifact.artifact_type == "allure_results"
             and artifact.exists
+            and artifact.path == execution_plan_allure
+            and artifact.detail == "1 result files"
+            for artifact in artifacts
+        )
+        assert any(
+            artifact.artifact_type == "allure_results"
+            and artifact.exists
+            and artifact.path == allure_results
             and artifact.detail == "2 result files"
             for artifact in artifacts
         )

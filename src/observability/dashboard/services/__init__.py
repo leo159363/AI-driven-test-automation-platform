@@ -13,6 +13,11 @@ from src.observability.dashboard.services.api_execution_adapter import (
     ExecutionStepResult,
     execute_plan_with_api_adapter,
 )
+from src.observability.dashboard.services.browser_execution_adapter import (
+    BrowserDependencyError,
+    BrowserExecutionAdapter,
+    execute_plan_with_browser_adapter,
+)
 from src.observability.dashboard.services.execution_plan_service import (
     ExecutionPlan,
     ExecutionStep,
@@ -20,7 +25,9 @@ from src.observability.dashboard.services.execution_plan_service import (
     get_execution_preset_steps,
 )
 from src.observability.dashboard.services.execution_result_report_service import (
+    DEFAULT_EXECUTION_PLAN_ALLURE_RESULTS_DIR,
     DEFAULT_EXECUTION_PLAN_JUNIT_PATH,
+    write_execution_result_allure_results,
     write_execution_result_junit_xml,
 )
 from src.observability.dashboard.services.test_design_service import (
@@ -64,6 +71,8 @@ from src.observability.dashboard.services.test_design_templates import (
 __all__ = [
     "AutomationScenario",
     "ApiExecutionAdapter",
+    "BrowserDependencyError",
+    "BrowserExecutionAdapter",
     "ExecutionPlan",
     "ExecutionResult",
     "ExecutionStep",
@@ -72,6 +81,7 @@ __all__ = [
     "KnowledgeHit",
     "build_execution_plan",
     "build_runner_command",
+    "execute_plan_with_browser_adapter",
     "execute_plan_with_api_adapter",
     "get_automation_scenario",
     "get_execution_preset_steps",
@@ -83,6 +93,7 @@ __all__ = [
     "SOURCE_TYPE_LABELS",
     "DEFAULT_TEST_DESIGN_GOLDEN_SET",
     "DEFAULT_TEST_DESIGN_REPORT_DIR",
+    "DEFAULT_EXECUTION_PLAN_ALLURE_RESULTS_DIR",
     "DEFAULT_EXECUTION_PLAN_JUNIT_PATH",
     "TestExecutionSummary",
     "TestDesignCaseResult",
@@ -104,6 +115,7 @@ __all__ = [
     "parse_junit_xml",
     "retrieve_knowledge_hits",
     "run_test_design_evaluation",
+    "write_execution_result_allure_results",
     "write_test_design_evaluation_report",
     "write_execution_result_junit_xml",
 ]

@@ -116,6 +116,19 @@
 - [x] Add import and smoke tests for the new page.
 - [x] Commit with Stage 12 explanation.
 
+## Stage 13: Browser UI Adapter and Allure Export
+
+- [x] Add a Browser UI execution adapter for UI-oriented execution plans.
+- [x] Support browser dry-run without requiring Playwright.
+- [x] Keep real Playwright execution behind an optional dependency.
+- [x] Capture failure screenshot artifacts where possible.
+- [x] Let the execution planner page run UI plans through the browser adapter.
+- [x] Extend the execution-plan CLI with adapter selection, UI dry-run, screenshot directory, and optional Allure results output.
+- [x] Convert execution adapter results into minimal Allure-compatible result JSON.
+- [x] Update the report center discovery list for execution-plan Allure results.
+- [x] Add focused unit tests for browser adapter behavior, Allure output, and UI CLI dry-run.
+- [x] Commit with Stage 13 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.

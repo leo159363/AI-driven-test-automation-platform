@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -14,6 +15,7 @@ from src.observability.dashboard.services.api_execution_adapter import (
     ExecutionStepResult,
 )
 from src.observability.dashboard.services.execution_result_report_service import (
+    write_execution_result_allure_results,
     write_execution_result_junit_xml,
 )
 from src.observability.dashboard.services.test_report_service import parse_junit_xml
@@ -113,3 +115,21 @@ class TestExecutionResultReportService:
         assert summary.failed == 1
         assert summary.skipped == 2
         assert summary.errors == 0
+
+    def test_write_execution_result_allure_results(self, tmp_path: Path) -> None:
+        screenshot = tmp_path / "failure.png"
+        screenshot.write_bytes(b"fake-png")
+        result = _sample_result()
+        result.artifacts["failure_screenshot"] = str(screenshot)
+
+        path = write_execution_result_allure_results(result, tmp_path / "allure-results")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+
+        assert payload["name"] == "API Login"
+        assert payload["status"] == "failed"
+        assert len(payload["steps"]) == 4
+        assert payload["steps"][0]["status"] == "passed"
+        assert payload["steps"][1]["status"] == "failed"
+        assert payload["steps"][2]["status"] == "skipped"
+        assert any(attachment["type"] == "image/png" for attachment in payload["attachments"])
+        assert any(path.parent.glob("*-execution.log"))
