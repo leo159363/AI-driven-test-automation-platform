@@ -33,6 +33,13 @@ from src.mcp_server.tools.run_api_tests import (
     run_api_tests_handler,
     register_tool as register_run_api_tests,
 )
+from src.mcp_server.tools.get_test_report import (
+    TOOL_NAME as GET_TEST_REPORT_NAME,
+    TOOL_DESCRIPTION as GET_TEST_REPORT_DESCRIPTION,
+    TOOL_INPUT_SCHEMA as GET_TEST_REPORT_SCHEMA,
+    get_test_report_handler,
+    register_tool as register_get_test_report,
+)
 
 __all__ = [
     "QUERY_KNOWLEDGE_HUB_NAME",
@@ -56,4 +63,9 @@ __all__ = [
     "RUN_API_TESTS_SCHEMA",
     "run_api_tests_handler",
     "register_run_api_tests",
+    "GET_TEST_REPORT_NAME",
+    "GET_TEST_REPORT_DESCRIPTION",
+    "GET_TEST_REPORT_SCHEMA",
+    "get_test_report_handler",
+    "register_get_test_report",
 ]

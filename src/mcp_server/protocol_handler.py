@@ -219,6 +219,10 @@ def _register_default_tools(protocol_handler: ProtocolHandler) -> None:
     from src.mcp_server.tools.run_api_tests import register_tool as register_api_tests_tool
     register_api_tests_tool(protocol_handler)
 
+    # Import and register get_test_report tool
+    from src.mcp_server.tools.get_test_report import register_tool as register_report_tool
+    register_report_tool(protocol_handler)
+
 
 def create_mcp_server(
     server_name: str,
