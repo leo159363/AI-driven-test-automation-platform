@@ -2,204 +2,187 @@
 
 [![CI](https://github.com/leo159363/AI-driven-test-automation-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/leo159363/AI-driven-test-automation-platform/actions/workflows/ci.yml)
 
-QualityPilot 是一个基于 MCP + RAG 的智能自动化测试平台，面向测试开发场景，支持测试知识检索、用例生成、自动化执行、报告解析和失败分析。
+QualityPilot 是一个基于 **MCP + RAG** 的智能自动化测试平台，面向测试开发场景，支持测试知识检索、测试用例生成、API 自动化执行、JUnit/Allure 报告解析、失败原因分析和 Bug 报告生成。
 
-项目基于原有 Modular RAG MCP Server 改造，保留 RAG、MCP、Streamlit Dashboard、pytest、评估和可观测能力，并把产品定位收敛到测试开发常见闭环：
+项目定位不是完整企业级 TestOps 系统，而是一个适合测试开发实习面试讲解的工程化闭环：
 
 ```text
-文档入库
-  -> RAG 检索
+文档 / RAG 上下文
   -> 测试用例生成
-  -> 自动化执行
-  -> 报告解析
-  -> 失败分析
+  -> API 自动化执行
+  -> JUnit / Allure 报告解析
+  -> 失败用例查询
+  -> 失败原因分析
+  -> Bug 报告草稿生成
 ```
 
-这个项目不是完整的企业级 TestOps SaaS，而是一个适合面试讲解的工程化闭环：能说明测试设计、RAG 检索、自动化执行、报告分析、质量评估和 MCP 工具化扩展如何组合在一起。
+## 1. 一条命令运行 Demo
 
-## 当前能力
+```powershell
+.\.venv\Scripts\python.exe scripts\run_qualitypilot_demo.py
+```
 
-| 模块 | 能力 | 关键文件 |
+Demo 会启动一个本地登录接口 stub，真实执行 API 自动化场景，并故意制造一个稳定失败：接口返回 HTTP 200，但缺少需求要求的 `token` 字段。随后平台会解析报告、定位失败用例、分析原因，并生成 Bug 草稿。
+
+运行成功后会看到类似输出：
+
+```text
+QualityPilot demo completed
+execution_status=failed
+report_status=failed
+failed_case_count=1
+bug_count=1
+junitxml=reports/qualitypilot-demo/junit.xml
+allure_results=reports/qualitypilot-demo/allure-results
+summary_json=reports/qualitypilot-demo/demo_summary.json
+bug_report_md=reports/qualitypilot-demo/bug_report.md
+```
+
+面试时建议重点展示：
+
+- `reports/qualitypilot-demo/junit.xml`：标准 JUnit XML 测试报告。
+- `reports/qualitypilot-demo/demo_summary.json`：完整链路结构化输出。
+- `reports/qualitypilot-demo/bug_report.md`：可复制到缺陷平台的 Bug 草稿。
+
+更详细的演示说明见 [docs/qualitypilot_demo.md](docs/qualitypilot_demo.md)。
+
+## 2. 核心能力
+
+| 模块 | 已实现能力 | 体现的测试开发能力 |
 | --- | --- | --- |
-| 测试工作台 | 输入需求，按功能、边界、异常、安全、并发、回归维度生成测试点草稿，并可导出 Markdown | `src/observability/dashboard/pages/test_workbench.py` |
-| 知识源分类 | 将检索片段归类为需求文档、API 文档、缺陷记录、测试规范、执行日志或未知来源 | `src/observability/dashboard/services/test_design_service.py` |
-| 测试设计评审 | 对生成的测试设计做规则检查，识别缺失维度、空泛描述、不可执行断言和缺少依据的问题 | `src/observability/dashboard/pages/test_design_review.py` |
-| 测试设计评估 | 使用 Golden Test Set 评估需求覆盖率、维度覆盖率、引用覆盖率和空输出，支持 CLI 与 Dashboard 展示 | `src/observability/dashboard/pages/test_design_evaluation.py` |
-| 追踪矩阵 | 将需求项、测试点、自动化场景和最近执行历史关联起来，支持人工评审状态与 Markdown / CSV 导出 | `src/observability/dashboard/pages/traceability_matrix.py` |
-| 自动化场景 | 内置 API 登录、API 文件上传、UI 登录冒烟场景，可生成 JUnit XML，并兼容 Allure 结果目录 | `scripts/run_automation_suite.py` |
-| 测试报告中心 | 解析 pytest JUnit XML，发现 Allure 结果目录和 HTML 报告目录 | `src/observability/dashboard/pages/test_reports.py` |
-| 执行计划 | 将自然语言步骤解析为结构化执行计划，识别 API 与 UI 计划 | `src/observability/dashboard/services/execution_plan_service.py` |
-| API 执行适配器 | 支持 API 计划 dry-run 和真实 HTTP 执行，返回步骤状态、日志、失败原因、响应预览，并可导出 JUnit XML / Allure results | `src/observability/dashboard/services/api_execution_adapter.py` |
-| Browser UI 执行适配器 | 支持 UI 计划 dry-run、可选 Playwright 真执行、失败截图和统一报告导出 | `src/observability/dashboard/services/browser_execution_adapter.py` |
-| 执行历史 | 保存 API / UI 执行计划记录，展示状态、失败原因、报告路径、截图 artifact、通过率和失败原因分布 | `src/observability/dashboard/pages/execution_history.py` |
-| RAG / MCP 基座 | 保留文档入库、Hybrid Search、MCP tools、摄取追踪、查询追踪和评估面板 | `src/` |
+| RAG 测试上下文 | 支持需求、接口文档、历史 Bug、测试报告、日志等 source type 元数据 | 测试设计需要证据来源，不是凭空生成 |
+| MCP Server | 将测试开发动作封装为可编排 tools | 面向 Agent / IDE / 自动化工作流扩展 |
+| 测试用例生成 | 根据需求和 RAG 上下文生成结构化测试用例 | 功能、异常、安全、回归等维度覆盖 |
+| API 自动化执行 | 执行 API 场景，输出 step 级结果 | pytest / HTTP adapter / 执行计划落地 |
+| 测试报告解析 | 解析 JUnit XML，发现 Allure results | 自动化测试平台必须能消费报告 |
+| 失败用例查询 | 按状态、关键字、类名、用例名筛选失败用例 | 支持失败定位和回归分析 |
+| 失败原因分析 | 输出可能根因、置信度、证据、建议修复 | 从“跑失败”推进到“分析失败” |
+| Bug 报告生成 | 生成结构化缺陷草稿和 Markdown | 打通测试执行到缺陷提交前的最后一步 |
+| Dashboard | 保留 Streamlit 页面、测试报告、执行历史、追踪矩阵等能力 | 展示平台化思路，而不是脚本集合 |
 
-## 技术栈
+## 3. MCP Tools
+
+当前核心 tools：
+
+| Tool | 用途 |
+| --- | --- |
+| `retrieve_test_context` | 检索测试设计、失败分析、Bug 生成所需上下文 |
+| `generate_test_cases` | 从需求和上下文生成结构化测试用例 |
+| `run_api_tests` | 执行 API 自动化场景并生成报告路径 |
+| `get_test_report` | 解析 JUnit/Allure 测试报告 |
+| `query_failed_cases` | 查询失败、错误、跳过用例 |
+| `analyze_failure` | 分析失败原因并给出修复建议 |
+| `generate_bug_report` | 生成结构化 Bug 草稿和 Markdown |
+
+保留的基础知识库 tools：
+
+```text
+query_knowledge_hub
+list_collections
+get_document_summary
+```
+
+完整参数和输出示例见 [docs/mcp_tools.md](docs/mcp_tools.md)。
+
+## 4. 技术栈
 
 - Python 3.10+
-- Streamlit Dashboard
-- pytest / JUnit XML / optional Allure / optional Playwright
+- MCP Server
 - RAG ingestion pipeline
-- Dense retrieval + BM25 sparse retrieval + RRF fusion + optional rerank
-- ChromaDB vector store
-- MCP Server tools
-- Deterministic Golden Test Set evaluation
+- ChromaDB / BM25 / hybrid retrieval
+- pytest
+- JUnit XML
+- Allure-compatible results
+- Streamlit Dashboard
+- GitHub Actions CI
 
-## 快速开始
+## 5. 快速开始
 
-### 1. 安装依赖
-
-如果仓库里已经有 `.venv`，可以直接使用。全新环境可执行：
+安装依赖：
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 ```
 
-### 2. 启动 MCP Server
-
-安装后可以通过 console script 启动真实 MCP Server：
+启动 MCP Server：
 
 ```powershell
-mcp-server
+.\.venv\Scripts\mcp-server.exe
 ```
 
-也可以直接运行模块入口：
+或：
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.mcp_server.server
 ```
 
-### 3. 启动 Dashboard
+启动 Dashboard：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\start_dashboard.py --port 8501
 ```
 
-打开 `http://localhost:8501` 后，建议按这个顺序演示：
-
-1. `测试工作台`：输入一段需求，生成测试点草稿。
-2. `测试设计评审`：检查测试点是否缺少维度、断言是否可执行、是否有依据来源。
-3. `追踪矩阵`：把需求项、测试点、自动化场景和最近执行结果串起来，并导出 Markdown / CSV 评审材料。
-4. `自动化场景`：查看内置 API / UI 自动化示例。
-5. `执行计划`：选择 API 登录或 UI 登录场景，生成自然语言步骤对应的执行计划，可开启 dry-run。
-6. `执行历史`：查看保存过的执行计划记录、通过率趋势、状态分布、失败原因和报告路径。
-7. `测试报告`：查看 JUnit XML 和 Allure 目录状态。
-8. `测试设计评估`：运行 Golden Test Set，展示测试点生成质量指标。
-9. `评估中心`：说明已有 RAG 评估入口。
-
-### 4. 运行内置自动化场景
+运行核心 Demo：
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\run_automation_suite.py --scenario all --disable-allure
+.\.venv\Scripts\python.exe scripts\run_qualitypilot_demo.py
 ```
 
-默认输出：
-
-- `reports/junit.xml`
-- `reports/allure-results/`，仅在安装 `allure-pytest` 且未禁用时生成
-
-### 5. 运行测试设计评估
+运行相关测试：
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\evaluate_test_design.py
+.\.venv\Scripts\python.exe -m pytest tests\unit\test_qualitypilot_demo_script.py tests\unit\test_generate_bug_report_tool.py tests\unit\test_analyze_failure_tool.py tests\unit\test_run_api_tests_tool.py -v
 ```
 
-如需显式生成 JSON 报告：
+## 6. 项目结构
 
-```powershell
-.\.venv\Scripts\python.exe scripts\evaluate_test_design.py --output data/evaluation/test_design_report.json
+```text
+src/
+  mcp_server/
+    tools/                  # MCP tools：检索、用例生成、执行、报告、失败分析、Bug 生成
+  ingestion/                # 文档入库、切分、向量化、存储
+  core/                     # RAG 查询、检索、响应组装
+  observability/dashboard/  # Streamlit Dashboard 与测试平台页面
+scripts/
+  run_qualitypilot_demo.py  # 端到端面试 Demo
+  run_automation_suite.py   # 内置自动化场景 runner
+  run_execution_plan.py     # 自然语言执行计划 runner
+docs/
+  qualitypilot_demo.md      # 面试 Demo 说明
+  mcp_tools.md              # MCP tools 文档
+  interview_guide.md        # 面试讲解指南
+tests/
+  unit/                     # 核心单元测试
+  integration/              # MCP / 服务集成测试
+  e2e/                      # 端到端协议测试
 ```
 
-`data/` 已在 `.gitignore` 中忽略，生成报告默认不会进入 Git 提交。
+## 7. 面试讲法
 
-### 6. 运行执行计划并生成 JUnit XML / Allure Results
+可以这样介绍：
 
-```powershell
-.\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario api_login --dry-run --junitxml reports\execution-plan-junit.xml
-.\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario ui_login_smoke --adapter browser --dry-run --junitxml reports\execution-plan-junit.xml --allure-results reports\execution-plan-allure-results --record-history
+> QualityPilot 是一个面向测试开发场景的 MCP + RAG 智能自动化测试平台。我把测试开发常见链路拆成多个 MCP tools：先检索需求和接口文档上下文，再生成测试用例，然后执行 API 自动化测试，生成 JUnit / Allure 报告。报告失败后，平台会查询失败用例，结合上下文分析失败原因，并生成结构化 Bug 草稿。项目重点不是做一个大而全的企业系统，而是把“测试设计、自动化执行、报告解析、失败分析、缺陷草稿”这条闭环做清楚、跑得通、能测试。
+
+简历可写：
+
+```text
+基于 Python、MCP、RAG、pytest、JUnit XML 和 Streamlit 实现智能自动化测试平台，封装测试上下文检索、用例生成、API 自动化执行、报告解析、失败用例查询、失败原因分析和 Bug 草稿生成等 MCP tools，并提供稳定端到端 Demo，打通从需求到缺陷报告的测试开发闭环。
 ```
 
-生成后可以在 Dashboard 的 `测试报告` 页面查看该 JUnit XML 汇总。
+## 8. 当前边界
 
-Browser UI 真执行需要额外安装 Playwright 浏览器依赖；dry-run 不需要：
+- 当前不是完整企业级 TestOps 平台，没有复杂权限、任务调度、多环境管理和外部缺陷系统写入。
+- 失败分析和 Bug 生成目前以规则兜底为主，保证本地和 CI 稳定；后续可以接入 LLM 做总结增强。
+- Allure 当前生成 compatible results，未强依赖本机安装 Allure CLI 生成 HTML。
+- Demo 使用本地 stub 服务制造稳定失败，便于面试现场复现。
 
-```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".[browser]"
-.\.venv\Scripts\python.exe -m playwright install chromium
-```
+## 9. 后续路线
 
-### 7. 运行核心回归测试
+优先级建议：
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest tests\unit\test_browser_execution_adapter.py tests\unit\test_execution_result_report_service.py tests\unit\test_execution_history_service.py tests\unit\test_run_execution_plan_script.py tests\unit\test_traceability_service.py tests\unit\test_test_design_review_service.py tests\unit\test_test_design_evaluation_service.py tests\unit\test_test_design_service.py tests\unit\test_api_execution_adapter.py tests\unit\test_execution_plan_service.py tests\automation tests\unit\test_automation_scenario_service.py tests\unit\test_test_report_service.py tests\unit\test_dashboard_config.py tests\e2e\test_dashboard_smoke.py tests\e2e\test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list -v
-```
-
-最近一次阶段回归结果：`93 passed`。
-
-### 8. GitHub Actions CI
-
-仓库已接入 GitHub Actions。每次 push 或 pull request 到 `main` 时会自动安装依赖、运行核心回归测试、生成 `reports/ci-junit.xml`，并上传 `reports/` 作为 CI artifact。
-
-## Spec 与阶段记录
-
-项目按阶段推进，规格文档位于：
-
-- `.kiro/specs/ai-test-platform/requirements.md`
-- `.kiro/specs/ai-test-platform/design.md`
-- `.kiro/specs/ai-test-platform/tasks.md`
-- `docs/development_log.md`
-
-已完成阶段：
-
-| Stage | 内容 |
-| --- | --- |
-| Stage 1 | 项目定位为 AI 驱动的自动化测试平台 |
-| Stage 2 | 建立需求、设计、任务规格文档 |
-| Stage 3 | 抽取测试设计服务并增加单元测试 |
-| Stage 4 | 增加测试报告中心 |
-| Stage 5 | 增加内置自动化场景和统一 runner |
-| Stage 6 | 增加知识源分类 |
-| Stage 7 | 增加测试设计 Golden Test Set 评估 |
-| Stage 8 | 增加自然语言执行计划预览 |
-| Stage 9 | 增加 API 执行适配器 |
-| Stage 10 | 整理 README 和面试交付文档 |
-| Stage 11 | 增加执行结果 JUnit XML 导出 |
-| Stage 12 | 增加测试设计评估 Dashboard 页面 |
-| Stage 13 | 增加 Browser UI 执行适配器和 Allure 结果导出 |
-| Stage 14 | 增加 GitHub Actions CI 和报告 artifact |
-| Stage 15 | 增加执行历史和测试任务记录 |
-| Stage 16 | 增加执行质量趋势和失败原因分析 |
-| Stage 17 | 增加测试设计规则评审和面试问答稿 |
-| Stage 18 | 增加需求-测试点-执行结果追踪矩阵 |
-| Stage 19 | 增加追踪矩阵人工评审状态和导出 |
-
-## 面试讲法
-
-可以用下面这段作为 1 分钟介绍：
-
-> 我这个项目是一个面向测试开发场景的 AI 自动化测试平台。它不是只做一个页面 demo，而是把需求输入、RAG 知识检索、测试点生成、测试设计评审、质量评估、追踪矩阵、自动化场景执行、执行历史、测试报告展示和执行计划适配串成一个闭环。核心思路是：测试人员输入需求或接口说明后，系统结合需求文档、API 文档、缺陷记录、测试规范和执行日志生成结构化测试点；再用规则评审检查缺失维度、空泛描述和不可执行断言；再用追踪矩阵说明每条需求对应哪些测试点、自动化场景和最近执行结果，并导出 Markdown / CSV 评审材料；再用 Golden Test Set 评估生成质量；自动化侧内置 API 和 UI 场景，能输出 JUnit / Allure 兼容报告；最后通过自然语言执行计划接入 API HTTP adapter 和 Browser UI adapter，展示从“生成计划”到“执行记录和报告中心”的路径。
-
-重点可以讲 5 个技术点：
-
-1. **RAG 增强测试设计**：不是凭模板生成，而是支持从历史缺陷、API 文档、测试规范里召回证据。
-2. **知识源分类**：把检索结果按需求、API、缺陷、规范、执行日志分类，便于测试人员判断依据来源。
-3. **质量评估闭环**：用 Golden Test Set 在 Dashboard 中展示覆盖率、引用质量和空输出，避免只凭感觉判断 AI 输出。
-4. **自动化与报告链路**：pytest 场景可稳定运行，并输出 JUnit XML，Dashboard 能展示报告状态，GitHub Actions 能在每次提交后自动回归并上传报告产物。
-5. **追踪与执行适配器边界**：追踪矩阵把需求、测试点、自动化场景和最近执行状态串起来，并支持人工评审状态与导出；API HTTP adapter 和 Browser UI adapter 都复用同一套 ExecutionPlan / ExecutionResult 模型，避免把规划逻辑和执行逻辑耦合，并将执行结果保存为历史记录、导出为 JUnit XML / Allure results 供报告中心复用。
-
-更完整的面试讲解见 [docs/interview_guide.md](docs/interview_guide.md)，针对“测试用例、自动化测试、性能测试怎么讲”的问答稿见 [docs/interview_testing_answers.md](docs/interview_testing_answers.md)。
-
-## 仓库卫生
-
-- 不提交本地 API key、`config/settings.yaml` 备份、向量库、缓存、日志、报告和实验导出。
-- `data/`、`logs/`、`reports/`、`allure-results/`、`allure-report/` 默认被忽略。
-- 每个阶段只提交与当前目标相关的文件，避免混入无关业务项目或历史实验目录。
-
-## 下一步可扩展方向
-
-- 接入 MCP browser 工具或真实业务测试站点，补齐更复杂 UI 操作。
-- 增加测试设计评估趋势，把 Golden Test Set 得分和规则评审风险也纳入质量看板。
-- 给追踪矩阵增加本地持久化，保存人工确认状态和评审备注。
-- 给知识检索增加 source type 过滤器。
-- 增加 Docker / 演示部署，把 Dashboard 和 Allure HTML 以更稳定的方式展示出来。
+1. 增加完整端到端 MCP tools/call 测试，验证每个 tool 的协议输入输出。
+2. 增加 Allure HTML 生成说明或可选脚本。
+3. 增加 Dashboard 中的“AI 测试闭环 Demo”页面，把当前 CLI Demo 可视化。
+4. 将失败分析结果和 Bug 草稿保存到本地历史记录。
+5. 接入真实业务 Demo API 或公开测试站点，替换部分 stub 场景。
