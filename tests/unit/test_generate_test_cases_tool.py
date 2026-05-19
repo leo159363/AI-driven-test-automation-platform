@@ -119,3 +119,38 @@ def test_generate_test_cases_normalizes_dimensions_and_limits_count() -> None:
         "security",
     ]
     assert generate_module._clamp_int(99, minimum=1, maximum=12, default=6) == 12
+
+
+@pytest.mark.asyncio
+async def test_generate_test_cases_uses_pre_retrieved_contexts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class UnexpectedQueryTool:
+        async def execute(self, **kwargs: Any) -> MCPToolResponse:
+            raise AssertionError("live retrieval should be skipped")
+
+    monkeypatch.setattr(
+        generate_module,
+        "get_query_tool_instance",
+        lambda: UnexpectedQueryTool(),
+    )
+
+    payload = await generate_module.generate_test_cases_payload(
+        requirement="login returns token",
+        dimensions=["functional"],
+        case_count=1,
+        contexts=[
+            {
+                "context_id": "ctx-1",
+                "source_id": "auth-api-v1",
+                "source_type": "api_doc",
+                "title": "Login API",
+                "content": "Login should return token.",
+                "score": 0.9,
+            }
+        ],
+    )
+
+    assert "context_warning" not in payload
+    assert payload["context_summary"]["source_type_distribution"] == {"api_doc": 1}
+    assert payload["test_cases"][0]["citations"][0]["chunk_id"] == "ctx-1"

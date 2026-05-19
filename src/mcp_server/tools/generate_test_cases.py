@@ -98,6 +98,11 @@ TOOL_INPUT_SCHEMA: Dict[str, Any] = {
             "minimum": 1,
             "maximum": 20,
         },
+        "contexts": {
+            "type": "array",
+            "description": "Optional pre-retrieved RAG contexts. If provided, live retrieval is skipped.",
+            "items": {"type": "object"},
+        },
     },
     "required": ["requirement"],
 }
@@ -112,6 +117,7 @@ async def generate_test_cases_handler(
     dimensions: Optional[List[str]] = None,
     case_count: int = 6,
     top_k: int = 5,
+    contexts: Optional[List[Dict[str, Any]]] = None,
 ) -> types.CallToolResult:
     """Generate structured test cases for MCP clients."""
     try:
@@ -124,6 +130,7 @@ async def generate_test_cases_handler(
             dimensions=dimensions,
             case_count=case_count,
             top_k=top_k,
+            contexts=contexts,
         )
         return types.CallToolResult(
             content=[
@@ -170,6 +177,7 @@ async def generate_test_cases_payload(
     dimensions: Optional[List[str]] = None,
     case_count: int = 6,
     top_k: int = 5,
+    contexts: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Build the JSON payload returned by generate_test_cases."""
     normalized_requirement = _validate_requirement(requirement)
@@ -184,14 +192,18 @@ async def generate_test_cases_payload(
         "standard",
     ]
 
-    contexts, retrieval_error = await _retrieve_contexts(
-        query=normalized_requirement,
-        project=project,
-        module=module,
-        version=version,
-        source_types=effective_source_types,
-        top_k=effective_top_k,
-    )
+    if contexts is not None:
+        contexts = _normalize_contexts(contexts)
+        retrieval_error = None
+    else:
+        contexts, retrieval_error = await _retrieve_contexts(
+            query=normalized_requirement,
+            project=project,
+            module=module,
+            version=version,
+            source_types=effective_source_types,
+            top_k=effective_top_k,
+        )
 
     cases = _generate_cases(
         requirement=normalized_requirement,
@@ -490,6 +502,24 @@ def _normalize_source_types(source_types: Optional[List[str]]) -> List[str]:
         value = source_type.strip().lower()
         if value in SUPPORTED_SOURCE_TYPES and value not in normalized:
             normalized.append(value)
+    return normalized
+
+
+def _normalize_contexts(contexts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    normalized = []
+    for index, context in enumerate(contexts, start=1):
+        metadata = context.get("metadata") or {}
+        normalized.append(
+            {
+                "chunk_id": context.get("chunk_id") or context.get("context_id") or f"CTX-{index:03d}",
+                "source_id": context.get("source_id") or metadata.get("source_id", ""),
+                "source_type": context.get("source_type") or metadata.get("source_type", ""),
+                "title": context.get("title") or metadata.get("title", ""),
+                "content": context.get("content") or context.get("text", ""),
+                "score": context.get("score", 0),
+                "metadata": metadata,
+            }
+        )
     return normalized
 
 

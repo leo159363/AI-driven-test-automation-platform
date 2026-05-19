@@ -13,7 +13,7 @@ workflow.
 | `list_collections` | List ChromaDB collections. | `include_stats` | Markdown collection summary. |
 | `get_document_summary` | Find and summarize chunks for a document. | `doc_id`, `collection` | Markdown document summary. |
 | `retrieve_test_context` | Retrieve test-oriented RAG context for downstream testing tasks. | `query`, `project`, `module`, `version`, `source_types`, `top_k` | Structured JSON with `query`, `contexts`, and `recommended_usage`. |
-| `generate_test_cases` | Generate structured test cases from a requirement and optional RAG context. | `requirement`, `project`, `module`, `version`, `source_types`, `dimensions`, `case_count`, `top_k` | Structured JSON with `test_cases`, `context_summary`, priorities, steps, expected results, and pytest automation hints. |
+| `generate_test_cases` | Generate structured test cases from a requirement and optional RAG context. | `requirement`, `project`, `module`, `version`, `source_types`, `dimensions`, `case_count`, `top_k`, `contexts` | Structured JSON with `test_cases`, `context_summary`, priorities, steps, expected results, and pytest automation hints. |
 | `run_api_tests` | Run API automation scenarios and write test reports. | `scenario_id`, `base_url`, `dry_run`, `execution_mode`, `step_text`, `junitxml`, `allure_results`, `record_history` | Structured JSON with `run_id`, status summary, step results, logs, and report paths. |
 | `get_test_report` | Parse JUnit/Allure report artifacts after test execution. | `run_id`, `report_path`, `project_root`, `allure_results`, `include_failed_cases` | Structured JSON with status, summary, suites, failed cases, and artifact paths. |
 | `query_failed_cases` | Query failed/error/skipped cases from a parsed test report. | `run_id`, `report_path`, `project_root`, `statuses`, `keyword`, `classname`, `case_name`, `limit`, `include_details` | Structured JSON with filtered cases, failure category, failure signature, and recommended next tools. |
@@ -123,7 +123,17 @@ demo and can later be upgraded to call an LLM with a JSON schema.
   "source_types": ["requirement", "api_doc", "bug"],
   "dimensions": ["functional", "negative", "security"],
   "case_count": 3,
-  "top_k": 5
+  "top_k": 5,
+  "contexts": [
+    {
+      "chunk_id": "auth-api-v1_0001",
+      "source_id": "auth-api-v1",
+      "source_type": "api_doc",
+      "title": "login token contract",
+      "content": "The login API should return a token field after successful authentication.",
+      "score": 0.91
+    }
+  ]
 }
 ```
 
