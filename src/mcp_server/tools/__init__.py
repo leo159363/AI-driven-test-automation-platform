@@ -26,6 +26,13 @@ from src.mcp_server.tools.generate_test_cases import (
     generate_test_cases_handler,
     register_tool as register_generate_test_cases,
 )
+from src.mcp_server.tools.run_api_tests import (
+    TOOL_NAME as RUN_API_TESTS_NAME,
+    TOOL_DESCRIPTION as RUN_API_TESTS_DESCRIPTION,
+    TOOL_INPUT_SCHEMA as RUN_API_TESTS_SCHEMA,
+    run_api_tests_handler,
+    register_tool as register_run_api_tests,
+)
 
 __all__ = [
     "QUERY_KNOWLEDGE_HUB_NAME",
@@ -44,4 +51,9 @@ __all__ = [
     "GENERATE_TEST_CASES_SCHEMA",
     "generate_test_cases_handler",
     "register_generate_test_cases",
+    "RUN_API_TESTS_NAME",
+    "RUN_API_TESTS_DESCRIPTION",
+    "RUN_API_TESTS_SCHEMA",
+    "run_api_tests_handler",
+    "register_run_api_tests",
 ]

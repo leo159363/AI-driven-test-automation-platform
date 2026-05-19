@@ -203,6 +203,7 @@ class TestMCPClientE2E:
         assert "get_document_summary" in tool_names
         assert "retrieve_test_context" in tool_names
         assert "generate_test_cases" in tool_names
+        assert "run_api_tests" in tool_names
 
         # Each tool must declare a valid inputSchema
         for tool in tools:
