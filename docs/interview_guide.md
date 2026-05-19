@@ -4,7 +4,7 @@
 
 ## 1 分钟项目介绍
 
-这是一个面向测试开发场景的 AI 驱动自动化测试平台。项目基于 RAG 和 MCP 架构改造，核心闭环是：输入需求或接口说明，系统结合需求文档、API 文档、缺陷记录、测试规范和执行日志生成测试点草稿；再用 Golden Test Set 评估生成质量；自动化侧内置 API 和 UI 场景，能输出 JUnit / Allure 兼容报告；执行层支持自然语言步骤解析，并接入 API HTTP adapter 与 Browser UI adapter。
+这是一个面向测试开发场景的 AI 驱动自动化测试平台。项目基于 RAG 和 MCP 架构改造，核心闭环是：输入需求或接口说明，系统结合需求文档、API 文档、缺陷记录、测试规范和执行日志生成测试点草稿；再用规则评审检查测试点是否可执行、维度是否完整、依据是否清楚；再用 Golden Test Set 评估生成质量；自动化侧内置 API 和 UI 场景，能输出 JUnit / Allure 兼容报告；执行层支持自然语言步骤解析，并接入 API HTTP adapter 与 Browser UI adapter。
 
 ## 推荐演示顺序
 
@@ -22,36 +22,40 @@
 
 选择 `接口测试设计`，关注 `功能 / 异常 / 安全 / 回归`，生成测试点草稿。
 
-3. 进入 `自动化场景`，说明平台内置了 API 登录、API 文件上传、UI 登录冒烟，不是只支持单一 demo。
+3. 进入 `测试设计评审`，把生成的 Markdown 放进去，说明平台会检查缺失维度、空泛描述、不可执行断言、弱断言和缺少依据，并给出风险等级与修改建议。
 
-4. 运行自动化场景：
+4. 进入 `自动化场景`，说明平台内置了 API 登录、API 文件上传、UI 登录冒烟，不是只支持单一 demo。
+
+5. 运行自动化场景：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_automation_suite.py --scenario all --disable-allure
 ```
 
-5. 进入 `测试报告`，查看 `reports/junit.xml` 的汇总。
+6. 进入 `测试报告`，查看 `reports/junit.xml` 的汇总。
 
-6. 进入 `执行计划`，选择 API 登录场景或 UI 登录冒烟场景，生成计划，说明自然语言步骤会变成结构化 action。
+7. 进入 `执行计划`，选择 API 登录场景或 UI 登录冒烟场景，生成计划，说明自然语言步骤会变成结构化 action。
 
-7. 执行计划也可以导出成 JUnit XML：
+8. 执行计划也可以导出成 JUnit XML：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario api_login --dry-run --junitxml reports\execution-plan-junit.xml
 .\.venv\Scripts\python.exe scripts\run_execution_plan.py --scenario ui_login_smoke --adapter browser --dry-run --junitxml reports\execution-plan-junit.xml --allure-results reports\execution-plan-allure-results
 ```
 
-8. 打开 GitHub Actions，说明每次 push/PR 会自动跑核心回归并上传 `reports/` artifact。
+9. 打开 GitHub Actions，说明每次 push/PR 会自动跑核心回归并上传 `reports/` artifact。
 
-9. 进入 `执行历史`，查看保存过的执行计划记录、通过率趋势、状态分布、失败原因、报告路径和截图 artifact。
+10. 进入 `执行历史`，查看保存过的执行计划记录、通过率趋势、状态分布、失败原因、报告路径和截图 artifact。
 
-10. 进入 `测试设计评估`，点击运行 Golden Test Set，展示需求覆盖率、维度覆盖率、引用覆盖率和空输出指标。也可以用 CLI 运行：
+11. 进入 `测试设计评估`，点击运行 Golden Test Set，展示需求覆盖率、维度覆盖率、引用覆盖率和空输出指标。也可以用 CLI 运行：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\evaluate_test_design.py
 ```
 
 说明这个项目不是只看 AI 输出好不好，而是用固定样例做质量回归，并且评估结果可以直接在 Dashboard 中展示。
+
+12. 如果面试官问“项目里怎么体现测试用例、自动化测试和性能测试”，可以打开 [docs/interview_testing_answers.md](interview_testing_answers.md) 按章节回答。
 
 ## 可以重点讲的设计
 
@@ -73,6 +77,10 @@ AI 生成质量不能只靠肉眼感觉。项目用固定需求样例评估：
 - non-empty output：是否出现空输出。
 
 这些指标虽然简单，但足够作为第一版回归基线。项目现在同时提供 CLI 和 Dashboard 页面，便于本地回归和面试演示。
+
+### 为什么要做测试设计评审
+
+Golden Test Set 更适合做回归基线，但面试和真实工作里还需要判断单个测试设计草稿能不能落地执行。所以项目加了规则评审：检查是否缺功能、边界、异常、安全、回归等维度；检查有没有“功能是否正常”“体验良好”这种空泛描述；检查断言是不是能自动化验证；检查有没有需求或接口依据。这样能把 AI 生成的草稿从“看起来像测试用例”推进到“测试人员可以继续补充和执行”。
 
 ### 为什么 Browser adapter 默认先用 dry-run
 
@@ -110,7 +118,7 @@ AI 生成质量不能只靠肉眼感觉。项目用固定需求样例评估：
 
 ### 如果继续扩展，你会先做什么？
 
-下一步优先做执行历史和质量趋势，把每次自动化执行、评估分数、失败原因和报告路径保存下来。之后再接 MCP browser 工具或真实业务测试站点，扩展更复杂的 UI 交互、截图和 trace。
+下一步我会优先做需求、测试点、执行结果之间的 traceability matrix，把每条需求对应哪些测试点、哪些自动化场景、执行结果是什么串起来。之后可以补轻量性能基线，比如 RAG 检索、报告解析、执行历史趋势聚合的耗时统计，再接 MCP browser 工具或真实业务测试站点。
 
 ## 简历写法参考
 
@@ -120,6 +128,7 @@ AI 生成质量不能只靠肉眼感觉。项目用固定需求样例评估：
 AI 驱动的自动化测试平台
 - 基于 Python、Streamlit、pytest、RAG 和 MCP 设计测试开发工作台，串联需求输入、知识检索、测试点生成、自动化执行、报告展示与质量评估链路。
 - 构建测试知识源分类能力，将需求文档、API 文档、缺陷记录、测试规范和执行日志标准化展示，提升测试设计依据可追溯性。
+- 实现测试设计规则评审，识别缺失维度、空泛描述、不可执行断言、弱断言和缺少依据的问题，输出风险等级与修改建议。
 - 实现测试设计 Golden Test Set 评估，计算需求覆盖率、维度覆盖率、引用覆盖率和空输出指标，支持生成逻辑的稳定回归。
 - 内置 API 登录、文件上传和 UI 登录冒烟自动化场景，支持 pytest 执行、JUnit XML 输出和 Allure 目录发现。
 - 设计自然语言执行计划解析与 API HTTP / Browser UI adapter，支持 dry-run、真实 HTTP 执行、可选 Playwright UI 执行、步骤日志、响应预览、失败截图和失败原因记录。

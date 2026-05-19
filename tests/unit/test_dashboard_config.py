@@ -157,6 +157,10 @@ class TestDashboardImports:
         from src.observability.dashboard.pages import test_design_evaluation
         assert hasattr(test_design_evaluation, "render")
 
+    def test_test_design_review_importable(self) -> None:
+        from src.observability.dashboard.pages import test_design_review
+        assert hasattr(test_design_review, "render")
+
     def test_app_file_exists(self) -> None:
         app_path = Path("src/observability/dashboard/app.py")
         assert app_path.exists()

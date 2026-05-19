@@ -192,6 +192,21 @@ Stage 12 exposes the same deterministic evaluator in the dashboard:
 
 The page loads the Golden Test Set, previews cases, runs evaluation on demand, displays aggregate metrics and per-case rows, and can explicitly save a JSON report under `data/evaluation/`.
 
+Stage 17 adds deterministic review checks for a single generated test-design draft:
+
+- `src/observability/dashboard/services/test_design_review_service.py`
+- `src/observability/dashboard/pages/test_design_review.py`
+
+The review service complements Golden Test Set evaluation. Golden Set answers "does the generator regress on known requirements"; the review service answers "is this specific draft actionable enough for a tester to execute." It checks:
+
+- missing expected dimensions such as functional, boundary, exception, security, and regression;
+- vague descriptions that are too broad to automate;
+- subjective or untestable assertions;
+- weak assertion wording;
+- missing source or evidence references.
+
+The dashboard page lets the user paste or reuse Markdown, choose expected dimensions, and view score, risk level, covered dimensions, missing dimensions, table findings, and JSON output.
+
 ### 6. Test Report Center
 
 New files:
@@ -410,6 +425,18 @@ class TestDesignEvaluationReport:
     total_elapsed_ms: float
 ```
 
+### TestDesignReviewReport
+
+```python
+@dataclass
+class TestDesignReviewReport:
+    risk_level: str
+    score: int
+    covered_dimensions: list[str]
+    missing_dimensions: list[str]
+    findings: list[TestDesignReviewFinding]
+```
+
 ### TestExecutionSummary
 
 ```python
@@ -490,8 +517,10 @@ class ExecutionResult:
 
 - `tests/unit/test_dashboard_config.py`
   - Dashboard config service import and workbench page import.
+- `tests/unit/test_test_design_review_service.py`
+  - Deterministic test-design review checks for covered dimensions, vague wording, untestable assertions, and empty drafts.
 - `tests/e2e/test_dashboard_smoke.py`
-  - Streamlit page smoke rendering, including Test Workbench.
+  - Streamlit page smoke rendering, including Test Workbench and Test Design Review.
 - `tests/e2e/test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list`
   - MCP server still initializes and lists tools after project rename.
 
@@ -522,3 +551,4 @@ class ExecutionResult:
 - Stage 14: add GitHub Actions CI and report artifact upload.
 - Stage 15: add execution history and test task records.
 - Stage 16: add execution quality trends and failure reason analysis.
+- Stage 17: add test-design review checks and interview testing answer documentation.

@@ -75,6 +75,8 @@
 8. WHEN a test-design evaluation report is written THEN it SHALL be written under `data/evaluation/` only after an explicit CLI output argument.
 9. Generated test-design evaluation reports SHALL remain ignored by default unless promoted into committed fixtures.
 10. The dashboard SHALL provide a test-design evaluation page that displays aggregate metrics and per-case results.
+11. The dashboard SHALL provide a deterministic test-design review page that checks missing dimensions, vague descriptions, untestable assertions, weak assertions, and missing evidence.
+12. The test-design review result SHALL include score, risk level, covered dimensions, missing dimensions, and actionable findings.
 
 ### Requirement 6: Observability
 

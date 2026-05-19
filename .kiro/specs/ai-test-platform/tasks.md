@@ -164,6 +164,18 @@
 - [x] Re-run dashboard smoke coverage for the history page.
 - [x] Commit with Stage 16 explanation.
 
+## Stage 17: Test Design Review and Interview Testing Answers
+
+- [x] Add a deterministic test-design review service.
+- [x] Check missing dimensions, vague descriptions, untestable assertions, weak assertions, and missing evidence.
+- [x] Add a dashboard page for reviewing generated test-design Markdown.
+- [x] Register the page in Streamlit navigation.
+- [x] Add unit tests for review scoring and findings.
+- [x] Add dashboard import and smoke tests for the new page.
+- [x] Add `docs/interview_testing_answers.md` for interview questions about test cases, automation testing, and performance testing.
+- [x] Re-run the staged regression suite.
+- [x] Commit with Stage 17 explanation.
+
 ## Repository Hygiene
 
 - [ ] Do not commit plaintext API keys.

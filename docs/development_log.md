@@ -345,3 +345,25 @@ Verification:
 - Run execution history service tests, dashboard import tests, and Execution History page smoke test.
 - Re-run full staged regression before commit.
 - Result: `80 passed`.
+
+## Stage 17 - Test Design Review and Interview Testing Answers
+
+Commit goal: add a deterministic review step for generated test designs and document how to answer interview questions about test cases, automation testing, and performance testing.
+
+Scope:
+- Add a test-design review service that scores a Markdown draft and reports risk level.
+- Detect missing expected dimensions, vague case descriptions, subjective or untestable assertions, weak assertion wording, and missing evidence.
+- Add a `测试设计评审` dashboard page with dimension selection, review execution, findings table, and JSON output.
+- Register the page in dashboard navigation and cover it with import and smoke tests.
+- Add `docs/interview_testing_answers.md` for interview answers about project testing scope, automation tooling, automation flow, results, and performance testing design.
+
+Out of scope:
+- LLM-as-judge review.
+- Persisting review history.
+- Full test-case management workflows with owners, priorities, and approvals.
+- Large-scale performance benchmark execution.
+
+Verification:
+- Run focused review-service, dashboard import, and page smoke tests.
+- Re-run full staged regression before commit.
+- Result: `85 passed`.

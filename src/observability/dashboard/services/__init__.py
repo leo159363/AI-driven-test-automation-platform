@@ -53,6 +53,13 @@ from src.observability.dashboard.services.test_design_service import (
     normalize_source_type,
     retrieve_knowledge_hits,
 )
+from src.observability.dashboard.services.test_design_review_service import (
+    DEFAULT_EXPECTED_DIMENSIONS,
+    DIMENSION_LABELS,
+    TestDesignReviewFinding,
+    TestDesignReviewReport,
+    review_test_design_markdown,
+)
 from src.observability.dashboard.services.test_design_evaluation_service import (
     DEFAULT_TEST_DESIGN_GOLDEN_SET,
     DEFAULT_TEST_DESIGN_REPORT_DIR,
@@ -89,6 +96,7 @@ __all__ = [
     "ExecutionHistoryRecord",
     "FOCUS_OPTIONS",
     "KnowledgeHit",
+    "DEFAULT_EXPECTED_DIMENSIONS",
     "build_execution_plan",
     "build_runner_command",
     "execute_plan_with_browser_adapter",
@@ -99,8 +107,11 @@ __all__ = [
     "list_automation_scenarios",
     "SCENARIO_BLUEPRINTS",
     "TestDesignDraft",
+    "TestDesignReviewFinding",
+    "TestDesignReviewReport",
     "ReportArtifact",
     "SOURCE_TYPE_LABELS",
+    "DIMENSION_LABELS",
     "DEFAULT_TEST_DESIGN_GOLDEN_SET",
     "DEFAULT_TEST_DESIGN_REPORT_DIR",
     "DEFAULT_EXECUTION_HISTORY_PATH",
@@ -129,6 +140,7 @@ __all__ = [
     "normalize_source_type",
     "parse_junit_xml",
     "retrieve_knowledge_hits",
+    "review_test_design_markdown",
     "run_test_design_evaluation",
     "summarize_execution_history",
     "write_execution_result_allure_results",
