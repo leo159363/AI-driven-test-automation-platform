@@ -47,6 +47,13 @@ from src.mcp_server.tools.query_failed_cases import (
     query_failed_cases_handler,
     register_tool as register_query_failed_cases,
 )
+from src.mcp_server.tools.analyze_failure import (
+    TOOL_NAME as ANALYZE_FAILURE_NAME,
+    TOOL_DESCRIPTION as ANALYZE_FAILURE_DESCRIPTION,
+    TOOL_INPUT_SCHEMA as ANALYZE_FAILURE_SCHEMA,
+    analyze_failure_handler,
+    register_tool as register_analyze_failure,
+)
 
 __all__ = [
     "QUERY_KNOWLEDGE_HUB_NAME",
@@ -80,4 +87,9 @@ __all__ = [
     "QUERY_FAILED_CASES_SCHEMA",
     "query_failed_cases_handler",
     "register_query_failed_cases",
+    "ANALYZE_FAILURE_NAME",
+    "ANALYZE_FAILURE_DESCRIPTION",
+    "ANALYZE_FAILURE_SCHEMA",
+    "analyze_failure_handler",
+    "register_analyze_failure",
 ]

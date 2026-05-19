@@ -17,6 +17,7 @@ workflow.
 | `run_api_tests` | Run API automation scenarios and write test reports. | `scenario_id`, `base_url`, `dry_run`, `execution_mode`, `step_text`, `junitxml`, `allure_results`, `record_history` | Structured JSON with `run_id`, status summary, step results, logs, and report paths. |
 | `get_test_report` | Parse JUnit/Allure report artifacts after test execution. | `run_id`, `report_path`, `project_root`, `allure_results`, `include_failed_cases` | Structured JSON with status, summary, suites, failed cases, and artifact paths. |
 | `query_failed_cases` | Query failed/error/skipped cases from a parsed test report. | `run_id`, `report_path`, `project_root`, `statuses`, `keyword`, `classname`, `case_name`, `limit`, `include_details` | Structured JSON with filtered cases, failure category, failure signature, and recommended next tools. |
+| `analyze_failure` | Analyze failed cases and produce root-cause hints. | `run_id`, `report_path`, `project_root`, `failed_cases`, `contexts`, `statuses`, `keyword`, `classname`, `case_name`, `limit`, `project`, `module`, `version`, `analysis_depth` | Structured JSON with likely root cause, confidence, evidence, suggested fixes, and bug-report candidates. |
 
 ## Source Type Metadata
 
@@ -392,6 +393,131 @@ Or:
     {
       "tool": "generate_bug_report",
       "reason": "Convert confirmed reproducible failures into a structured defect report."
+    }
+  ]
+}
+```
+
+### Workflow Position
+
+```text
+document ingestion
+  -> retrieve_test_context
+  -> generate_test_cases
+  -> run_api_tests
+  -> get_test_report
+  -> query_failed_cases
+  -> analyze_failure
+  -> generate_bug_report
+```
+
+## analyze_failure
+
+### Purpose
+
+`analyze_failure` consumes failed cases from `query_failed_cases` or directly
+parses a JUnit report. It can also accept RAG contexts returned by
+`retrieve_test_context`. The output is designed for test triage and the next
+`generate_bug_report` stage.
+
+This tool is deterministic and rule-based by default. It does not require an
+LLM key, which keeps demos and CI stable.
+
+### Input Example
+
+```json
+{
+  "run_id": "api-api_login-1a2b3c4d",
+  "project_root": ".",
+  "keyword": "token",
+  "project": "qualitypilot-demo",
+  "module": "auth",
+  "version": "v1",
+  "contexts": [
+    {
+      "chunk_id": "auth-api-v1_0001",
+      "source_id": "auth-api-v1",
+      "source_type": "api_doc",
+      "title": "login token contract",
+      "content": "The login API should return a token field after successful authentication.",
+      "score": 0.91
+    }
+  ],
+  "analysis_depth": "standard"
+}
+```
+
+Or pass failed cases directly:
+
+```json
+{
+  "failed_cases": [
+    {
+      "case_id": "FC-001",
+      "classname": "api_http.api_login",
+      "name": "step_02_assert_token",
+      "status": "failure",
+      "message": "Response does not contain expected text: token",
+      "details": "status=failed\nmessage=Response does not contain expected text: token"
+    }
+  ],
+  "analysis_depth": "quick"
+}
+```
+
+### Output Example
+
+```json
+{
+  "status": "analyzed",
+  "run_id": "api-api_login-1a2b3c4d",
+  "report_path": "reports/mcp-api-tests/api-api_login-1a2b3c4d/junit.xml",
+  "analysis_depth": "standard",
+  "project": "qualitypilot-demo",
+  "module": "auth",
+  "version": "v1",
+  "context_count": 1,
+  "case_count": 1,
+  "analyses": [
+    {
+      "analysis_id": "FA-001",
+      "case_id": "FC-001",
+      "classname": "api_http.api_login",
+      "name": "step_02_assert_token",
+      "status": "failure",
+      "root_cause_type": "product_bug_or_contract_mismatch",
+      "likely_root_cause": "Authentication or permission behavior differs from the expected API contract or test data setup.",
+      "confidence": 0.7,
+      "should_create_bug": true,
+      "next_action": "confirm_reproducibility_then_generate_bug_report",
+      "related_contexts": [
+        {
+          "context_id": "auth-api-v1_0001",
+          "source_id": "auth-api-v1",
+          "source_type": "api_doc",
+          "title": "login token contract",
+          "score": 0.91,
+          "matched_terms": 2
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "root_cause_distribution": {
+      "product_bug_or_contract_mismatch": 1
+    },
+    "bug_candidate_count": 1,
+    "high_confidence_count": 0
+  },
+  "recommended_next_tools": [
+    {
+      "tool": "retrieve_test_context",
+      "reason": "Retrieve requirement, API document, bug, and log context before final triage."
+    },
+    {
+      "tool": "generate_bug_report",
+      "reason": "Convert confirmed bug candidates into a structured defect report."
     }
   ]
 }
