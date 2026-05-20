@@ -53,6 +53,7 @@ jobs:
             tests/automation \
             tests/unit/test_automation_scenario_service.py \
             tests/unit/test_test_report_service.py \
+            tests/unit/test_allure_report_service.py \
             tests/unit/test_qualitypilot_demo_dashboard_service.py \
             tests/unit/test_dashboard_config.py \
             tests/e2e/test_dashboard_smoke.py \

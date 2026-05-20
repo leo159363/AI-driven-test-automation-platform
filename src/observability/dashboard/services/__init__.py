@@ -13,6 +13,13 @@ from src.observability.dashboard.services.api_execution_adapter import (
     ExecutionStepResult,
     execute_plan_with_api_adapter,
 )
+from src.observability.dashboard.services.allure_report_service import (
+    DEFAULT_ALLURE_REPORT_DIR,
+    DEFAULT_ALLURE_RESULTS_DIR,
+    AllureGenerationResult,
+    build_allure_generate_command,
+    generate_allure_html_report,
+)
 from src.observability.dashboard.services.browser_execution_adapter import (
     BrowserDependencyError,
     BrowserExecutionAdapter,
@@ -115,6 +122,7 @@ from src.observability.dashboard.services.test_design_templates import (
 __all__ = [
     "AutomationScenario",
     "ApiExecutionAdapter",
+    "AllureGenerationResult",
     "BrowserDependencyError",
     "BrowserExecutionAdapter",
     "ExecutionPlan",
@@ -152,6 +160,8 @@ __all__ = [
     "DEFAULT_EXECUTION_HISTORY_PATH",
     "DEFAULT_EXECUTION_PLAN_ALLURE_RESULTS_DIR",
     "DEFAULT_EXECUTION_PLAN_JUNIT_PATH",
+    "DEFAULT_ALLURE_REPORT_DIR",
+    "DEFAULT_ALLURE_RESULTS_DIR",
     "DEFAULT_QUALITYPILOT_DEMO_DIR",
     "DEFAULT_QUALITYPILOT_DEMO_SUMMARY_PATH",
     "TestExecutionSummary",
@@ -160,6 +170,7 @@ __all__ = [
     "TestDesignEvaluationReport",
     "append_execution_history_record",
     "apply_review_statuses",
+    "build_allure_generate_command",
     "build_execution_history_record",
     "build_execution_quality_trends",
     "build_bug_report_rows",
@@ -180,6 +191,7 @@ __all__ = [
     "extract_test_points",
     "format_knowledge_hit_title",
     "generate_test_design_draft",
+    "generate_allure_html_report",
     "get_default_junit_report_path",
     "get_default_query",
     "get_focus_areas",

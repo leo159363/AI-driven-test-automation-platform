@@ -17,12 +17,15 @@ DEFAULT_JUNIT_CANDIDATES = (
 )
 
 DEFAULT_ALLURE_RESULTS_CANDIDATES = (
+    Path("reports/qualitypilot-demo/allure-results"),
     Path("reports/execution-plan-allure-results"),
     Path("reports/allure-results"),
     Path("allure-results"),
 )
 
 DEFAULT_ALLURE_REPORT_CANDIDATES = (
+    Path("reports/qualitypilot-demo/allure-report"),
+    Path("reports/execution-plan-allure-report"),
     Path("reports/allure-report"),
     Path("allure-report"),
 )

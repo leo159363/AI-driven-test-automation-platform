@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
 
 import streamlit as st
 
+from src.observability.dashboard.services.allure_report_service import (
+    DEFAULT_ALLURE_REPORT_DIR,
+    DEFAULT_ALLURE_RESULTS_DIR,
+    build_allure_generate_command,
+    generate_allure_html_report,
+)
 from src.observability.dashboard.services.test_report_service import (
     ReportArtifact,
     TestExecutionSummary,
@@ -16,7 +21,7 @@ from src.observability.dashboard.services.test_report_service import (
 )
 
 
-def _artifact_rows(artifacts: List[ReportArtifact]) -> List[dict[str, str]]:
+def _artifact_rows(artifacts: list[ReportArtifact]) -> list[dict[str, str]]:
     return [
         {
             "Type": artifact.label,
@@ -40,6 +45,42 @@ def _render_summary(summary: TestExecutionSummary) -> None:
         f"Suite: `{summary.suite_name}` | Duration: `{summary.duration_seconds:.2f}s` | "
         f"Source: `{summary.source_path}`"
     )
+
+
+def _render_allure_generation() -> None:
+    st.subheader("Allure HTML Generation")
+    st.markdown(
+        "Generate a static Allure HTML report from existing Allure results. "
+        "If the Allure CLI is not installed, this page returns a clear status "
+        "instead of failing."
+    )
+
+    results_dir = st.text_input(
+        "Allure results directory",
+        value=str(DEFAULT_ALLURE_RESULTS_DIR),
+        key="tr_allure_results_dir",
+    )
+    output_dir = st.text_input(
+        "Allure HTML output directory",
+        value=str(DEFAULT_ALLURE_REPORT_DIR),
+        key="tr_allure_output_dir",
+    )
+    clean = st.checkbox("Clean output directory before generation", value=True, key="tr_allure_clean")
+
+    command = build_allure_generate_command(results_dir, output_dir, clean=clean)
+    st.code(" ".join(command), language="bash")
+
+    if st.button("Generate Allure HTML", key="tr_generate_allure_html"):
+        result = generate_allure_html_report(
+            results_dir=results_dir,
+            output_dir=output_dir,
+            clean=clean,
+        )
+        if result.status == "generated":
+            st.success(result.message)
+        else:
+            st.warning(result.message)
+        st.json(result.to_dict())
 
 
 def render() -> None:
@@ -73,12 +114,15 @@ def render() -> None:
     st.subheader("报告工件")
     st.dataframe(_artifact_rows(artifacts), hide_index=True, use_container_width=True)
 
+    _render_allure_generation()
+
     st.subheader("推荐命令")
     st.code(
         "\n".join(
             [
                 "pytest --junitxml=reports/junit.xml",
                 "pytest --alluredir=reports/allure-results",
+                "python scripts/generate_allure_report.py",
                 "allure generate reports/allure-results -o reports/allure-report --clean",
             ]
         ),

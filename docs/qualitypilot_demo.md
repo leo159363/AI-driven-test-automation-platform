@@ -139,3 +139,26 @@ Interview demo order:
 1. Run `scripts/run_qualitypilot_demo.py` to generate artifacts.
 2. Open the Dashboard and choose `QualityPilot Demo`.
 3. Explain the page from top to bottom, emphasizing that every stage has structured JSON output instead of only free-form AI text.
+
+## 8. Allure HTML Report
+
+Stage 32 adds static Allure HTML report generation on top of the existing
+Allure-compatible result files.
+
+After running the QualityPilot demo, generate the HTML report:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\generate_allure_report.py
+```
+
+Default input and output:
+
+```text
+results_dir=reports/qualitypilot-demo/allure-results
+output_dir=reports/qualitypilot-demo/allure-report
+index_path=reports/qualitypilot-demo/allure-report/index.html
+```
+
+If the local machine does not have the Allure commandline installed, the script
+returns `missing_cli`. This is expected and means the platform has generated
+Allure-compatible results, but the external HTML generator is not available.
