@@ -46,7 +46,7 @@ bug_report_md=reports/qualitypilot-demo/bug_report.md
 - `reports/qualitypilot-demo/demo_summary.json`：完整链路结构化输出。
 - `reports/qualitypilot-demo/bug_report.md`：可复制到缺陷平台的 Bug 草稿。
 
-更详细的演示说明见 [docs/qualitypilot_demo.md](docs/qualitypilot_demo.md)，面试前检查清单见 [docs/final_interview_checklist.md](docs/final_interview_checklist.md)。
+更详细的演示说明见 [docs/qualitypilot_demo.md](docs/qualitypilot_demo.md)，面试前检查清单见 [docs/final_interview_checklist.md](docs/final_interview_checklist.md)，最终完成报告见 [docs/project_completion_report.md](docs/project_completion_report.md)。
 
 ## 2. 核心能力
 
