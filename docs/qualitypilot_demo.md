@@ -162,3 +162,30 @@ index_path=reports/qualitypilot-demo/allure-report/index.html
 If the local machine does not have the Allure commandline installed, the script
 returns `missing_cli`. This is expected and means the platform has generated
 Allure-compatible results, but the external HTML generator is not available.
+
+## 9. GitHub Actions Allure Artifact
+
+Stage 33 makes CI generate and upload a static Allure HTML report.
+
+In GitHub Actions, the workflow now:
+
+1. Runs the core pytest regression and writes `reports/ci-junit.xml`.
+2. Runs the execution-plan demo and writes `reports/execution-plan-allure-results`.
+3. Installs Java 17 and Allure commandline.
+4. Runs:
+
+```bash
+python scripts/generate_allure_report.py \
+  --results-dir reports/execution-plan-allure-results \
+  --output-dir reports/execution-plan-allure-report \
+  --json
+```
+
+5. Uploads `reports/execution-plan-allure-report/` as the `allure-html-report`
+artifact, and also keeps the full `reports/` folder as `ai-test-platform-reports`.
+
+Interview wording:
+
+```text
+CI 会在每次 push/PR 后运行核心回归，生成 JUnit XML、Allure results 和 Allure HTML 报告，并把报告作为 GitHub Actions artifact 上传。这样项目不是只在本地跑 pytest，而是具备持续集成和报告交付能力。
+```

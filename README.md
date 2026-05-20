@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/leo159363/AI-driven-test-automation-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/leo159363/AI-driven-test-automation-platform/actions/workflows/ci.yml)
 
+CI now uploads `ai-test-platform-reports` and `allure-html-report` artifacts after each push or pull request. See [docs/ci_report_artifacts.md](docs/ci_report_artifacts.md).
+
 QualityPilot 是一个基于 **MCP + RAG** 的智能自动化测试平台，面向测试开发场景，支持测试知识检索、测试用例生成、API 自动化执行、JUnit/Allure 报告解析、失败原因分析和 Bug 报告生成。
 
 项目定位不是完整企业级 TestOps 系统，而是一个适合测试开发实习面试讲解的工程化闭环：
@@ -95,6 +97,7 @@ get_document_summary
 - Allure-compatible results
 - Streamlit Dashboard
 - GitHub Actions CI
+- GitHub Actions Allure HTML artifact
 
 ## 5. 快速开始
 
