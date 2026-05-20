@@ -46,7 +46,7 @@ bug_report_md=reports/qualitypilot-demo/bug_report.md
 - `reports/qualitypilot-demo/demo_summary.json`：完整链路结构化输出。
 - `reports/qualitypilot-demo/bug_report.md`：可复制到缺陷平台的 Bug 草稿。
 
-更详细的演示说明见 [docs/qualitypilot_demo.md](docs/qualitypilot_demo.md)。
+更详细的演示说明见 [docs/qualitypilot_demo.md](docs/qualitypilot_demo.md)，面试前检查清单见 [docs/final_interview_checklist.md](docs/final_interview_checklist.md)。
 
 ## 2. 核心能力
 
@@ -177,15 +177,23 @@ tests/
 
 - 当前不是完整企业级 TestOps 平台，没有复杂权限、任务调度、多环境管理和外部缺陷系统写入。
 - 失败分析和 Bug 生成目前以规则兜底为主，保证本地和 CI 稳定；后续可以接入 LLM 做总结增强。
-- Allure 当前生成 compatible results，未强依赖本机安装 Allure CLI 生成 HTML。
+- Allure 已支持 results 生成、HTML 生成脚本和 GitHub Actions HTML artifact；本地是否能生成 HTML 取决于是否安装 Allure CLI。
 - Demo 使用本地 stub 服务制造稳定失败，便于面试现场复现。
 
-## 9. 后续路线
+## 9. 已完成面试闭环
+
+- MCP tools 全链路：`generate_test_cases -> run_api_tests -> get_test_report -> query_failed_cases -> analyze_failure -> generate_bug_report`。
+- RAG 测试上下文：支持 `project`、`module`、`version`、`source_type`、`source_id` 元数据和测试场景过滤。
+- 自动化执行：内置 API 登录、文件上传、UI 登录 dry-run 等演示场景。
+- 测试报告：支持 JUnit XML 解析、Allure results、Allure HTML 生成脚本和 CI artifact 上传。
+- Dashboard 展示：支持 QualityPilot Demo、测试报告、执行历史、追踪矩阵、测试设计评审/评估。
+- CI：push/PR 自动运行核心回归并上传 `ai-test-platform-reports` 和 `allure-html-report`。
+
+## 10. 后续路线
 
 优先级建议：
 
-1. 增加完整端到端 MCP tools/call 测试，验证每个 tool 的协议输入输出。
-2. 增加 Allure HTML 生成说明或可选脚本。
-3. 增加 Dashboard 中的“AI 测试闭环 Demo”页面，把当前 CLI Demo 可视化。
-4. 将失败分析结果和 Bug 草稿保存到本地历史记录。
-5. 接入真实业务 Demo API 或公开测试站点，替换部分 stub 场景。
+1. 将失败分析结果和 Bug 草稿保存到本地历史记录，形成可追溯缺陷分析记录。
+2. 接入真实业务 Demo API 或公开测试站点，替换部分 stub 场景。
+3. 增加轻量性能基线，例如 RAG 检索、报告解析、执行历史聚合耗时。
+4. 后续可接入 LLM 总结、外部缺陷系统或 GitHub Issues，但当前面试版不强依赖。

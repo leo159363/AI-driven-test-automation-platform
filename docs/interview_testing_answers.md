@@ -23,8 +23,8 @@
 | 自动化场景 | 展示内置 API 登录、API 文件上传、UI 登录冒烟场景 |
 | 执行计划 | 将自然语言步骤解析成结构化 action，并选择 API 或 Browser adapter 执行 |
 | 执行历史 | 保存每次执行的场景、状态、失败原因、报告路径和 artifact |
-| 测试报告 | 解析 JUnit XML，发现 Allure results 和 Allure report 目录 |
-| CI | GitHub Actions 自动运行核心回归并上传报告 artifact |
+| 测试报告 | 解析 JUnit XML，发现 Allure results / Allure report 目录 |
+| CI | GitHub Actions 自动运行核心回归并上传 JUnit、Allure results 和 Allure HTML artifact |
 
 ## 2. 测试用例设计覆盖了哪些方面
 
@@ -70,7 +70,7 @@
 - 本地 Windows 能运行。
 - GitHub Actions Ubuntu 环境能运行。
 - JUnit XML 能被报告中心解析。
-- Allure results 使用通用 JSON 附件格式，后续可生成 HTML 报告。
+- Allure results 使用通用 JSON 附件格式，可通过本地脚本或 CI 生成静态 HTML 报告。
 
 ### 易用性测试
 
@@ -115,6 +115,7 @@
 | Streamlit AppTest | Dashboard 页面 smoke test |
 | JUnit XML | 标准测试报告输出 |
 | Allure results | 自动化执行结果和附件输出 |
+| Allure HTML artifact | CI 中生成可下载的静态测试报告 |
 | GitHub Actions | CI 持续集成 |
 | Playwright 可选 | Browser UI adapter 的真实浏览器执行扩展 |
 
@@ -149,11 +150,12 @@
 4. 根据 action 类型选择 API adapter 或 Browser adapter。
 5. adapter 执行或 dry-run 每一步，并记录 passed、failed、skipped、dry_run。
 6. 执行结果写入 JUnit XML 和 Allure results。
-7. 可选保存执行历史。
-8. 追踪矩阵把需求项、测试点、自动化场景和最近执行状态关联起来。
-9. 测试报告页面读取报告。
-10. 执行历史页面展示趋势、失败原因和 artifact。
-11. GitHub Actions 在 push 后自动跑核心回归。
+7. 可选生成 Allure HTML，并在 CI 中作为 artifact 上传。
+8. 可选保存执行历史。
+9. 追踪矩阵把需求项、测试点、自动化场景和最近执行状态关联起来。
+10. 测试报告页面读取报告。
+11. 执行历史页面展示趋势、失败原因和 artifact。
+12. GitHub Actions 在 push 后自动跑核心回归。
 
 ## 6. 自动化测试结果是什么
 
@@ -169,7 +171,7 @@
 - Dashboard 页面有 smoke test。
 - API 和 UI demo 场景有自动化回归。
 - CI 会在 GitHub 上自动跑测试。
-- 报告会以 artifact 形式保存。
+- JUnit、Allure results 和 Allure HTML 报告会以 artifact 形式保存。
 
 如果面试官问有没有通过自动化发现代码问题，可以这样说：
 
@@ -224,4 +226,4 @@
 
 可以直接这样说：
 
-> 我这个项目里测试不是只写了几个 pytest，而是围绕 AI 自动化测试平台做了分层测试。功能上测了测试工作台、测试设计评审、追踪矩阵、执行计划、API/UI adapter、报告中心、执行历史和 CI；自动化上用了 pytest、Streamlit AppTest、JUnit XML、Allure results 和 GitHub Actions；用例设计覆盖功能、接口、界面、异常、安全、兼容性、易用性和弱网异常。性能测试当前没有做大规模压测，但我预留了 RAG 检索、测试设计生成、报告解析和历史趋势聚合这些压测对象，后续可以用 Locust、JMeter 或 pytest-benchmark 做性能基线。
+> 我这个项目里测试不是只写了几个 pytest，而是围绕 AI 自动化测试平台做了分层测试。功能上测了测试工作台、测试设计评审、追踪矩阵、执行计划、API/UI adapter、报告中心、执行历史和 CI；自动化上用了 pytest、Streamlit AppTest、JUnit XML、Allure results、Allure HTML artifact 和 GitHub Actions；用例设计覆盖功能、接口、界面、异常、安全、兼容性、易用性和弱网异常。性能测试当前没有做大规模压测，但我预留了 RAG 检索、测试设计生成、报告解析和历史趋势聚合这些压测对象，后续可以用 Locust、JMeter 或 pytest-benchmark 做性能基线。

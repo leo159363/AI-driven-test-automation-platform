@@ -108,7 +108,7 @@ bug_report_md=reports/qualitypilot-demo/bug_report.md
 
 ### Allure 是否完整集成？
 
-当前阶段生成的是 Allure compatible results，并能发现结果目录。后续可以接 `allure generate` 输出 HTML 报告，但这不是当前 MVP 的重点。
+当前阶段已经支持 Allure-compatible results、`scripts/generate_allure_report.py` 静态 HTML 生成脚本，以及 GitHub Actions 上传 `allure-html-report` artifact。本地如果没有 Allure commandline，脚本会返回 `missing_cli`；CI 会自动安装 Java 和 Allure commandline 后生成 HTML 报告。
 
 ### 这能写进简历吗？
 
