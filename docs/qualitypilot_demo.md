@@ -117,3 +117,25 @@ bug_report_md=reports/qualitypilot-demo/bug_report.md
 ```text
 实现基于 MCP tools 的自动化测试闭环：支持测试上下文检索、用例生成、API 自动化执行、JUnit/Allure 报告解析、失败用例查询、失败原因分析和 Bug 草稿生成，并提供可运行的端到端 Demo 脚本。
 ```
+## 7. Dashboard Visualization
+
+The Dashboard now includes a `QualityPilot Demo` page for showing the command-line
+demo artifacts in an interview-friendly UI.
+
+Start the Dashboard:
+```powershell
+.\.venv\Scripts\python.exe scripts\start_dashboard.py --port 8501
+```
+
+The page shows:
+- MCP workflow: `generate_test_cases -> run_api_tests -> get_test_report -> query_failed_cases -> analyze_failure -> generate_bug_report`.
+- RAG contexts used by case generation and failure analysis.
+- Generated test cases with dimensions, priorities, and suggested automation files.
+- Failed cases parsed from JUnit XML.
+- Failure analysis with root-cause type, confidence, and bug-candidate flag.
+- Bug report draft as structured rows plus Markdown.
+
+Interview demo order:
+1. Run `scripts/run_qualitypilot_demo.py` to generate artifacts.
+2. Open the Dashboard and choose `QualityPilot Demo`.
+3. Explain the page from top to bottom, emphasizing that every stage has structured JSON output instead of only free-form AI text.

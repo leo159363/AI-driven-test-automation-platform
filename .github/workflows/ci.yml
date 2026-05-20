@@ -53,8 +53,10 @@ jobs:
             tests/automation \
             tests/unit/test_automation_scenario_service.py \
             tests/unit/test_test_report_service.py \
+            tests/unit/test_qualitypilot_demo_dashboard_service.py \
             tests/unit/test_dashboard_config.py \
             tests/e2e/test_dashboard_smoke.py \
+            tests/e2e/test_qualitypilot_demo_dashboard_smoke.py \
             tests/e2e/test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list \
             tests/e2e/test_mcp_qualitypilot_workflow.py \
             -v \

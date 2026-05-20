@@ -8,13 +8,9 @@ Covers:
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.observability.dashboard.services.config_service import (
-    ComponentInfo,
     ConfigService,
 )
-
 
 # ── Fake Settings ────────────────────────────────────────────────────
 
@@ -132,6 +128,10 @@ class TestDashboardImports:
     def test_overview_importable(self) -> None:
         from src.observability.dashboard.pages import overview
         assert hasattr(overview, "render")
+
+    def test_qualitypilot_demo_importable(self) -> None:
+        from src.observability.dashboard.pages import qualitypilot_demo
+        assert hasattr(qualitypilot_demo, "render")
 
     def test_test_workbench_importable(self) -> None:
         from src.observability.dashboard.pages import test_workbench

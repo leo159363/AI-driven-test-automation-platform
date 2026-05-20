@@ -11,6 +11,12 @@ def _page_overview() -> None:
     render()
 
 
+def _page_qualitypilot_demo() -> None:
+    from src.observability.dashboard.pages.qualitypilot_demo import render
+
+    render()
+
+
 def _page_test_workbench() -> None:
     from src.observability.dashboard.pages.test_workbench import render
 
@@ -90,6 +96,7 @@ def _page_evaluation_panel() -> None:
 
 
 pages = [
+    st.Page(_page_qualitypilot_demo, title="QualityPilot Demo"),
     st.Page(_page_overview, title="平台总览", icon="📊", default=True),
     st.Page(_page_test_workbench, title="测试工作台", icon="🧪"),
     st.Page(_page_automation_scenarios, title="自动化场景", icon="⚙️"),
