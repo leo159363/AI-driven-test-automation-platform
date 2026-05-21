@@ -250,6 +250,15 @@ textarea {
   font-size: 28px;
 }
 
+.compact-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.compact-metrics .metric-card strong {
+  font-size: 20px;
+}
+
 .panel {
   padding: 18px;
 }
@@ -257,6 +266,10 @@ textarea {
 .panel h3 {
   margin: 0 0 14px;
   font-size: 17px;
+}
+
+.report-run-panel {
+  margin-bottom: 14px;
 }
 
 .split-layout {
@@ -284,6 +297,12 @@ textarea {
 
 .endpoint-card.selected {
   border-color: #1f6feb;
+  box-shadow: inset 3px 0 0 #1f6feb;
+}
+
+.scenario-card.selected {
+  border-color: #1f6feb;
+  background: #f8fbff;
   box-shadow: inset 3px 0 0 #1f6feb;
 }
 

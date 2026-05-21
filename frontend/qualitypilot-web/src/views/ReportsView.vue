@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { getLatestReport } from "../services/api";
-import type { LatestReportResponse } from "../types";
+import { getAutomationRuns, getLatestReport } from "../services/api";
+import type { AutomationRunRecord, LatestReportResponse } from "../types";
 
 const data = ref<LatestReportResponse | null>(null);
+const runs = ref<AutomationRunRecord[]>([]);
 const error = ref("");
 
 onMounted(async () => {
   try {
-    data.value = await getLatestReport();
+    const [reportData, runData] = await Promise.all([getLatestReport(), getAutomationRuns()]);
+    data.value = reportData;
+    runs.value = runData.items;
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err);
   }
@@ -47,6 +50,35 @@ onMounted(async () => {
 
     <div v-if="data?.warning" class="error-banner">{{ data.warning }}</div>
 
+    <div class="panel report-run-panel">
+      <h3>自动化运行记录</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>场景</th>
+            <th>状态</th>
+            <th>通过 / 总数</th>
+            <th>Allure Results</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="run in runs" :key="run.run_id">
+            <td class="path-text">{{ run.run_id }}</td>
+            <td>{{ run.scenario_name }}</td>
+            <td>
+              <span class="status-pill" :class="run.status === 'passed' ? 'ok' : 'warn'">
+                {{ run.status }}
+              </span>
+            </td>
+            <td>{{ run.summary?.passed ?? "--" }} / {{ run.summary?.total ?? "--" }}</td>
+            <td class="path-text">{{ run.paths.allure_results }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-if="runs.length === 0" class="empty-state">暂无从 Vue / API 触发的执行记录。</div>
+    </div>
+
     <div class="panel">
       <h3>报告产物</h3>
       <table class="data-table">
@@ -74,4 +106,3 @@ onMounted(async () => {
     </div>
   </section>
 </template>
-

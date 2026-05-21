@@ -79,6 +79,50 @@ export interface AutomationScenarioResponse {
   };
 }
 
+export interface AutomationRunSummary {
+  total: number;
+  passed: number;
+  failed: number;
+  errors: number;
+  skipped: number;
+  duration_seconds: number;
+}
+
+export interface AutomationRunPaths {
+  run_dir: string;
+  junitxml: string;
+  allure_results: string;
+  run_record: string;
+}
+
+export interface AutomationRunRecord {
+  run_id: string;
+  scenario_id: string;
+  scenario_name: string;
+  category: string;
+  status: string;
+  return_code: number;
+  timed_out: boolean;
+  started_at: string;
+  finished_at: string;
+  duration_seconds: number;
+  command: string[];
+  summary: AutomationRunSummary | null;
+  paths: AutomationRunPaths;
+  stdout: string;
+  stderr: string;
+}
+
+export interface AutomationRunsResponse {
+  items: AutomationRunRecord[];
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    timeout: number;
+  };
+}
+
 export interface ReportArtifact {
   artifact_type: string;
   label: string;
@@ -104,4 +148,15 @@ export interface LatestReportResponse {
   summary: ExecutionSummary | null;
   warning: string | null;
   artifacts: ReportArtifact[];
+}
+
+export interface RunReportResponse {
+  run_id: string;
+  scenario_id: string;
+  scenario_name: string;
+  status: string;
+  summary: AutomationRunSummary | null;
+  paths: AutomationRunPaths;
+  stdout: string;
+  stderr: string;
 }

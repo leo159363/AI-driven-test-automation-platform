@@ -169,6 +169,20 @@ http://127.0.0.1:8501
 
 Vue 前端是全栈化改造后的正式页面入口，默认调用 `http://127.0.0.1:8000` 的 FastAPI 接口：
 
+如果你只想一键启动前后端，推荐使用：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\start_fullstack.py
+```
+
+然后打开：
+
+```text
+http://127.0.0.1:5173
+```
+
+手动启动方式如下：
+
 ```powershell
 cd frontend\qualitypilot-web
 npm.cmd install
@@ -188,8 +202,8 @@ http://127.0.0.1:5173
 | `平台总览` | 调用 FastAPI 汇总测试用例、接口、自动化场景和报告产物 |
 | `API 测试` | 展示接口目录树、接口详情、headers、body、断言、关联用例和 pytest 目标 |
 | `测试用例` | 展示测试用例目录、类型筛选和 pytest 目标 |
-| `自动化执行` | 展示可执行 pytest 场景和执行命令 |
-| `测试报告` | 展示 JUnit / Allure 报告发现结果 |
+| `自动化执行` | 选择 pytest 场景，触发后端执行并生成 JUnit / Allure 产物 |
+| `测试报告` | 展示 JUnit / Allure 报告发现结果和 API 触发的执行记录 |
 | `AI 测试助手` | 先完成页面骨架，后续接入 RAG 和 MCP tools |
 | `知识库管理` | 先完成页面骨架，后续接入文档上传和检索 |
 
@@ -256,6 +270,7 @@ src/
 frontend/
   qualitypilot-web/         # Vue 3 + Vite 前端工程
 scripts/
+  start_fullstack.py       # 一键启动 FastAPI + Vue 开发服务
   run_qualitypilot_demo.py  # 端到端面试 Demo
   run_automation_suite.py   # 内置自动化场景 runner
   run_execution_plan.py     # 自然语言执行计划 runner

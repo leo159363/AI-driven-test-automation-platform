@@ -5,8 +5,9 @@ from __future__ import annotations
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
+from src.api.services.automation_run_service import get_automation_run
 from src.observability.dashboard.services.test_report_service import (
     discover_report_artifacts,
     get_default_junit_report_path,
@@ -44,3 +45,24 @@ def get_latest_report() -> dict[str, object]:
         "artifacts": artifacts,
     }
 
+
+@router.get("/{run_id}")
+def get_report_by_run_id(run_id: str) -> dict[str, object]:
+    """Return report metadata for one automation run."""
+    try:
+        run = get_automation_run(run_id, _repo_root())
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return {
+        "run_id": run["run_id"],
+        "scenario_id": run["scenario_id"],
+        "scenario_name": run["scenario_name"],
+        "status": run["status"],
+        "summary": run.get("summary"),
+        "paths": run["paths"],
+        "stdout": run.get("stdout", ""),
+        "stderr": run.get("stderr", ""),
+    }

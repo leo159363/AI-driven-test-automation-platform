@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from src.api.main import create_app
@@ -58,6 +59,71 @@ def test_automation_scenarios_endpoint_returns_runner_command() -> None:
     assert all("run_automation_suite.py" in item["runner_command"] for item in payload["items"])
 
 
+def test_run_automation_endpoint_returns_execution_record(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.api.routers import automation
+
+    def fake_run_automation_scenario(scenario_id: str, timeout_seconds: int = 120):
+        assert timeout_seconds == 120
+        return {
+            "run_id": "api_login-demo",
+            "scenario_id": scenario_id,
+            "scenario_name": "API: 登录接口",
+            "category": "API",
+            "status": "passed",
+            "return_code": 0,
+            "timed_out": False,
+            "started_at": "2026-05-21T00:00:00+00:00",
+            "finished_at": "2026-05-21T00:00:01+00:00",
+            "duration_seconds": 1.0,
+            "command": ["python", "scripts/run_automation_suite.py"],
+            "summary": {
+                "total": 2,
+                "passed": 2,
+                "failed": 0,
+                "errors": 0,
+                "skipped": 0,
+                "duration_seconds": 0.2,
+            },
+            "paths": {
+                "run_dir": "reports/api-runs/api_login-demo",
+                "junitxml": "reports/api-runs/api_login-demo/junit.xml",
+                "allure_results": "reports/api-runs/api_login-demo/allure-results",
+                "run_record": "reports/api-runs/api_login-demo/run.json",
+            },
+            "stdout": "ok",
+            "stderr": "",
+        }
+
+    monkeypatch.setattr(automation, "run_automation_scenario", fake_run_automation_scenario)
+
+    response = _client().post("/api/automation/run", json={"scenario_id": "api_login"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["run_id"] == "api_login-demo"
+    assert payload["status"] == "passed"
+    assert payload["summary"]["passed"] == 2
+
+
+def test_automation_runs_endpoint_returns_summary(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.api.routers import automation
+
+    monkeypatch.setattr(
+        automation,
+        "list_automation_runs",
+        lambda: [
+            {"run_id": "a", "status": "passed"},
+            {"run_id": "b", "status": "failed"},
+        ],
+    )
+
+    response = _client().get("/api/automation/runs")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"] == {"total": 2, "passed": 1, "failed": 1, "timeout": 0}
+
+
 def test_latest_report_endpoint_has_report_artifacts() -> None:
     response = _client().get("/api/reports/latest")
 
@@ -66,3 +132,34 @@ def test_latest_report_endpoint_has_report_artifacts() -> None:
     assert "junit_path" in payload
     assert "artifacts" in payload
     assert any(artifact["artifact_type"] == "junit_xml" for artifact in payload["artifacts"])
+
+
+def test_run_report_endpoint_returns_one_run(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.api.routers import reports
+
+    monkeypatch.setattr(
+        reports,
+        "get_automation_run",
+        lambda run_id, project_root: {
+            "run_id": run_id,
+            "scenario_id": "api_login",
+            "scenario_name": "API: 登录接口",
+            "status": "passed",
+            "summary": {"total": 2, "passed": 2, "failed": 0, "errors": 0, "skipped": 0},
+            "paths": {
+                "run_dir": "reports/api-runs/api_login-demo",
+                "junitxml": "reports/api-runs/api_login-demo/junit.xml",
+                "allure_results": "reports/api-runs/api_login-demo/allure-results",
+                "run_record": "reports/api-runs/api_login-demo/run.json",
+            },
+            "stdout": "ok",
+            "stderr": "",
+        },
+    )
+
+    response = _client().get("/api/reports/api_login-demo")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["run_id"] == "api_login-demo"
+    assert payload["summary"]["passed"] == 2
