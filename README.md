@@ -43,6 +43,7 @@ CI 会在 push / pull request 后运行核心回归，并上传 `ai-test-platfor
 | MCP Server | 将测试开发动作封装为可编排 tools | 面向 Agent / IDE / 自动化工作流扩展 |
 | 测试用例生成 | 根据需求和上下文生成结构化测试用例 | 功能、异常、安全、回归等维度覆盖 |
 | API 自动化执行 | 执行登录、文件上传等 API 场景 | pytest、HTTP adapter、执行计划落地 |
+| 测试用例管理 | 展示接口/UI 测试用例、自动化状态、pytest 目标和执行命令 | 更接近传统自动化测试平台的用例入口 |
 | UI 自动化 dry-run | 将自然语言 UI 步骤转换为 Browser adapter action | 展示 UI 自动化扩展思路，同时保证演示稳定 |
 | 测试报告解析 | 解析 JUnit XML，发现 Allure results / Allure report | 自动化测试平台必须能消费报告 |
 | 失败用例查询 | 按 failed / error / skipped 筛选失败用例 | 支持失败定位和回归分析 |
@@ -132,6 +133,7 @@ http://127.0.0.1:8501
 | 页面 | 重点讲什么 |
 | --- | --- |
 | `QualityPilot Demo` | MCP workflow、RAG contexts、测试用例、失败分析、Bug 草稿 |
+| `测试用例管理` | 测试用例列表、接口测试请求、自动化状态、执行命令和报告产物 |
 | `测试工作台` | 输入需求，生成带证据的测试设计草稿 |
 | `自动化场景` | API 登录、文件上传、UI 登录 dry-run |
 | `执行计划` | 自然语言步骤转结构化 action |

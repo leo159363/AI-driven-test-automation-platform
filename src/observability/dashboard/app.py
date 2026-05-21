@@ -23,6 +23,12 @@ def _page_test_workbench() -> None:
     render()
 
 
+def _page_test_case_management() -> None:
+    from src.observability.dashboard.pages.test_case_management import render
+
+    render()
+
+
 def _page_automation_scenarios() -> None:
     from src.observability.dashboard.pages.automation_scenarios import render
 
@@ -98,6 +104,7 @@ def _page_evaluation_panel() -> None:
 pages = [
     st.Page(_page_qualitypilot_demo, title="QualityPilot Demo"),
     st.Page(_page_overview, title="平台总览", icon="📊", default=True),
+    st.Page(_page_test_case_management, title="测试用例管理", icon="📋"),
     st.Page(_page_test_workbench, title="测试工作台", icon="🧪"),
     st.Page(_page_automation_scenarios, title="自动化场景", icon="⚙️"),
     st.Page(_page_execution_planner, title="执行计划", icon="🗂️"),

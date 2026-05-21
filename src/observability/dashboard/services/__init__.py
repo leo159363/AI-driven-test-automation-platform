@@ -1,18 +1,5 @@
 """Dashboard services package."""
 
-from src.observability.dashboard.services.automation_scenario_service import (
-    AutomationScenario,
-    build_runner_command,
-    get_automation_scenario,
-    get_pytest_targets,
-    list_automation_scenarios,
-)
-from src.observability.dashboard.services.api_execution_adapter import (
-    ApiExecutionAdapter,
-    ExecutionResult,
-    ExecutionStepResult,
-    execute_plan_with_api_adapter,
-)
 from src.observability.dashboard.services.allure_report_service import (
     DEFAULT_ALLURE_REPORT_DIR,
     DEFAULT_ALLURE_RESULTS_DIR,
@@ -20,10 +7,32 @@ from src.observability.dashboard.services.allure_report_service import (
     build_allure_generate_command,
     generate_allure_html_report,
 )
+from src.observability.dashboard.services.api_execution_adapter import (
+    ApiExecutionAdapter,
+    ExecutionResult,
+    ExecutionStepResult,
+    execute_plan_with_api_adapter,
+)
+from src.observability.dashboard.services.automation_scenario_service import (
+    AutomationScenario,
+    build_runner_command,
+    get_automation_scenario,
+    get_pytest_targets,
+    list_automation_scenarios,
+)
 from src.observability.dashboard.services.browser_execution_adapter import (
     BrowserDependencyError,
     BrowserExecutionAdapter,
     execute_plan_with_browser_adapter,
+)
+from src.observability.dashboard.services.execution_history_service import (
+    DEFAULT_EXECUTION_HISTORY_PATH,
+    ExecutionHistoryRecord,
+    append_execution_history_record,
+    build_execution_history_record,
+    build_execution_quality_trends,
+    load_execution_history_records,
+    summarize_execution_history,
 )
 from src.observability.dashboard.services.execution_plan_service import (
     ExecutionPlan,
@@ -37,18 +46,50 @@ from src.observability.dashboard.services.execution_result_report_service import
     write_execution_result_allure_results,
     write_execution_result_junit_xml,
 )
-from src.observability.dashboard.services.execution_history_service import (
-    DEFAULT_EXECUTION_HISTORY_PATH,
-    ExecutionHistoryRecord,
-    append_execution_history_record,
-    build_execution_quality_trends,
-    build_execution_history_record,
-    load_execution_history_records,
-    summarize_execution_history,
+from src.observability.dashboard.services.qualitypilot_demo_service import (
+    DEFAULT_QUALITYPILOT_DEMO_DIR,
+    DEFAULT_QUALITYPILOT_DEMO_SUMMARY_PATH,
+    build_bug_report_rows,
+    build_context_rows,
+    build_failed_case_rows,
+    build_failure_analysis_rows,
+    build_headline_metrics,
+    build_test_case_rows,
+    build_workflow_rows,
+    extract_bug_report_markdown,
+    load_qualitypilot_demo_summary,
+)
+from src.observability.dashboard.services.test_case_library_service import (
+    ApiRequestExample,
+    TestCaseItem,
+    build_api_request_rows,
+    build_case_catalog_rows,
+    build_scenario_execution_command,
+    list_api_request_examples,
+    list_test_cases,
+    summarize_test_cases,
+)
+from src.observability.dashboard.services.test_design_evaluation_service import (
+    DEFAULT_TEST_DESIGN_GOLDEN_SET,
+    DEFAULT_TEST_DESIGN_REPORT_DIR,
+    TestDesignCaseResult,
+    TestDesignEvaluationCase,
+    TestDesignEvaluationReport,
+    evaluate_test_design_case,
+    load_test_design_golden_set,
+    run_test_design_evaluation,
+    write_test_design_evaluation_report,
+)
+from src.observability.dashboard.services.test_design_review_service import (
+    DEFAULT_EXPECTED_DIMENSIONS,
+    DIMENSION_LABELS,
+    TestDesignReviewFinding,
+    TestDesignReviewReport,
+    review_test_design_markdown,
 )
 from src.observability.dashboard.services.test_design_service import (
-    KnowledgeHit,
     SOURCE_TYPE_LABELS,
+    KnowledgeHit,
     TestDesignDraft,
     build_test_outline,
     format_knowledge_hit_title,
@@ -60,12 +101,17 @@ from src.observability.dashboard.services.test_design_service import (
     normalize_source_type,
     retrieve_knowledge_hits,
 )
-from src.observability.dashboard.services.test_design_review_service import (
-    DEFAULT_EXPECTED_DIMENSIONS,
-    DIMENSION_LABELS,
-    TestDesignReviewFinding,
-    TestDesignReviewReport,
-    review_test_design_markdown,
+from src.observability.dashboard.services.test_design_templates import (
+    FOCUS_OPTIONS,
+    SCENARIO_BLUEPRINTS,
+)
+from src.observability.dashboard.services.test_report_service import (
+    ReportArtifact,
+    TestExecutionSummary,
+    discover_report_artifacts,
+    get_default_junit_report_path,
+    load_execution_summary,
+    parse_junit_xml,
 )
 from src.observability.dashboard.services.traceability_service import (
     REVIEW_STATUS_LABELS,
@@ -81,42 +127,6 @@ from src.observability.dashboard.services.traceability_service import (
     export_traceability_markdown,
     extract_requirement_items,
     extract_test_points,
-)
-from src.observability.dashboard.services.test_design_evaluation_service import (
-    DEFAULT_TEST_DESIGN_GOLDEN_SET,
-    DEFAULT_TEST_DESIGN_REPORT_DIR,
-    TestDesignCaseResult,
-    TestDesignEvaluationCase,
-    TestDesignEvaluationReport,
-    evaluate_test_design_case,
-    load_test_design_golden_set,
-    run_test_design_evaluation,
-    write_test_design_evaluation_report,
-)
-from src.observability.dashboard.services.test_report_service import (
-    ReportArtifact,
-    TestExecutionSummary,
-    discover_report_artifacts,
-    get_default_junit_report_path,
-    load_execution_summary,
-    parse_junit_xml,
-)
-from src.observability.dashboard.services.qualitypilot_demo_service import (
-    DEFAULT_QUALITYPILOT_DEMO_DIR,
-    DEFAULT_QUALITYPILOT_DEMO_SUMMARY_PATH,
-    build_bug_report_rows,
-    build_context_rows,
-    build_failed_case_rows,
-    build_failure_analysis_rows,
-    build_headline_metrics,
-    build_test_case_rows,
-    build_workflow_rows,
-    extract_bug_report_markdown,
-    load_qualitypilot_demo_summary,
-)
-from src.observability.dashboard.services.test_design_templates import (
-    FOCUS_OPTIONS,
-    SCENARIO_BLUEPRINTS,
 )
 
 __all__ = [
@@ -143,6 +153,8 @@ __all__ = [
     "list_automation_scenarios",
     "SCENARIO_BLUEPRINTS",
     "TestDesignDraft",
+    "TestCaseItem",
+    "ApiRequestExample",
     "TestDesignReviewFinding",
     "TestDesignReviewReport",
     "TraceabilityAutomationLink",
@@ -171,6 +183,8 @@ __all__ = [
     "append_execution_history_record",
     "apply_review_statuses",
     "build_allure_generate_command",
+    "build_api_request_rows",
+    "build_case_catalog_rows",
     "build_execution_history_record",
     "build_execution_quality_trends",
     "build_bug_report_rows",
@@ -181,6 +195,7 @@ __all__ = [
     "build_test_case_rows",
     "build_workflow_rows",
     "build_test_outline",
+    "build_scenario_execution_command",
     "build_traceability_report",
     "discover_report_artifacts",
     "evaluate_test_design_case",
@@ -198,6 +213,8 @@ __all__ = [
     "get_scenario_blueprint",
     "infer_source_type",
     "load_test_design_golden_set",
+    "list_api_request_examples",
+    "list_test_cases",
     "load_execution_summary",
     "load_execution_history_records",
     "load_qualitypilot_demo_summary",
@@ -207,6 +224,7 @@ __all__ = [
     "review_test_design_markdown",
     "run_test_design_evaluation",
     "summarize_execution_history",
+    "summarize_test_cases",
     "write_execution_result_allure_results",
     "write_test_design_evaluation_report",
     "write_execution_result_junit_xml",

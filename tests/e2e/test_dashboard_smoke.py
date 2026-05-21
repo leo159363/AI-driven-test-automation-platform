@@ -17,8 +17,7 @@ Usage::
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import Any, List
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -73,7 +72,7 @@ def _mock_settings() -> MagicMock:
 
 def _collect_text(at: Any) -> str:
     """Collect all rendered text from an AppTest run for assertion."""
-    parts: List[str] = []
+    parts: list[str] = []
     for attr in ("markdown", "header", "subheader", "info", "error", "title", "text", "success", "warning"):
         for el in getattr(at, attr, []):
             parts.append(str(getattr(el, "value", "")))
@@ -166,7 +165,29 @@ class TestDashboardSmoke:
         assert "test" in text.lower() or "测试" in text
 
     # ------------------------------------------------------------------
-    # 4. Automation Scenarios page
+    # 4. Test Case Management page
+    # ------------------------------------------------------------------
+
+    @pytest.mark.e2e
+    def test_test_case_management_page_renders(self) -> None:
+        """Test Case Management page loads without errors."""
+        from streamlit.testing.v1 import AppTest
+
+        def page_script():
+            from src.observability.dashboard.pages.test_case_management import render
+            render()
+
+        at = AppTest.from_function(page_script, default_timeout=10)
+        at.run()
+
+        assert not at.exception, (
+            f"Test Case Management page raised an exception: {at.exception}"
+        )
+        text = _collect_text(at)
+        assert "测试用例" in text or "接口测试" in text
+
+    # ------------------------------------------------------------------
+    # 5. Automation Scenarios page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -188,7 +209,7 @@ class TestDashboardSmoke:
         assert "automation" in text.lower() or "场景" in text
 
     # ------------------------------------------------------------------
-    # 5. Execution Planner page
+    # 6. Execution Planner page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -210,7 +231,7 @@ class TestDashboardSmoke:
         assert "execution" in text.lower() or "计划" in text
 
     # ------------------------------------------------------------------
-    # 6. Execution History page
+    # 7. Execution History page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -232,7 +253,7 @@ class TestDashboardSmoke:
         assert "execution" in text.lower() or "history" in text.lower()
 
     # ------------------------------------------------------------------
-    # 7. Test Reports page
+    # 8. Test Reports page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -254,7 +275,7 @@ class TestDashboardSmoke:
         assert "report" in text.lower() or "报告" in text
 
     # ------------------------------------------------------------------
-    # 8. Test Design Evaluation page
+    # 9. Test Design Evaluation page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -276,7 +297,7 @@ class TestDashboardSmoke:
         assert "评估" in text or "evaluation" in text.lower()
 
     # ------------------------------------------------------------------
-    # 9. Test Design Review page
+    # 10. Test Design Review page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -298,7 +319,7 @@ class TestDashboardSmoke:
         assert "review" in text.lower() or "risk" in text.lower()
 
     # ------------------------------------------------------------------
-    # 10. Traceability Matrix page
+    # 11. Traceability Matrix page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -320,7 +341,7 @@ class TestDashboardSmoke:
         assert "traceability" in text.lower() or "matrix" in text.lower()
 
     # ------------------------------------------------------------------
-    # 11. Ingestion Manager page
+    # 12. Ingestion Manager page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -348,7 +369,7 @@ class TestDashboardSmoke:
         )
 
     # ------------------------------------------------------------------
-    # 12. Ingestion Traces page
+    # 13. Ingestion Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -378,7 +399,7 @@ class TestDashboardSmoke:
         assert "trace" in text.lower() or "ingestion" in text.lower()
 
     # ------------------------------------------------------------------
-    # 13. Query Traces page
+    # 14. Query Traces page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
@@ -408,7 +429,7 @@ class TestDashboardSmoke:
         assert "query" in text.lower() or "trace" in text.lower()
 
     # ------------------------------------------------------------------
-    # 14. Evaluation Panel page
+    # 15. Evaluation Panel page
     # ------------------------------------------------------------------
 
     @pytest.mark.e2e
