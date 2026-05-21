@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="QualityPilot Vue automation execution and report page">
+  <rect width="1280" height="720" fill="#f4f7fb"/>
+  <rect x="24" y="24" width="220" height="672" rx="10" fill="#111827"/>
+  <text x="52" y="70" fill="#f8fafc" font-family="Arial, Microsoft YaHei" font-size="24" font-weight="700">QualityPilot</text>
+  <text x="52" y="96" fill="#9fb2d1" font-family="Arial, Microsoft YaHei" font-size="13">Automation & Report</text>
+  <text x="52" y="170" fill="#cbd7ea" font-family="Arial, Microsoft YaHei" font-size="15">API 测试</text>
+  <rect x="44" y="206" width="160" height="38" rx="8" fill="#1f6feb"/>
+  <text x="66" y="231" fill="#ffffff" font-family="Arial, Microsoft YaHei" font-size="15" font-weight="700">自动化执行</text>
+  <text x="52" y="292" fill="#cbd7ea" font-family="Arial, Microsoft YaHei" font-size="15">测试报告</text>
+  <text x="52" y="342" fill="#cbd7ea" font-family="Arial, Microsoft YaHei" font-size="15">AI 测试助手</text>
+  <text x="52" y="392" fill="#cbd7ea" font-family="Arial, Microsoft YaHei" font-size="15">知识库管理</text>
+
+  <text x="282" y="64" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="28" font-weight="700">自动化执行与报告</text>
+  <text x="282" y="92" fill="#566579" font-family="Arial, Microsoft YaHei" font-size="15">Vue 页面触发 pytest 场景，后端生成 JUnit / Allure 产物并解析执行结果。</text>
+
+  <rect x="282" y="122" width="290" height="540" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="306" y="158" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">场景列表</text>
+  <rect x="306" y="188" width="230" height="110" rx="10" fill="#f8fbff" stroke="#1f6feb"/>
+  <text x="326" y="220" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="16" font-weight="700">API: 登录接口</text>
+  <text x="326" y="250" fill="#64748b" font-family="Arial, Microsoft YaHei" font-size="13">api_login · pytest</text>
+  <rect x="326" y="266" width="92" height="26" rx="13" fill="#dcfce7"/>
+  <text x="344" y="284" fill="#166534" font-family="Arial" font-size="12" font-weight="700">ready</text>
+  <rect x="306" y="322" width="230" height="98" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="326" y="354" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="16" font-weight="700">API: 文件上传</text>
+  <text x="326" y="384" fill="#64748b" font-family="Arial, Microsoft YaHei" font-size="13">api_file_upload · pytest</text>
+
+  <rect x="600" y="122" width="640" height="230" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="624" y="158" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">执行控制台</text>
+  <rect x="624" y="184" width="150" height="42" rx="8" fill="#1f6feb"/>
+  <text x="662" y="211" fill="#ffffff" font-family="Arial, Microsoft YaHei" font-size="15" font-weight="700">运行场景</text>
+  <rect x="624" y="252" width="568" height="64" rx="8" fill="#0f172a"/>
+  <text x="646" y="280" fill="#e2e8f0" font-family="Consolas" font-size="13">python scripts/run_automation_suite.py --scenario api_login</text>
+  <text x="646" y="302" fill="#93c5fd" font-family="Consolas" font-size="13">run_id=api_login-20260521 status=failed failed=1</text>
+
+  <rect x="600" y="380" width="300" height="282" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="624" y="416" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">结果摘要</text>
+  <rect x="624" y="448" width="104" height="78" rx="8" fill="#eff6ff"/>
+  <text x="646" y="478" fill="#1d4ed8" font-family="Arial, Microsoft YaHei" font-size="13">total</text>
+  <text x="646" y="510" fill="#172033" font-family="Arial" font-size="28" font-weight="700">2</text>
+  <rect x="750" y="448" width="104" height="78" rx="8" fill="#fff1f2"/>
+  <text x="772" y="478" fill="#9f1239" font-family="Arial, Microsoft YaHei" font-size="13">failed</text>
+  <text x="772" y="510" fill="#172033" font-family="Arial" font-size="28" font-weight="700">1</text>
+  <text x="624" y="570" fill="#43536b" font-family="Arial, Microsoft YaHei" font-size="14">失败用例进入 AI 分析流程</text>
+  <text x="624" y="604" fill="#43536b" font-family="Arial, Microsoft YaHei" font-size="14">可继续生成 Bug 报告草稿</text>
+
+  <rect x="940" y="380" width="300" height="282" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="964" y="416" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">报告产物</text>
+  <rect x="964" y="448" width="230" height="44" rx="8" fill="#f8fafc" stroke="#d8e1ef"/>
+  <text x="982" y="475" fill="#40516a" font-family="Consolas" font-size="13">junit.xml</text>
+  <rect x="964" y="510" width="230" height="44" rx="8" fill="#f8fafc" stroke="#d8e1ef"/>
+  <text x="982" y="537" fill="#40516a" font-family="Consolas" font-size="13">allure-results/</text>
+  <rect x="964" y="572" width="230" height="44" rx="8" fill="#f8fafc" stroke="#d8e1ef"/>
+  <text x="982" y="599" fill="#40516a" font-family="Consolas" font-size="13">bug_report.md</text>
+</svg>

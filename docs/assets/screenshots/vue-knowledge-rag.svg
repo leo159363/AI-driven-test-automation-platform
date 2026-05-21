@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="QualityPilot Vue knowledge base and RAG page">
+  <rect width="1280" height="720" fill="#f4f7fb"/>
+  <rect x="24" y="24" width="220" height="672" rx="10" fill="#111827"/>
+  <text x="52" y="70" fill="#f8fafc" font-family="Arial, Microsoft YaHei" font-size="24" font-weight="700">QualityPilot</text>
+  <text x="52" y="96" fill="#9fb2d1" font-family="Arial, Microsoft YaHei" font-size="13">Knowledge RAG</text>
+  <text x="52" y="170" fill="#cbd7ea" font-family="Arial, Microsoft YaHei" font-size="15">API 测试</text>
+  <text x="52" y="220" fill="#cbd7ea" font-family="Arial, Microsoft YaHei" font-size="15">自动化执行</text>
+  <text x="52" y="270" fill="#cbd7ea" font-family="Arial, Microsoft YaHei" font-size="15">AI 测试助手</text>
+  <rect x="44" y="306" width="160" height="38" rx="8" fill="#1f6feb"/>
+  <text x="66" y="331" fill="#ffffff" font-family="Arial, Microsoft YaHei" font-size="15" font-weight="700">知识库管理</text>
+
+  <text x="282" y="64" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="28" font-weight="700">知识库管理</text>
+  <text x="282" y="92" fill="#566579" font-family="Arial, Microsoft YaHei" font-size="15">需求、接口文档、历史 Bug 和测试规范统一入库，作为 AI 生成的证据来源。</text>
+
+  <rect x="282" y="122" width="250" height="260" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="306" y="158" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">过滤条件</text>
+  <rect x="306" y="186" width="190" height="34" rx="8" fill="#f8fafc" stroke="#d8e1ef"/>
+  <text x="320" y="209" fill="#40516a" font-family="Arial, Microsoft YaHei" font-size="13">project: QualityPilot</text>
+  <rect x="306" y="234" width="190" height="34" rx="8" fill="#f8fafc" stroke="#d8e1ef"/>
+  <text x="320" y="257" fill="#40516a" font-family="Arial, Microsoft YaHei" font-size="13">version: demo</text>
+  <rect x="306" y="290" width="86" height="28" rx="14" fill="#eef2f7"/>
+  <text x="324" y="309" fill="#40516a" font-family="Arial" font-size="12" font-weight="700">api_doc</text>
+  <rect x="402" y="290" width="74" height="28" rx="14" fill="#eef2f7"/>
+  <text x="422" y="309" fill="#40516a" font-family="Arial" font-size="12" font-weight="700">bug</text>
+  <rect x="306" y="328" width="112" height="28" rx="14" fill="#eef2f7"/>
+  <text x="326" y="347" fill="#40516a" font-family="Arial" font-size="12" font-weight="700">standard</text>
+
+  <rect x="560" y="122" width="318" height="260" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="584" y="158" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">文档上传 / 入库</text>
+  <rect x="584" y="188" width="250" height="42" rx="8" fill="#f8fafc" stroke="#d8e1ef"/>
+  <text x="602" y="215" fill="#64748b" font-family="Arial, Microsoft YaHei" font-size="13">login_requirement.md</text>
+  <rect x="584" y="248" width="118" height="34" rx="8" fill="#eff6ff" stroke="#1f6feb"/>
+  <text x="606" y="271" fill="#1d4ed8" font-family="Arial" font-size="13" font-weight="700">requirement</text>
+  <rect x="584" y="306" width="190" height="42" rx="8" fill="#1f6feb"/>
+  <text x="620" y="333" fill="#ffffff" font-family="Arial, Microsoft YaHei" font-size="15" font-weight="700">上传并切分入库</text>
+
+  <rect x="906" y="122" width="334" height="260" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="930" y="158" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">RAG 检索测试</text>
+  <rect x="930" y="188" width="270" height="84" rx="8" fill="#f8fafc" stroke="#d8e1ef"/>
+  <text x="948" y="220" fill="#40516a" font-family="Arial, Microsoft YaHei" font-size="14">登录接口 token 401 错误处理</text>
+  <text x="948" y="248" fill="#40516a" font-family="Arial, Microsoft YaHei" font-size="14">和用例设计</text>
+  <rect x="930" y="304" width="150" height="42" rx="8" fill="#1f6feb"/>
+  <text x="958" y="331" fill="#ffffff" font-family="Arial, Microsoft YaHei" font-size="15" font-weight="700">检索知识片段</text>
+
+  <rect x="282" y="410" width="470" height="250" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="306" y="446" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">知识来源</text>
+  <text x="306" y="492" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="15" font-weight="700">API Document: Authentication</text>
+  <text x="306" y="518" fill="#64748b" font-family="Consolas" font-size="12">api_authentication.md · api_doc · 登录鉴权</text>
+  <text x="306" y="562" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="15" font-weight="700">Defect: Login Lockout Counter Reset</text>
+  <text x="306" y="588" fill="#64748b" font-family="Consolas" font-size="12">defect_login_lockout.md · bug · 登录鉴权</text>
+
+  <rect x="780" y="410" width="460" height="250" rx="10" fill="#ffffff" stroke="#d8e1ef"/>
+  <text x="804" y="446" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="18" font-weight="700">召回片段</text>
+  <rect x="804" y="474" width="380" height="72" rx="8" fill="#f8fbff" stroke="#d8e1ef"/>
+  <text x="822" y="500" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="14" font-weight="700">Invalid credentials return 401</text>
+  <text x="822" y="526" fill="#52627a" font-family="Arial, Microsoft YaHei" font-size="13">source_type: api_doc · score 4.92</text>
+  <rect x="804" y="566" width="380" height="72" rx="8" fill="#f8fbff" stroke="#d8e1ef"/>
+  <text x="822" y="592" fill="#172033" font-family="Arial, Microsoft YaHei" font-size="14" font-weight="700">Regression checks: successful login resets failure counter</text>
+  <text x="822" y="618" fill="#52627a" font-family="Arial, Microsoft YaHei" font-size="13">source_type: bug · score 3.81</text>
+</svg>
