@@ -165,7 +165,35 @@ http://127.0.0.1:8501
 | `执行历史` | 执行状态、失败原因、报告路径、质量趋势 |
 | `追踪矩阵` | 需求、测试点、自动化场景、最近执行状态的覆盖关系 |
 
-### 5. 启动 MCP Server
+### 5. 启动 Vue 前端
+
+Vue 前端是全栈化改造后的正式页面入口，默认调用 `http://127.0.0.1:8000` 的 FastAPI 接口：
+
+```powershell
+cd frontend\qualitypilot-web
+npm.cmd install
+npm.cmd run dev
+```
+
+浏览器打开：
+
+```text
+http://127.0.0.1:5173
+```
+
+当前 Vue 已包含这些页面：
+
+| 页面 | 当前能力 |
+| --- | --- |
+| `平台总览` | 调用 FastAPI 汇总测试用例、接口、自动化场景和报告产物 |
+| `API 测试` | 展示接口目录、接口列表、请求示例、断言和关联用例 |
+| `测试用例` | 展示测试用例目录、类型筛选和 pytest 目标 |
+| `自动化执行` | 展示可执行 pytest 场景和执行命令 |
+| `测试报告` | 展示 JUnit / Allure 报告发现结果 |
+| `AI 测试助手` | 先完成页面骨架，后续接入 RAG 和 MCP tools |
+| `知识库管理` | 先完成页面骨架，后续接入文档上传和检索 |
+
+### 6. 启动 MCP Server
 
 ```powershell
 .\.venv\Scripts\mcp-server.exe
@@ -177,7 +205,7 @@ http://127.0.0.1:8501
 .\.venv\Scripts\python.exe -m src.mcp_server.server
 ```
 
-### 6. 生成 Allure HTML 报告
+### 7. 生成 Allure HTML 报告
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\generate_allure_report.py
@@ -185,7 +213,7 @@ http://127.0.0.1:8501
 
 本机需要安装 Allure commandline 才能生成 HTML。如果本机没有 Allure CLI，脚本会返回 `missing_cli`；GitHub Actions 会自动安装 Java 和 Allure commandline，并上传 `allure-html-report` artifact。
 
-### 7. 运行核心回归
+### 8. 运行核心回归
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\unit\test_browser_execution_adapter.py tests\unit\test_execution_result_report_service.py tests\unit\test_execution_history_service.py tests\unit\test_run_execution_plan_script.py tests\unit\test_traceability_service.py tests\unit\test_test_design_review_service.py tests\unit\test_test_design_evaluation_service.py tests\unit\test_test_design_service.py tests\unit\test_api_execution_adapter.py tests\unit\test_execution_plan_service.py tests\automation tests\unit\test_automation_scenario_service.py tests\unit\test_test_report_service.py tests\unit\test_allure_report_service.py tests\unit\test_qualitypilot_demo_dashboard_service.py tests\unit\test_dashboard_config.py tests\e2e\test_dashboard_smoke.py tests\e2e\test_qualitypilot_demo_dashboard_smoke.py tests\e2e\test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list tests\e2e\test_mcp_qualitypilot_workflow.py -v
@@ -211,6 +239,7 @@ Allure results: generated
 - JUnit XML
 - Allure-compatible results / Allure HTML artifact
 - FastAPI backend
+- Vue 3 / Vite / TypeScript frontend
 - Streamlit Dashboard
 - GitHub Actions CI
 
@@ -224,6 +253,8 @@ src/
   ingestion/                # 文档入库、切分、向量化、存储
   core/                     # RAG 查询、检索、响应组装
   observability/dashboard/  # Streamlit Dashboard 与测试平台页面
+frontend/
+  qualitypilot-web/         # Vue 3 + Vite 前端工程
 scripts/
   run_qualitypilot_demo.py  # 端到端面试 Demo
   run_automation_suite.py   # 内置自动化场景 runner
