@@ -149,7 +149,8 @@ textarea {
 .metric-card,
 .endpoint-card,
 .case-card,
-.scenario-card {
+.scenario-card,
+.context-card {
   border: 1px solid #d8e1ef;
   border-radius: 8px;
   background: #fff;
@@ -278,6 +279,12 @@ textarea {
   gap: 14px;
 }
 
+.assistant-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(440px, 1fr) minmax(320px, 0.8fr);
+  gap: 14px;
+}
+
 .two-column {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -291,8 +298,98 @@ textarea {
 
 .endpoint-card,
 .case-card,
-.scenario-card {
+.scenario-card,
+.context-card {
   padding: 14px;
+}
+
+.template-button {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #d8e1ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #26364d;
+  cursor: pointer;
+  text-align: left;
+}
+
+.template-button.active {
+  border-color: #1f6feb;
+  background: #eff6ff;
+}
+
+.template-button span {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.assistant-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.form-control,
+.small-input,
+.assistant-textarea {
+  width: 100%;
+  border: 1px solid #d8e1ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+}
+
+.form-control,
+.small-input {
+  min-height: 38px;
+  padding: 0 10px;
+}
+
+.assistant-textarea {
+  resize: vertical;
+  min-height: 160px;
+  padding: 12px;
+  line-height: 1.6;
+}
+
+.assistant-options,
+.source-type-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.toggle-row,
+.checkbox-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.checkbox-chip {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #d8e1ef;
+  border-radius: 999px;
+  background: #f8fafc;
+}
+
+.small-input {
+  width: 74px;
+}
+
+.assistant-result-row {
+  margin-top: 14px;
+}
+
+.markdown-preview {
+  max-height: 520px;
 }
 
 .endpoint-card.selected {
@@ -477,6 +574,7 @@ textarea {
   }
 
   .split-layout,
+  .assistant-layout,
   .two-column {
     grid-template-columns: 1fr;
   }

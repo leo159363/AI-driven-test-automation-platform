@@ -160,3 +160,45 @@ export interface RunReportResponse {
   stdout: string;
   stderr: string;
 }
+
+export interface PromptTemplate {
+  template_id: string;
+  name: string;
+  category: string;
+  description: string;
+  recommended_tools: string[];
+  default_source_types: string[];
+  placeholder: string;
+}
+
+export interface PromptTemplatesResponse {
+  items: PromptTemplate[];
+  summary: {
+    total: number;
+    categories: string[];
+  };
+}
+
+export interface AssistantContext {
+  chunk_id: string;
+  source_id: string;
+  source_type: string;
+  title: string;
+  content: string;
+  score: number;
+  metadata: Record<string, string>;
+}
+
+export interface AssistantResponse {
+  template: PromptTemplate;
+  message: string;
+  project: string;
+  module: string;
+  version: string;
+  use_knowledge: boolean;
+  contexts: AssistantContext[];
+  result_type: string;
+  result: Record<string, unknown>;
+  markdown: string;
+  recommended_next_steps: string[];
+}

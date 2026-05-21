@@ -5,6 +5,8 @@ import type {
   AutomationRunsResponse,
   HealthResponse,
   LatestReportResponse,
+  AssistantResponse,
+  PromptTemplatesResponse,
   TestCaseCatalogResponse,
   RunReportResponse,
 } from "../types";
@@ -69,4 +71,21 @@ export function getLatestReport(): Promise<LatestReportResponse> {
 
 export function getRunReport(runId: string): Promise<RunReportResponse> {
   return getJson<RunReportResponse>(`/api/reports/${encodeURIComponent(runId)}`);
+}
+
+export function getPromptTemplates(): Promise<PromptTemplatesResponse> {
+  return getJson<PromptTemplatesResponse>("/api/assistant/templates");
+}
+
+export function sendAssistantMessage(payload: {
+  template_id: string;
+  message: string;
+  project: string;
+  module: string;
+  version: string;
+  use_knowledge: boolean;
+  source_types: string[];
+  top_k: number;
+}): Promise<AssistantResponse> {
+  return postJson<AssistantResponse>("/api/assistant/chat", payload);
 }

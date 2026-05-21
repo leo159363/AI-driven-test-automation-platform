@@ -22,6 +22,35 @@ def test_health_endpoint_returns_service_metadata() -> None:
     assert payload["docs"] == "/docs"
 
 
+def test_assistant_templates_endpoint_returns_prompt_templates() -> None:
+    response = _client().get("/api/assistant/templates")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"]["total"] >= 5
+    assert any(item["template_id"] == "test_case_generation" for item in payload["items"])
+
+
+def test_assistant_chat_endpoint_generates_test_cases() -> None:
+    response = _client().post(
+        "/api/assistant/chat",
+        json={
+            "template_id": "test_case_generation",
+            "message": "登录接口成功返回 token，错误密码返回 401",
+            "module": "登录鉴权",
+            "use_knowledge": True,
+            "source_types": ["api_doc", "standard"],
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["result_type"] == "test_cases"
+    assert payload["contexts"]
+    assert payload["result"]["test_cases"]
+
+
 def test_test_cases_endpoint_returns_catalog_and_summary() -> None:
     response = _client().get("/api/test-cases")
 

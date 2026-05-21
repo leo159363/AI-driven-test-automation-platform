@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routers import automation, health, reports, test_cases
+from src.api.routers import assistant, automation, health, reports, test_cases
 
 
 def create_app() -> FastAPI:
@@ -28,6 +28,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(health.router)
+    app.include_router(assistant.router)
     app.include_router(test_cases.router)
     app.include_router(automation.router)
     app.include_router(reports.router)
@@ -35,4 +36,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
