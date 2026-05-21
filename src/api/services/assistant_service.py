@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from src.api.services.knowledge_service import search_knowledge_contexts
 from src.mcp_server.tools.analyze_failure import analyze_failure_payload
 from src.mcp_server.tools.generate_bug_report import generate_bug_report_payload
 from src.mcp_server.tools.generate_test_cases import generate_test_cases_payload
@@ -155,7 +156,9 @@ async def build_assistant_response(
     contexts = retrieve_local_contexts(
         query=user_message,
         source_types=source_types or list(template.default_source_types),
+        project=project,
         module=module,
+        version=version,
         top_k=top_k,
     ) if use_knowledge else []
 
@@ -214,35 +217,20 @@ def retrieve_local_contexts(
     *,
     query: str,
     source_types: list[str],
+    project: str = "QualityPilot",
     module: str = "",
+    version: str = "demo",
     top_k: int = 4,
 ) -> list[dict[str, Any]]:
     """Return deterministic local RAG-like contexts for interview demos."""
-    tokens = _tokens(query + " " + module)
-    allowed = {source_type for source_type in source_types if source_type}
-    scored = []
-    for context in LOCAL_CONTEXTS:
-        if allowed and context["source_type"] not in allowed:
-            continue
-        context_tokens = _tokens(
-            " ".join(
-                [
-                    str(context["title"]),
-                    str(context["content"]),
-                    str(context["metadata"].get("module", "")),
-                ]
-            )
-        )
-        overlap = len(tokens.intersection(context_tokens))
-        module_bonus = 2 if module and module in str(context["metadata"].get("module", "")) else 0
-        score = overlap + module_bonus + float(context.get("score", 0))
-        if score > 0:
-            item = dict(context)
-            item["score"] = round(score, 3)
-            scored.append(item)
-
-    scored.sort(key=lambda item: float(item["score"]), reverse=True)
-    return scored[: max(1, min(int(top_k or 4), 8))]
+    return search_knowledge_contexts(
+        query=query,
+        project=project,
+        module=module,
+        version=version,
+        source_types=source_types,
+        top_k=top_k,
+    )
 
 
 def _failure_analysis_from_message(

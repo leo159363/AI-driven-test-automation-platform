@@ -202,3 +202,51 @@ export interface AssistantResponse {
   markdown: string;
   recommended_next_steps: string[];
 }
+
+export interface KnowledgeSource {
+  source_id: string;
+  title: string;
+  source_type: string;
+  project: string;
+  module: string;
+  version: string;
+  chunk_count: number;
+  origin: string;
+  created_at: string;
+}
+
+export interface KnowledgeSourceTypesResponse {
+  items: string[];
+  summary: {
+    total: number;
+  };
+}
+
+export interface KnowledgeSourcesResponse {
+  items: KnowledgeSource[];
+  summary: {
+    total: number;
+    source_types: string[];
+    modules: string[];
+  };
+}
+
+export type KnowledgeContext = AssistantContext;
+
+export interface KnowledgeSearchResponse {
+  query: string;
+  contexts: KnowledgeContext[];
+  retrieval_mode: string;
+  filters: {
+    project: string;
+    module: string;
+    version: string;
+    source_types: string[];
+    top_k: number;
+  };
+}
+
+export interface KnowledgeUploadResponse {
+  source: KnowledgeSource;
+  message: string;
+}

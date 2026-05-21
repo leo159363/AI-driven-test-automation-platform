@@ -139,6 +139,10 @@ http://127.0.0.1:8000/docs
 | `GET /api/api-endpoints` | 接口测试目录 |
 | `GET /api/automation/scenarios` | pytest 自动化场景 |
 | `GET /api/reports/latest` | JUnit / Allure 报告发现 |
+| `GET /api/knowledge/source-types` | 知识来源类型字典 |
+| `GET /api/knowledge/sources` | 知识库来源列表和过滤 |
+| `POST /api/knowledge/search` | RAG 检索测试，返回召回片段和引用来源 |
+| `POST /api/knowledge/upload` | 上传 txt / markdown 文档并切分入库 |
 
 ### 4. 启动 Dashboard
 
@@ -205,7 +209,7 @@ http://127.0.0.1:5173
 | `自动化执行` | 选择 pytest 场景，触发后端执行并生成 JUnit / Allure 产物 |
 | `测试报告` | 展示 JUnit / Allure 报告发现结果和 API 触发的执行记录 |
 | `AI 测试助手` | 提供提示词模板、知识库开关、测试用例生成、失败分析、Bug 草稿和可测性分析 |
-| `知识库管理` | 先完成页面骨架，后续接入文档上传和检索 |
+| `知识库管理` | 支持文档上传、知识来源列表、source_type 过滤、RAG 检索测试和召回片段展示 |
 
 ### 6. 启动 MCP Server
 

@@ -6,6 +6,10 @@ import type {
   HealthResponse,
   LatestReportResponse,
   AssistantResponse,
+  KnowledgeSearchResponse,
+  KnowledgeSourceTypesResponse,
+  KnowledgeSourcesResponse,
+  KnowledgeUploadResponse,
   PromptTemplatesResponse,
   TestCaseCatalogResponse,
   RunReportResponse,
@@ -28,6 +32,17 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+  }
+  return (await response.json()) as T;
+}
+
+async function postForm<T>(path: string, body: FormData): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    body,
   });
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status} ${response.statusText}`);
@@ -88,4 +103,54 @@ export function sendAssistantMessage(payload: {
   top_k: number;
 }): Promise<AssistantResponse> {
   return postJson<AssistantResponse>("/api/assistant/chat", payload);
+}
+
+export function getKnowledgeSourceTypes(): Promise<KnowledgeSourceTypesResponse> {
+  return getJson<KnowledgeSourceTypesResponse>("/api/knowledge/source-types");
+}
+
+export function getKnowledgeSources(params: {
+  project?: string;
+  module?: string;
+  version?: string;
+  source_types?: string[];
+} = {}): Promise<KnowledgeSourcesResponse> {
+  const query = new URLSearchParams();
+  if (params.project) query.set("project", params.project);
+  if (params.module) query.set("module", params.module);
+  if (params.version) query.set("version", params.version);
+  for (const sourceType of params.source_types ?? []) {
+    query.append("source_types", sourceType);
+  }
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return getJson<KnowledgeSourcesResponse>(`/api/knowledge/sources${suffix}`);
+}
+
+export function searchKnowledge(payload: {
+  query: string;
+  project: string;
+  module: string;
+  version: string;
+  source_types: string[];
+  top_k: number;
+}): Promise<KnowledgeSearchResponse> {
+  return postJson<KnowledgeSearchResponse>("/api/knowledge/search", payload);
+}
+
+export function uploadKnowledgeDocument(payload: {
+  file: File;
+  project: string;
+  module: string;
+  version: string;
+  source_type: string;
+  title: string;
+}): Promise<KnowledgeUploadResponse> {
+  const body = new FormData();
+  body.append("file", payload.file);
+  body.append("project", payload.project);
+  body.append("module", payload.module);
+  body.append("version", payload.version);
+  body.append("source_type", payload.source_type);
+  body.append("title", payload.title);
+  return postForm<KnowledgeUploadResponse>("/api/knowledge/upload", body);
 }

@@ -51,6 +51,69 @@ def test_assistant_chat_endpoint_generates_test_cases() -> None:
     assert payload["result"]["test_cases"]
 
 
+def test_knowledge_source_types_endpoint_returns_taxonomy() -> None:
+    response = _client().get("/api/knowledge/source-types")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert {"requirement", "api_doc", "bug", "standard"}.issubset(set(payload["items"]))
+
+
+def test_knowledge_search_endpoint_returns_contexts() -> None:
+    response = _client().post(
+        "/api/knowledge/search",
+        json={
+            "query": "login token 401",
+            "project": "QualityPilot",
+            "version": "demo",
+            "source_types": ["api_doc", "standard"],
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["retrieval_mode"] == "keyword_overlap_demo"
+    assert payload["contexts"]
+    assert {"source_id", "source_type", "content", "metadata"}.issubset(payload["contexts"][0])
+
+
+def test_knowledge_upload_endpoint_returns_source(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.api.routers import knowledge
+
+    monkeypatch.setattr(
+        knowledge,
+        "upload_knowledge_document",
+        lambda **kwargs: {
+            "source_id": "upload-demo.md",
+            "title": kwargs["title"],
+            "source_type": kwargs["source_type"],
+            "project": kwargs["project"],
+            "module": kwargs["module"],
+            "version": kwargs["version"],
+            "chunk_count": 1,
+            "created_at": "2026-05-21T00:00:00+00:00",
+        },
+    )
+
+    response = _client().post(
+        "/api/knowledge/upload",
+        data={
+            "project": "QualityPilot",
+            "module": "demo",
+            "version": "v1",
+            "source_type": "requirement",
+            "title": "Demo Requirement",
+        },
+        files={"file": ("demo.md", b"# Demo\ncontent", "text/markdown")},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["source"]["title"] == "Demo Requirement"
+    assert payload["source"]["chunk_count"] == 1
+
+
 def test_test_cases_endpoint_returns_catalog_and_summary() -> None:
     response = _client().get("/api/test-cases")
 
