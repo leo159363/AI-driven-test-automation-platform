@@ -140,7 +140,7 @@ _API_REQUESTS: tuple[ApiRequestExample, ...] = (
     ApiRequestExample(
         name="文件上传成功",
         method="POST",
-        path="/api/files",
+        path="/api/upload",
         request_example='headers={"X-Filename": "demo.txt"}, body=<binary>',
         expected_result="HTTP 201，返回 filename 和 size。",
         related_case_id="TC-API-UPLOAD-001",
@@ -148,7 +148,7 @@ _API_REQUESTS: tuple[ApiRequestExample, ...] = (
     ApiRequestExample(
         name="文件上传参数错误",
         method="POST",
-        path="/api/files",
+        path="/api/upload",
         request_example="headers={}, body=<binary>",
         expected_result="HTTP 400，提示缺少文件名。",
         related_case_id="TC-API-UPLOAD-002",

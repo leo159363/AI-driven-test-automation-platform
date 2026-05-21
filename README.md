@@ -116,7 +116,31 @@ bug_report_md=reports/qualitypilot-demo/bug_report.md
 | `reports/qualitypilot-demo/allure-results/` | Allure-compatible results |
 | `reports/qualitypilot-demo/bug_report.md` | 可复制到缺陷平台的 Bug 草稿 |
 
-### 3. 启动 Dashboard
+### 3. 启动 FastAPI 后端
+
+FastAPI 是后续 Vue 前端调用的正式后端 API 层，当前先暴露测试用例、接口列表、自动化场景和测试报告等基础接口：
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn src.api.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+浏览器打开：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+第一阶段已提供的核心接口：
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/health` | 后端健康检查 |
+| `GET /api/test-cases` | 测试用例目录 |
+| `GET /api/api-endpoints` | 接口测试目录 |
+| `GET /api/automation/scenarios` | pytest 自动化场景 |
+| `GET /api/reports/latest` | JUnit / Allure 报告发现 |
+
+### 4. 启动 Dashboard
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\start_dashboard.py --port 8501
@@ -141,7 +165,7 @@ http://127.0.0.1:8501
 | `执行历史` | 执行状态、失败原因、报告路径、质量趋势 |
 | `追踪矩阵` | 需求、测试点、自动化场景、最近执行状态的覆盖关系 |
 
-### 4. 启动 MCP Server
+### 5. 启动 MCP Server
 
 ```powershell
 .\.venv\Scripts\mcp-server.exe
@@ -153,7 +177,7 @@ http://127.0.0.1:8501
 .\.venv\Scripts\python.exe -m src.mcp_server.server
 ```
 
-### 5. 生成 Allure HTML 报告
+### 6. 生成 Allure HTML 报告
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\generate_allure_report.py
@@ -161,7 +185,7 @@ http://127.0.0.1:8501
 
 本机需要安装 Allure commandline 才能生成 HTML。如果本机没有 Allure CLI，脚本会返回 `missing_cli`；GitHub Actions 会自动安装 Java 和 Allure commandline，并上传 `allure-html-report` artifact。
 
-### 6. 运行核心回归
+### 7. 运行核心回归
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\unit\test_browser_execution_adapter.py tests\unit\test_execution_result_report_service.py tests\unit\test_execution_history_service.py tests\unit\test_run_execution_plan_script.py tests\unit\test_traceability_service.py tests\unit\test_test_design_review_service.py tests\unit\test_test_design_evaluation_service.py tests\unit\test_test_design_service.py tests\unit\test_api_execution_adapter.py tests\unit\test_execution_plan_service.py tests\automation tests\unit\test_automation_scenario_service.py tests\unit\test_test_report_service.py tests\unit\test_allure_report_service.py tests\unit\test_qualitypilot_demo_dashboard_service.py tests\unit\test_dashboard_config.py tests\e2e\test_dashboard_smoke.py tests\e2e\test_qualitypilot_demo_dashboard_smoke.py tests\e2e\test_mcp_client.py::TestMCPClientE2E::test_initialize_and_tools_list tests\e2e\test_mcp_qualitypilot_workflow.py -v
@@ -186,6 +210,7 @@ Allure results: generated
 - pytest
 - JUnit XML
 - Allure-compatible results / Allure HTML artifact
+- FastAPI backend
 - Streamlit Dashboard
 - GitHub Actions CI
 
@@ -193,6 +218,7 @@ Allure results: generated
 
 ```text
 src/
+  api/                     # FastAPI 后端接口：给 Vue 前端调用
   mcp_server/
     tools/                  # MCP tools：检索、用例生成、执行、报告、失败分析、Bug 生成
   ingestion/                # 文档入库、切分、向量化、存储
