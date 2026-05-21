@@ -12,6 +12,8 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.error import URLError
+from urllib.request import urlopen
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = REPO_ROOT / "frontend" / "qualitypilot-web"
@@ -60,21 +62,41 @@ def _start_vue(host: str, port: int) -> subprocess.Popen:
     )
 
 
+def _url_ok(url: str) -> bool:
+    try:
+        with urlopen(url, timeout=2) as response:
+            return 200 <= response.status < 500
+    except URLError:
+        return False
+    except OSError:
+        return False
+
+
 def main() -> int:
     args = _parser().parse_args()
     processes: list[subprocess.Popen] = []
 
     try:
-        processes.append(_start_fastapi(args.host, args.api_port))
-        time.sleep(1)
-        processes.append(_start_vue(args.host, args.web_port))
+        api_health_url = f"http://{args.host}:{args.api_port}/api/health"
+        web_url = f"http://{args.host}:{args.web_port}"
+
+        if _url_ok(api_health_url):
+            print(f"FastAPI already running: {api_health_url}")
+        else:
+            processes.append(_start_fastapi(args.host, args.api_port))
+            time.sleep(1)
+
+        if _url_ok(web_url):
+            print(f"Vue frontend already running: {web_url}")
+        else:
+            processes.append(_start_vue(args.host, args.web_port))
 
         print("QualityPilot full-stack dev servers started")
         print(f"FastAPI docs: http://{args.host}:{args.api_port}/docs")
         print(f"Vue frontend: http://{args.host}:{args.web_port}")
         print("Press Ctrl+C to stop both servers.")
 
-        while all(process.poll() is None for process in processes):
+        while not processes or all(process.poll() is None for process in processes):
             time.sleep(1)
 
         return next((process.returncode or 0 for process in processes if process.poll() is not None), 0)
