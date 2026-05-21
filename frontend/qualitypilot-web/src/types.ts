@@ -61,6 +61,41 @@ export interface ApiEndpointResponse {
   };
 }
 
+export interface ApiDebugAssertion {
+  type: string;
+  name: string;
+  path?: string;
+  operator?: string;
+  passed: boolean;
+  actual: unknown;
+  expected: unknown;
+}
+
+export interface ApiDebugResponse {
+  request: {
+    method: string;
+    path: string;
+    base_url: string;
+    headers: Record<string, string>;
+    body: string;
+    target_mode: string;
+  };
+  response: {
+    status_code: number;
+    headers: Record<string, string>;
+    body: string;
+    json: unknown;
+    duration_ms: number;
+  };
+  assertions: ApiDebugAssertion[];
+  passed: boolean;
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+  };
+}
+
 export interface AutomationScenario {
   scenario_id: string;
   name: string;

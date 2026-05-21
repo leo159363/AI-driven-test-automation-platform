@@ -279,6 +279,12 @@ textarea {
   gap: 14px;
 }
 
+.api-testing-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(320px, 0.8fr) minmax(460px, 1.1fr);
+  gap: 14px;
+}
+
 .assistant-layout {
   display: grid;
   grid-template-columns: 300px minmax(440px, 1fr) minmax(320px, 0.8fr);
@@ -405,6 +411,11 @@ textarea {
   min-height: 128px;
 }
 
+.code-editor {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 12px;
+}
+
 .full-width {
   width: 100%;
 }
@@ -418,6 +429,10 @@ textarea {
 }
 
 .knowledge-section {
+  margin-top: 14px;
+}
+
+.api-debug-section {
   margin-top: 14px;
 }
 
@@ -486,6 +501,13 @@ textarea {
   font-size: 15px;
 }
 
+.api-request-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
 .path-text,
 .code-block {
   font-family: "Cascadia Code", Consolas, monospace;
@@ -551,6 +573,23 @@ textarea {
   margin: 0;
   padding-left: 20px;
   color: #31445e;
+}
+
+.assertion-editor {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.assertion-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 120px minmax(120px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.assertion-result-table {
+  margin: 12px 0;
 }
 
 .primary-button,
@@ -629,6 +668,7 @@ textarea {
   }
 
   .split-layout,
+  .api-testing-layout,
   .assistant-layout,
   .knowledge-layout,
   .two-column {

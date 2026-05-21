@@ -116,12 +116,13 @@ http://127.0.0.1:5173
 
 1. 打开 Vue 首页，说明这是一个测试开发平台原型。
 2. 进入 `API 测试`，展示接口目录、请求样例、断言、关联测试用例和 pytest 目标。
-3. 进入 `测试用例`，说明平台维护了功能、异常、安全、回归等维度的用例。
-4. 进入 `自动化执行`，选择 `api_login` 或 `api_file_upload` 触发后端 pytest。
-5. 进入 `测试报告`，展示 JUnit / Allure 产物路径和执行结果。
-6. 进入 `知识库管理`，上传需求或接口文档，输入 Query 检索上下文。
-7. 进入 `AI 测试助手`，选择提示词模板，生成用例、失败分析或 Bug 报告草稿。
-8. 最后说明 MCP tools 如何把这些能力开放给 Agent / IDE / 自动化工作流。
+3. 在 `API 测试` 页面发送请求，查看状态码断言和 JSON 字段断言结果。
+4. 进入 `测试用例`，说明平台维护了功能、异常、安全、回归等维度的用例。
+5. 进入 `自动化执行`，选择 `api_login` 或 `api_file_upload` 触发后端 pytest。
+6. 进入 `测试报告`，展示 JUnit / Allure 产物路径和执行结果。
+7. 进入 `知识库管理`，上传需求或接口文档，输入 Query 检索上下文。
+8. 进入 `AI 测试助手`，选择提示词模板，生成用例、失败分析或 Bug 报告草稿。
+9. 最后说明 MCP tools 如何把这些能力开放给 Agent / IDE / 自动化工作流。
 
 ## 主要后端接口
 
@@ -130,6 +131,7 @@ http://127.0.0.1:5173
 | `GET /api/health` | 后端健康检查 |
 | `GET /api/test-cases` | 测试用例目录 |
 | `GET /api/api-endpoints` | API 测试接口目录 |
+| `POST /api/api-testing/debug` | 受控接口调试，支持状态码和 JSON 字段断言 |
 | `GET /api/automation/scenarios` | 自动化测试场景 |
 | `POST /api/automation/run` | 触发 pytest 自动化执行 |
 | `GET /api/automation/runs` | 查询执行历史 |

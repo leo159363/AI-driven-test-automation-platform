@@ -1,5 +1,6 @@
 import type {
   ApiEndpointResponse,
+  ApiDebugResponse,
   AutomationScenarioResponse,
   AutomationRunRecord,
   AutomationRunsResponse,
@@ -60,6 +61,23 @@ export function getTestCases(): Promise<TestCaseCatalogResponse> {
 
 export function getApiEndpoints(): Promise<ApiEndpointResponse> {
   return getJson<ApiEndpointResponse>("/api/api-endpoints");
+}
+
+export function sendApiDebugRequest(payload: {
+  method: string;
+  path: string;
+  base_url: string;
+  headers: Record<string, string>;
+  body: string;
+  expected_status: number | null;
+  json_assertions: Array<{
+    path: string;
+    operator: string;
+    expected: string;
+  }>;
+  timeout_seconds: number;
+}): Promise<ApiDebugResponse> {
+  return postJson<ApiDebugResponse>("/api/api-testing/debug", payload);
 }
 
 export function getAutomationScenarios(): Promise<AutomationScenarioResponse> {

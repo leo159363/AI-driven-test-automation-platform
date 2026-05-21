@@ -141,6 +141,43 @@ def test_api_endpoints_are_linked_to_test_cases() -> None:
     )
 
 
+def test_api_testing_debug_endpoint_runs_mock_request() -> None:
+    response = _client().post(
+        "/api/api-testing/debug",
+        json={
+            "method": "POST",
+            "path": "/api/login",
+            "headers": {"Content-Type": "application/json"},
+            "body": '{"username": "tester", "password": "Passw0rd!"}',
+            "expected_status": 200,
+            "json_assertions": [
+                {"path": "token", "operator": "exists"},
+                {"path": "user.username", "operator": "equals", "expected": "tester"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["request"]["target_mode"] == "mock"
+    assert payload["response"]["status_code"] == 200
+    assert payload["passed"] is True
+
+
+def test_api_testing_debug_endpoint_rejects_remote_target() -> None:
+    response = _client().post(
+        "/api/api-testing/debug",
+        json={
+            "method": "GET",
+            "path": "/",
+            "base_url": "https://example.com",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "localhost" in response.json()["detail"]
+
+
 def test_automation_scenarios_endpoint_returns_runner_command() -> None:
     response = _client().get("/api/automation/scenarios")
 
