@@ -30,12 +30,23 @@ class TestCaseItem:
 class ApiRequestExample:
     """A simple API request example for explaining interface testing."""
 
+    endpoint_id: str
     name: str
+    module: str
     method: str
     path: str
+    description: str
+    headers: dict[str, str]
     request_example: str
+    request_body: str
+    assertions: tuple[str, ...]
     expected_result: str
     related_case_id: str
+    scenario_id: str
+    scenario_name: str
+    pytest_target: str
+    automation_status: str
+    last_run_status: str
 
 
 _TEST_CASES: tuple[TestCaseItem, ...] = (
@@ -122,36 +133,80 @@ _TEST_CASES: tuple[TestCaseItem, ...] = (
 
 _API_REQUESTS: tuple[ApiRequestExample, ...] = (
     ApiRequestExample(
+        endpoint_id="api-login-success",
         name="登录成功",
+        module="登录鉴权",
         method="POST",
         path="/api/login",
+        description="验证正确账号密码可以获得认证令牌，是登录鉴权模块的主流程接口。",
+        headers={"Content-Type": "application/json"},
         request_example='{"username": "tester", "password": "Passw0rd!"}',
+        request_body='{"username": "tester", "password": "Passw0rd!"}',
+        assertions=("HTTP 状态码为 200", "响应体包含 token", "响应体 user 字段为 tester"),
         expected_result='HTTP 200，响应体包含 {"token": "..."}',
         related_case_id="TC-API-LOGIN-001",
+        scenario_id="api_login",
+        scenario_name="API: 登录接口",
+        pytest_target="tests/automation/test_api_login.py::test_api_login_success",
+        automation_status="已自动化",
+        last_run_status="ready",
     ),
     ApiRequestExample(
+        endpoint_id="api-login-invalid-password",
         name="登录失败",
+        module="登录鉴权",
         method="POST",
         path="/api/login",
+        description="验证错误密码会被拒绝，并且错误信息不会泄露敏感账号状态。",
+        headers={"Content-Type": "application/json"},
         request_example='{"username": "tester", "password": "wrong"}',
+        request_body='{"username": "tester", "password": "wrong"}',
+        assertions=("HTTP 状态码为 401", "响应体 error 字段为 invalid_credentials"),
         expected_result="HTTP 401，返回认证失败错误信息。",
         related_case_id="TC-API-LOGIN-002",
+        scenario_id="api_login",
+        scenario_name="API: 登录接口",
+        pytest_target="tests/automation/test_api_login.py::test_api_login_rejects_invalid_password",
+        automation_status="已自动化",
+        last_run_status="ready",
     ),
     ApiRequestExample(
+        endpoint_id="api-upload-success",
         name="文件上传成功",
+        module="文件上传",
         method="POST",
         path="/api/upload",
+        description="验证二进制文件上传成功后返回文件名和文件大小。",
+        headers={"Content-Type": "application/octet-stream", "X-Filename": "demo.txt"},
         request_example='headers={"X-Filename": "demo.txt"}, body=<binary>',
+        request_body="<binary: demo-binary-content>",
+        assertions=("HTTP 状态码为 201", "响应体 filename 为 demo.txt", "响应体 size 等于上传字节数"),
         expected_result="HTTP 201，返回 filename 和 size。",
         related_case_id="TC-API-UPLOAD-001",
+        scenario_id="api_file_upload",
+        scenario_name="API: 文件上传接口",
+        pytest_target="tests/automation/test_api_file_upload.py::test_api_file_upload_accepts_binary_payload",
+        automation_status="已自动化",
+        last_run_status="ready",
     ),
     ApiRequestExample(
+        endpoint_id="api-upload-missing-filename",
         name="文件上传参数错误",
+        module="文件上传",
         method="POST",
         path="/api/upload",
+        description="验证缺少文件名 header 时，接口会返回参数错误。",
+        headers={"Content-Type": "application/octet-stream"},
         request_example="headers={}, body=<binary>",
+        request_body="<binary: demo-binary-content>",
+        assertions=("HTTP 状态码为 400", "响应体 error 字段为 missing_filename"),
         expected_result="HTTP 400，提示缺少文件名。",
         related_case_id="TC-API-UPLOAD-002",
+        scenario_id="api_file_upload",
+        scenario_name="API: 文件上传接口",
+        pytest_target="tests/automation/test_api_file_upload.py::test_api_file_upload_requires_filename_header",
+        automation_status="已自动化",
+        last_run_status="ready",
     ),
 )
 
@@ -189,12 +244,15 @@ def build_api_request_rows() -> list[dict[str, str]]:
     """Build API request rows for display."""
     return [
         {
+            "接口ID": item.endpoint_id,
             "接口名称": item.name,
+            "模块": item.module,
             "方法": item.method,
             "路径": item.path,
             "请求示例": item.request_example,
             "预期结果": item.expected_result,
             "关联用例": item.related_case_id,
+            "自动化状态": item.automation_status,
         }
         for item in list_api_request_examples()
     ]

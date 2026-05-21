@@ -41,6 +41,11 @@ def test_api_endpoints_are_linked_to_test_cases() -> None:
     assert "/api/login" in paths
     assert "/api/upload" in paths
     assert payload["summary"]["methods"]["POST"] >= 2
+    assert {"登录鉴权", "文件上传"}.issubset(set(payload["summary"]["modules"]))
+    assert {"api_login", "api_file_upload"}.issubset(set(payload["summary"]["scenarios"]))
+    assert {"endpoint_id", "headers", "assertions", "pytest_target"}.issubset(
+        payload["items"][0]
+    )
 
 
 def test_automation_scenarios_endpoint_returns_runner_command() -> None:

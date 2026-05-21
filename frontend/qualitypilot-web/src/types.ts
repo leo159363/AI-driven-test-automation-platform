@@ -32,12 +32,23 @@ export interface TestCaseCatalogResponse {
 }
 
 export interface ApiEndpointItem {
+  endpoint_id: string;
   name: string;
+  module: string;
   method: string;
   path: string;
+  description: string;
+  headers: Record<string, string>;
   request_example: string;
+  request_body: string;
+  assertions: string[];
   expected_result: string;
   related_case_id: string;
+  scenario_id: string;
+  scenario_name: string;
+  pytest_target: string;
+  automation_status: string;
+  last_run_status: string;
 }
 
 export interface ApiEndpointResponse {
@@ -46,6 +57,7 @@ export interface ApiEndpointResponse {
     total: number;
     methods: Record<string, number>;
     modules: string[];
+    scenarios: string[];
   };
 }
 
@@ -93,4 +105,3 @@ export interface LatestReportResponse {
   warning: string | null;
   artifacts: ReportArtifact[];
 }
-

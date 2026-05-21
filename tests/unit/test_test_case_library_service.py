@@ -31,6 +31,23 @@ def test_build_api_request_rows_links_cases() -> None:
     assert rows
     assert rows[0]["方法"] == "POST"
     assert rows[0]["关联用例"].startswith("TC-API-")
+    assert rows[0]["自动化状态"] == "已自动化"
+
+
+def test_api_request_examples_are_frontend_ready() -> None:
+    from src.observability.dashboard.services.test_case_library_service import (
+        list_api_request_examples,
+    )
+
+    examples = list_api_request_examples()
+
+    assert examples
+    assert all(example.endpoint_id for example in examples)
+    assert all(example.module for example in examples)
+    assert all(example.headers for example in examples)
+    assert all(example.assertions for example in examples)
+    assert all(example.scenario_id for example in examples)
+    assert any(example.path == "/api/upload" for example in examples)
 
 
 def test_summarize_test_cases_counts_core_dimensions() -> None:

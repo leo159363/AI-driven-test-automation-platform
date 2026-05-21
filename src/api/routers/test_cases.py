@@ -31,19 +31,14 @@ def get_api_endpoints() -> dict[str, object]:
     """Return API request examples linked to automated test cases."""
     endpoints = [asdict(endpoint) for endpoint in list_api_request_examples()]
     methods = Counter(endpoint["method"] for endpoint in endpoints)
-    modules = sorted(
-        {
-            case.module
-            for case in list_test_cases()
-            if case.case_id in {endpoint["related_case_id"] for endpoint in endpoints}
-        }
-    )
+    modules = sorted({endpoint["module"] for endpoint in endpoints})
+    scenarios = sorted({endpoint["scenario_id"] for endpoint in endpoints})
     return {
         "items": endpoints,
         "summary": {
             "total": len(endpoints),
             "methods": dict(sorted(methods.items())),
             "modules": modules,
+            "scenarios": scenarios,
         },
     }
-
