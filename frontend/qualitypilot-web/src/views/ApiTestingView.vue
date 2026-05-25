@@ -41,6 +41,8 @@ interface EndpointGuide {
   expected: string;
 }
 
+type RequestTab = "params" | "headers" | "body" | "assertions" | "mock" | "guide";
+
 const endpoints = ref<ApiEndpointItem[]>([]);
 const environments = ref<ApiEnvironment[]>([]);
 const selectedEndpointId = ref("");
@@ -68,6 +70,16 @@ const synthesizedCases = ref<ApiSynthesizedCase[]>([]);
 const planPrompt = ref("帮我为登录接口创建测试集合，生成正常登录和异常登录用例，并执行集合");
 const operationPlan = ref<ApiOperationPlanResponse | null>(null);
 const curlCommand = ref("");
+const activeRequestTab = ref<RequestTab>("params");
+
+const requestTabs: Array<{ id: RequestTab; label: string }> = [
+  { id: "params", label: "Params" },
+  { id: "headers", label: "Headers" },
+  { id: "body", label: "Body" },
+  { id: "assertions", label: "断言" },
+  { id: "mock", label: "Mock" },
+  { id: "guide", label: "说明" },
+];
 
 const quickExamples: QuickExample[] = [
   {
@@ -506,36 +518,23 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="panel">
-        <h3>请求调试器</h3>
+      <div class="panel api-request-panel">
+        <div class="item-title">
+          <h3>请求工作台</h3>
+          <span class="tag">{{ selectedEndpoint?.related_case_id ?? "未选择" }}</span>
+        </div>
         <template v-if="selectedEndpoint">
-          <div class="api-request-line">
-            <span class="method-pill">{{ selectedEndpoint.method }}</span>
-            <span class="path-text">{{ selectedEndpoint.path }}</span>
+          <div class="request-name-row">
+            <input class="form-control request-name-input" :value="selectedEndpoint.name" readonly />
+            <button class="ghost-button" type="button" @click="resetCurrentExample">重置示例</button>
           </div>
 
-          <div v-if="selectedEndpointGuide" class="endpoint-guide-card">
-            <div class="item-title">
-              <div>
-                <strong>当前用例在测什么</strong>
-                <p>{{ selectedEndpointGuide.goal }}</p>
-              </div>
-              <span class="status-pill ok">已填好默认数据</span>
-            </div>
-            <table class="data-table compact-table guide-table">
-              <tbody>
-                <tr v-for="item in selectedEndpointGuide.fields" :key="item.field">
-                  <td>
-                    <strong>{{ item.field }}</strong>
-                  </td>
-                  <td class="path-text">{{ item.fill }}</td>
-                  <td>{{ item.why }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p class="expected-text">
-              <strong>预期结果：</strong>{{ selectedEndpointGuide.expected }}
-            </p>
+          <div class="api-request-line request-url-row">
+            <span class="method-pill">{{ selectedEndpoint.method }}</span>
+            <span class="path-text">{{ selectedEndpoint.path }}</span>
+            <button class="primary-button" :disabled="loading" @click="submitDebugRequest">
+              {{ loading ? "发送中..." : "发送" }}
+            </button>
           </div>
 
           <div class="assistant-form-grid">
@@ -565,76 +564,124 @@ onMounted(async () => {
             </label>
           </div>
 
-          <label>
-            环境变量 JSON
-            <textarea v-model="variablesEditor" class="assistant-textarea compact-textarea code-editor" rows="4" />
-          </label>
-
-          <label>
-            环境公共 Headers JSON
-            <textarea v-model="environmentHeadersEditor" class="assistant-textarea compact-textarea code-editor" rows="3" />
-          </label>
-
-          <div class="two-column compact-editor-grid">
-            <label>
-              请求 Headers JSON
-              <textarea v-model="headersEditor" class="assistant-textarea compact-textarea code-editor" rows="5" />
-            </label>
-            <label>
-              Query Params JSON
-              <textarea v-model="paramsEditor" class="assistant-textarea compact-textarea code-editor" rows="5" />
-            </label>
-          </div>
-
-          <label>
-            Request Body
-            <textarea v-model="bodyEditor" class="assistant-textarea compact-textarea code-editor" rows="6" />
-          </label>
-
-          <div class="mock-row">
-            <label class="toggle-row">
-              <input v-model="mockEnabled" type="checkbox" />
-              启用自定义 Mock 响应
-            </label>
-            <label>
-              状态码
-              <input v-model.number="mockStatusCode" class="small-input" type="number" />
-            </label>
-            <label>
-              延迟(ms)
-              <input v-model.number="mockDelayMs" class="small-input" type="number" />
-            </label>
-          </div>
-          <textarea
-            v-if="mockEnabled"
-            v-model="mockBody"
-            class="assistant-textarea compact-textarea code-editor"
-            rows="3"
-          />
-
-          <div class="assertion-editor">
-            <div class="item-title">
-              <h3>断言配置</h3>
-              <button class="ghost-button" type="button" @click="addAssertion">新增 JSON 断言</button>
-            </div>
-            <label>
-              期望状态码
-              <input v-model.number="expectedStatus" class="small-input" type="number" />
-            </label>
-            <div
-              v-for="(assertion, index) in jsonAssertions"
-              :key="`${assertion.path}-${index}`"
-              class="assertion-row"
+          <div class="request-tabs">
+            <button
+              v-for="tab in requestTabs"
+              :key="tab.id"
+              class="request-tab"
+              :class="{ active: activeRequestTab === tab.id }"
+              type="button"
+              @click="activeRequestTab = tab.id"
             >
-              <input v-model="assertion.path" class="form-control" placeholder="JSON Path，例如 token" />
-              <select v-model="assertion.operator" class="form-control">
-                <option value="equals">equals</option>
-                <option value="contains">contains</option>
-                <option value="exists">exists</option>
-                <option value="not_exists">not_exists</option>
-              </select>
-              <input v-model="assertion.expected" class="form-control" placeholder="期望值" />
-              <button class="ghost-button" type="button" @click="removeAssertion(index)">删除</button>
+              {{ tab.label }}
+            </button>
+          </div>
+
+          <div class="request-tab-body">
+            <div v-if="activeRequestTab === 'params'" class="tab-panel">
+              <label>
+                Query Params JSON
+                <textarea v-model="paramsEditor" class="assistant-textarea compact-textarea code-editor" rows="7" />
+              </label>
+              <p class="muted">大多数当前示例接口不需要 query 参数，所以保持 `{}` 即可。</p>
+            </div>
+
+            <div v-else-if="activeRequestTab === 'headers'" class="tab-panel">
+              <div class="two-column compact-editor-grid">
+                <label>
+                  环境公共 Headers JSON
+                  <textarea v-model="environmentHeadersEditor" class="assistant-textarea compact-textarea code-editor" rows="7" />
+                </label>
+                <label>
+                  请求 Headers JSON
+                  <textarea v-model="headersEditor" class="assistant-textarea compact-textarea code-editor" rows="7" />
+                </label>
+              </div>
+            </div>
+
+            <div v-else-if="activeRequestTab === 'body'" class="tab-panel">
+              <label>
+                环境变量 JSON
+                <textarea v-model="variablesEditor" class="assistant-textarea compact-textarea code-editor" rows="5" />
+              </label>
+              <label>
+                Request Body
+                <textarea v-model="bodyEditor" class="assistant-textarea compact-textarea code-editor" rows="8" />
+              </label>
+            </div>
+
+            <div v-else-if="activeRequestTab === 'assertions'" class="tab-panel assertion-editor">
+              <div class="item-title">
+                <h3>断言配置</h3>
+                <button class="ghost-button" type="button" @click="addAssertion">新增 JSON 断言</button>
+              </div>
+              <label>
+                期望状态码
+                <input v-model.number="expectedStatus" class="small-input" type="number" />
+              </label>
+              <div
+                v-for="(assertion, index) in jsonAssertions"
+                :key="`${assertion.path}-${index}`"
+                class="assertion-row"
+              >
+                <input v-model="assertion.path" class="form-control" placeholder="JSON Path，例如 token" />
+                <select v-model="assertion.operator" class="form-control">
+                  <option value="equals">equals</option>
+                  <option value="contains">contains</option>
+                  <option value="exists">exists</option>
+                  <option value="not_exists">not_exists</option>
+                </select>
+                <input v-model="assertion.expected" class="form-control" placeholder="期望值" />
+                <button class="ghost-button" type="button" @click="removeAssertion(index)">删除</button>
+              </div>
+            </div>
+
+            <div v-else-if="activeRequestTab === 'mock'" class="tab-panel">
+              <div class="mock-row">
+                <label class="toggle-row">
+                  <input v-model="mockEnabled" type="checkbox" />
+                  启用自定义 Mock 响应
+                </label>
+                <label>
+                  状态码
+                  <input v-model.number="mockStatusCode" class="small-input" type="number" />
+                </label>
+                <label>
+                  延迟(ms)
+                  <input v-model.number="mockDelayMs" class="small-input" type="number" />
+                </label>
+              </div>
+              <textarea
+                v-model="mockBody"
+                class="assistant-textarea compact-textarea code-editor"
+                rows="7"
+              />
+            </div>
+
+            <div v-else class="tab-panel">
+              <div v-if="selectedEndpointGuide" class="endpoint-guide-card">
+                <div class="item-title">
+                  <div>
+                    <strong>当前用例在测什么</strong>
+                    <p>{{ selectedEndpointGuide.goal }}</p>
+                  </div>
+                  <span class="status-pill ok">已填好默认数据</span>
+                </div>
+                <table class="data-table compact-table guide-table">
+                  <tbody>
+                    <tr v-for="item in selectedEndpointGuide.fields" :key="item.field">
+                      <td>
+                        <strong>{{ item.field }}</strong>
+                      </td>
+                      <td class="path-text">{{ item.fill }}</td>
+                      <td>{{ item.why }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="expected-text">
+                  <strong>预期结果：</strong>{{ selectedEndpointGuide.expected }}
+                </p>
+              </div>
             </div>
           </div>
 
