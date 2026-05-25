@@ -444,6 +444,85 @@ textarea {
   margin-top: 14px;
 }
 
+.api-help-panel {
+  margin-bottom: 14px;
+}
+
+.api-help-panel .item-title {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.api-help-panel p {
+  margin: 6px 0 0;
+}
+
+.quick-example-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.quick-example-card {
+  display: grid;
+  gap: 8px;
+  min-height: 118px;
+  padding: 14px;
+  border: 1px solid #d8e1ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #26364d;
+  cursor: pointer;
+  text-align: left;
+}
+
+.quick-example-card.active {
+  border-color: #1f6feb;
+  background: #eff6ff;
+  box-shadow: inset 3px 0 0 #1f6feb;
+}
+
+.quick-example-card strong {
+  font-size: 16px;
+}
+
+.quick-example-card small {
+  color: #52627a;
+  line-height: 1.5;
+}
+
+.endpoint-guide-card {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.endpoint-guide-card .item-title {
+  align-items: flex-start;
+}
+
+.endpoint-guide-card p {
+  margin: 6px 0 0;
+  color: #52627a;
+  line-height: 1.6;
+}
+
+.guide-table td:first-child {
+  width: 130px;
+}
+
+.guide-table td:nth-child(2) {
+  width: 260px;
+}
+
+.expected-text {
+  color: #1e3a5f;
+}
+
 .mock-row {
   display: flex;
   flex-wrap: wrap;

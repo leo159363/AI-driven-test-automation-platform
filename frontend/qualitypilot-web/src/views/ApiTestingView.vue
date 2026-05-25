@@ -22,6 +22,25 @@ interface JsonAssertionEditor {
   expected: string;
 }
 
+interface QuickExample {
+  endpointId: string;
+  title: string;
+  module: string;
+  reason: string;
+}
+
+interface FieldGuide {
+  field: string;
+  fill: string;
+  why: string;
+}
+
+interface EndpointGuide {
+  goal: string;
+  fields: FieldGuide[];
+  expected: string;
+}
+
 const endpoints = ref<ApiEndpointItem[]>([]);
 const environments = ref<ApiEnvironment[]>([]);
 const selectedEndpointId = ref("");
@@ -49,6 +68,83 @@ const synthesizedCases = ref<ApiSynthesizedCase[]>([]);
 const planPrompt = ref("帮我为登录接口创建测试集合，生成正常登录和异常登录用例，并执行集合");
 const operationPlan = ref<ApiOperationPlanResponse | null>(null);
 const curlCommand = ref("");
+
+const quickExamples: QuickExample[] = [
+  {
+    endpointId: "api-login-success",
+    title: "登录成功",
+    module: "登录鉴权",
+    reason: "最先跑这个，用正确账号密码验证 token 返回。",
+  },
+  {
+    endpointId: "api-login-invalid-password",
+    title: "登录失败",
+    module: "登录鉴权",
+    reason: "用错误密码验证接口返回 401 和错误码。",
+  },
+  {
+    endpointId: "api-upload-success",
+    title: "文件上传成功",
+    module: "文件上传",
+    reason: "验证带 X-Filename 的二进制上传能返回文件名和大小。",
+  },
+  {
+    endpointId: "api-upload-missing-filename",
+    title: "文件上传参数错误",
+    module: "文件上传",
+    reason: "故意不传 X-Filename，验证参数校验和错误提示。",
+  },
+];
+
+const endpointGuides: Record<string, EndpointGuide> = {
+  "api-login-success": {
+    goal: "验证登录主流程：账号 tester 和密码 Passw0rd! 正确时，接口应该返回 token。",
+    expected: "HTTP 200，响应体包含 token，并且 user.username 等于 tester。",
+    fields: [
+      { field: "环境", fill: "内置 Mock 环境", why: "不需要真实后端服务，适合本地演示。" },
+      { field: "Base URL", fill: "留空", why: "留空会走平台内置的 mock 登录接口。" },
+      { field: "环境变量 JSON", fill: '"username": "tester", "password": "Passw0rd!"', why: "这是登录成功用例的数据。" },
+      { field: "请求 Headers JSON", fill: '{"Content-Type": "application/json"}', why: "登录接口发送 JSON 请求体。" },
+      { field: "Query Params JSON", fill: "{}", why: "这个登录用例不需要 query 参数。" },
+      { field: "Request Body", fill: '{"username": "tester", "password": "Passw0rd!"}', why: "正确账号密码。" },
+      { field: "断言", fill: "状态码 200，token exists，user.username equals tester", why: "验证接口业务结果。" },
+    ],
+  },
+  "api-login-invalid-password": {
+    goal: "验证登录异常流：密码错误时，接口不能返回 token，应该拒绝登录。",
+    expected: "HTTP 401，响应体 error 等于 invalid_credentials。",
+    fields: [
+      { field: "环境", fill: "内置 Mock 环境", why: "用内置接口稳定演示异常分支。" },
+      { field: "Base URL", fill: "留空", why: "继续使用内置 mock。" },
+      { field: "请求 Headers JSON", fill: '{"Content-Type": "application/json"}', why: "登录接口发送 JSON 请求体。" },
+      { field: "Request Body", fill: '{"username": "tester", "password": "wrong"}', why: "故意传错误密码。" },
+      { field: "断言", fill: "状态码 401，error equals invalid_credentials", why: "验证鉴权失败处理。" },
+    ],
+  },
+  "api-upload-success": {
+    goal: "验证文件上传主流程：传入二进制内容和文件名，接口应该返回文件名和大小。",
+    expected: "HTTP 201，响应体 filename 等于 demo.txt，并且 size 存在。",
+    fields: [
+      { field: "环境", fill: "内置 Mock 环境", why: "不用准备真实上传服务。" },
+      { field: "Body Type", fill: "raw", why: "这里模拟二进制文件内容，不是 JSON。" },
+      { field: "请求 Headers JSON", fill: '{"Content-Type": "application/octet-stream", "X-Filename": "demo.txt"}', why: "X-Filename 表示上传文件名。" },
+      { field: "Query Params JSON", fill: "{}", why: "上传用例不需要 query 参数。" },
+      { field: "Request Body", fill: "demo-binary-content", why: "用字符串模拟文件二进制内容。" },
+      { field: "断言", fill: "状态码 201，filename equals demo.txt，size exists", why: "验证上传结果。" },
+    ],
+  },
+  "api-upload-missing-filename": {
+    goal: "验证文件上传参数校验：缺少文件名 header 时，接口应该返回参数错误。",
+    expected: "HTTP 400，响应体 error 等于 missing_filename。",
+    fields: [
+      { field: "环境", fill: "内置 Mock 环境", why: "稳定演示参数错误分支。" },
+      { field: "Body Type", fill: "raw", why: "上传内容仍然是原始文本模拟文件。" },
+      { field: "请求 Headers JSON", fill: '{"Content-Type": "application/octet-stream"}', why: "故意不传 X-Filename。" },
+      { field: "Request Body", fill: "demo-binary-content", why: "文件内容存在，但文件名缺失。" },
+      { field: "断言", fill: "状态码 400，error equals missing_filename", why: "验证参数校验逻辑。" },
+    ],
+  },
+};
 
 const selectedEndpoint = computed<ApiEndpointItem | undefined>(
   () => endpoints.value.find((item) => item.endpoint_id === selectedEndpointId.value) ?? endpoints.value[0],
@@ -84,10 +180,25 @@ const responsePreview = computed(() => {
     : debugResponse.value.response.body;
 });
 
+const selectedEndpointGuide = computed<EndpointGuide | undefined>(() => {
+  const endpointId = selectedEndpoint.value?.endpoint_id;
+  return endpointId ? endpointGuides[endpointId] : undefined;
+});
+
 function selectEndpoint(endpointId: string): void {
   selectedEndpointId.value = endpointId;
   debugResponse.value = null;
   synthesizedCases.value = [];
+  curlCommand.value = "";
+  mockEnabled.value = false;
+}
+
+function resetCurrentExample(): void {
+  syncEditor(selectedEndpoint.value);
+  syncEnvironment(selectedEnvironment.value);
+  mockEnabled.value = false;
+  curlCommand.value = "";
+  debugResponse.value = null;
 }
 
 function syncEditor(endpoint: ApiEndpointItem | undefined): void {
@@ -306,6 +417,30 @@ onMounted(async () => {
 
     <div v-if="error" class="error-banner">接口工作台错误：{{ error }}</div>
 
+    <div class="panel api-help-panel">
+      <div class="item-title">
+        <div>
+          <h3>你先跑这 4 个固定用例</h3>
+          <p class="muted">不用自己想数据。点一个用例后，右侧调试器会自动填好请求数据和断言。</p>
+        </div>
+        <button class="ghost-button" type="button" @click="resetCurrentExample">恢复当前用例默认数据</button>
+      </div>
+      <div class="quick-example-grid">
+        <button
+          v-for="example in quickExamples"
+          :key="example.endpointId"
+          class="quick-example-card"
+          :class="{ active: example.endpointId === selectedEndpoint?.endpoint_id }"
+          type="button"
+          @click="selectEndpoint(example.endpointId)"
+        >
+          <span class="tag">{{ example.module }}</span>
+          <strong>{{ example.title }}</strong>
+          <small>{{ example.reason }}</small>
+        </button>
+      </div>
+    </div>
+
     <div class="metrics-grid">
       <div class="metric-card">
         <span>接口用例</span>
@@ -377,6 +512,30 @@ onMounted(async () => {
           <div class="api-request-line">
             <span class="method-pill">{{ selectedEndpoint.method }}</span>
             <span class="path-text">{{ selectedEndpoint.path }}</span>
+          </div>
+
+          <div v-if="selectedEndpointGuide" class="endpoint-guide-card">
+            <div class="item-title">
+              <div>
+                <strong>当前用例在测什么</strong>
+                <p>{{ selectedEndpointGuide.goal }}</p>
+              </div>
+              <span class="status-pill ok">已填好默认数据</span>
+            </div>
+            <table class="data-table compact-table guide-table">
+              <tbody>
+                <tr v-for="item in selectedEndpointGuide.fields" :key="item.field">
+                  <td>
+                    <strong>{{ item.field }}</strong>
+                  </td>
+                  <td class="path-text">{{ item.fill }}</td>
+                  <td>{{ item.why }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="expected-text">
+              <strong>预期结果：</strong>{{ selectedEndpointGuide.expected }}
+            </p>
           </div>
 
           <div class="assistant-form-grid">

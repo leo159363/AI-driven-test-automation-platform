@@ -128,7 +128,7 @@ http://127.0.0.1:5173
 
 ## 推荐演示路线
 
-第一次使用可以先看 [docs/how_to_use_qualitypilot.md](docs/how_to_use_qualitypilot.md)，里面按页面顺序写了怎么点、怎么看、面试怎么讲。
+第一次使用可以先看 [docs/how_to_use_qualitypilot.md](docs/how_to_use_qualitypilot.md)，里面按页面顺序写了怎么点、怎么看、面试怎么讲。每个模块具体填什么测试数据，看 [docs/module_test_data_guide.md](docs/module_test_data_guide.md)。
 
 1. 打开 Vue 首页，说明这是一个测试开发平台原型。
 2. 进入 `API 测试`，展示接口目录、请求样例、断言、关联测试用例和 pytest 目标。
