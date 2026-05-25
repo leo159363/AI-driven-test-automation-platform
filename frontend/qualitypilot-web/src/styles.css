@@ -303,6 +303,10 @@ textarea {
   gap: 14px;
 }
 
+.section-gap {
+  margin-top: 14px;
+}
+
 .stack {
   display: grid;
   gap: 12px;
@@ -611,6 +615,83 @@ textarea {
 
 .assertion-result-table {
   margin: 12px 0;
+}
+
+.demo-guide {
+  margin-bottom: 14px;
+}
+
+.demo-guide .item-title {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.demo-guide p {
+  margin: 6px 0 0;
+}
+
+.demo-step-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.demo-step-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #d8e1ef;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.demo-step-card p {
+  min-height: 58px;
+  color: #52627a;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.demo-step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step-index {
+  display: inline-grid;
+  width: 34px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #1f6feb;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.explain-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.explain-grid p {
+  margin: 8px 0 0;
+  line-height: 1.6;
 }
 
 .primary-button,
