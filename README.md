@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/leo159363/AI-driven-test-automation-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/leo159363/AI-driven-test-automation-platform/actions/workflows/ci.yml)
 
-QualityPilot 是一个面向测试开发场景的 **MCP + RAG 智能自动化测试平台**。项目目标不是做庞大的企业级 TestOps 系统，而是把测试开发实习面试中最容易被追问的链路做成一个能运行、能展示、能解释的全栈项目。
+QualityPilot 是一个面向测试开发场景的 **MCP + RAG 智能自动化测试平台**。项目目标是做成接近真实测试平台的全栈项目：既有接口测试、测试用例、自动化执行、报告中心、AI 助手和知识库，也保留 MCP / RAG 作为差异化能力。
 
 核心闭环：
 
@@ -18,7 +18,7 @@ QualityPilot 是一个面向测试开发场景的 **MCP + RAG 智能自动化测
 | 能力 | 当前实现 | 面试价值 |
 | --- | --- | --- |
 | Vue + FastAPI 全栈 | Vue 3 页面调用 FastAPI 后端接口 | 比纯脚本更像真实测试平台 |
-| API 测试中心 | 展示接口目录、请求样例、断言、关联用例和 pytest 目标 | 对齐 Postman / Apifox / 自动化测试平台 |
+| API 测试中心 | 支持接口目录、环境变量、Query Params、Headers、Body、Mock、断言、cURL、AI 用例裂变和编排预览 | 对齐 Postman / Apifox / FullScopeTest 类测试平台 |
 | 自动化执行 | 页面触发后端执行 pytest 场景并生成报告产物 | 体现测试执行平台化能力 |
 | 报告解析 | 解析 JUnit XML，发现 Allure results / report | 自动化平台必须能消费测试结果 |
 | MCP tools | 封装检索、用例生成、执行、报告、失败分析、Bug 生成 | 体现 Agent / IDE 可编排能力 |
@@ -116,13 +116,14 @@ http://127.0.0.1:5173
 
 1. 打开 Vue 首页，说明这是一个测试开发平台原型。
 2. 进入 `API 测试`，展示接口目录、请求样例、断言、关联测试用例和 pytest 目标。
-3. 在 `API 测试` 页面发送请求，查看状态码断言和 JSON 字段断言结果。
-4. 进入 `测试用例`，说明平台维护了功能、异常、安全、回归等维度的用例。
-5. 进入 `自动化执行`，选择 `api_login` 或 `api_file_upload` 触发后端 pytest。
-6. 进入 `测试报告`，展示 JUnit / Allure 产物路径和执行结果。
-7. 进入 `知识库管理`，上传需求或接口文档，输入 Query 检索上下文。
-8. 进入 `AI 测试助手`，选择提示词模板，生成用例、失败分析或 Bug 报告草稿。
-9. 最后说明 MCP tools 如何把这些能力开放给 Agent / IDE / 自动化工作流。
+3. 在 `API 测试` 页面选择环境，编辑变量、Headers、Query Params、Body，发送请求并查看状态码断言和 JSON 字段断言结果。
+4. 点击 `AI 裂变用例`，从一个接口自动生成正常、异常、边界和安全类用例；点击 `导出 cURL` 查看可复制的命令。
+5. 进入 `测试用例`，说明平台维护了功能、异常、安全、回归等维度的用例。
+6. 进入 `自动化执行`，选择 `api_login` 或 `api_file_upload` 触发后端 pytest。
+7. 进入 `测试报告`，展示 JUnit / Allure 产物路径和执行结果。
+8. 进入 `知识库管理`，上传需求或接口文档，输入 Query 检索上下文。
+9. 进入 `AI 测试助手`，选择提示词模板，生成用例、失败分析或 Bug 报告草稿。
+10. 最后说明 MCP tools 如何把这些能力开放给 Agent / IDE / 自动化工作流。
 
 ## 主要后端接口
 
@@ -131,7 +132,11 @@ http://127.0.0.1:5173
 | `GET /api/health` | 后端健康检查 |
 | `GET /api/test-cases` | 测试用例目录 |
 | `GET /api/api-endpoints` | API 测试接口目录 |
+| `GET /api/api-testing/environments` | API 测试环境变量与公共 Headers |
 | `POST /api/api-testing/debug` | 受控接口调试，支持状态码和 JSON 字段断言 |
+| `POST /api/api-testing/synthesize` | 根据当前请求生成正常、异常、边界、安全类接口用例 |
+| `POST /api/api-testing/plan` | 根据自然语言生成接口测试编排计划预览 |
+| `POST /api/api-testing/curl` | 导出当前请求的 cURL 命令 |
 | `GET /api/automation/scenarios` | 自动化测试场景 |
 | `POST /api/automation/run` | 触发 pytest 自动化执行 |
 | `GET /api/automation/runs` | 查询执行历史 |

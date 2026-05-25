@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from src.api.services.api_debug_service import run_api_debug_request
+from src.api.services.api_debug_service import (
+    export_curl_command,
+    generate_api_operation_plan,
+    list_api_environments,
+    run_api_debug_request,
+    synthesize_api_test_cases,
+)
 
 
 def test_run_api_debug_request_uses_mock_login_success() -> None:
@@ -66,3 +72,100 @@ def test_run_api_debug_request_rejects_remote_base_url() -> None:
             path="/api/health",
             base_url="https://example.com",
         )
+
+
+def test_run_api_debug_request_replaces_environment_variables() -> None:
+    result = run_api_debug_request(
+        method="POST",
+        path="/api/login",
+        headers={"Content-Type": "application/json"},
+        body='{"username": "{{username}}", "password": "{{password}}"}',
+        environment={
+            "environment_id": "mock-local",
+            "name": "Mock",
+            "variables": {"username": "tester", "password": "Passw0rd!"},
+            "headers": {"X-Project": "{{username}}"},
+        },
+        expected_status=200,
+        json_assertions=[{"path": "token", "operator": "exists"}],
+    )
+
+    assert result["request"]["body"] == '{"username": "tester", "password": "Passw0rd!"}'
+    assert result["request"]["headers"]["X-Project"] == "tester"
+    assert result["passed"] is True
+
+
+def test_run_api_debug_request_supports_configured_mock_response() -> None:
+    result = run_api_debug_request(
+        method="GET",
+        path="/api/anything",
+        mock_config={
+            "enabled": True,
+            "status_code": 202,
+            "headers": {"Content-Type": "application/json"},
+            "body": {"accepted": True},
+        },
+        expected_status=202,
+        json_assertions=[{"path": "accepted", "operator": "equals", "expected": "True"}],
+    )
+
+    assert result["request"]["target_mode"] == "configured_mock"
+    assert result["response"]["status_code"] == 202
+    assert result["response"]["json"] == {"accepted": True}
+
+
+def test_list_api_environments_returns_workspace_presets() -> None:
+    environments = list_api_environments()
+
+    assert {item["environment_id"] for item in environments} == {"mock-local", "local-api"}
+    assert environments[0]["variables"]["username"] == "tester"
+
+
+def test_synthesize_api_test_cases_generates_login_mutations() -> None:
+    result = synthesize_api_test_cases(
+        method="POST",
+        path="/api/login",
+        headers={"Content-Type": "application/json"},
+        body='{"username": "tester", "password": "Passw0rd!"}',
+        count=6,
+    )
+
+    names = {item["name"] for item in result["cases"]}
+    assert {"正常登录", "错误密码", "SQL 注入密码"}.issubset(names)
+    assert result["summary"]["dimensions"] == ["happy_path", "negative", "boundary", "security"]
+
+
+def test_generate_api_operation_plan_returns_runnable_operations() -> None:
+    result = generate_api_operation_plan(
+        prompt="帮我创建环境并执行登录接口测试",
+        context={"selected_endpoint_id": "login-success"},
+    )
+
+    operation_types = [item["type"] for item in result["operations"]]
+    assert "create_environment" in operation_types
+    assert "create_collection" in operation_types
+    assert "create_case" in operation_types
+    assert "run_collection" in operation_types
+
+
+def test_export_curl_command_replaces_variables_and_params() -> None:
+    result = export_curl_command(
+        method="POST",
+        path="/api/login",
+        base_url="http://127.0.0.1:9000",
+        headers={"Content-Type": "application/json", "X-User": "{{username}}"},
+        params={"trace": "{{trace_id}}"},
+        body='{"username": "{{username}}", "password": "{{password}}"}',
+        environment={
+            "variables": {
+                "username": "tester",
+                "password": "Passw0rd!",
+                "trace_id": "demo-1",
+            }
+        },
+    )
+
+    assert "curl -X POST" in result["curl"]
+    assert "trace=demo-1" in result["curl"]
+    assert "X-User: tester" in result["curl"]
+    assert "Passw0rd!" in result["curl"]

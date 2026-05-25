@@ -71,13 +71,32 @@ export interface ApiDebugAssertion {
   expected: unknown;
 }
 
+export interface ApiEnvironment {
+  environment_id: string;
+  name: string;
+  description: string;
+  base_url: string;
+  variables: Record<string, string>;
+  headers: Record<string, string>;
+}
+
+export interface ApiEnvironmentResponse {
+  items: ApiEnvironment[];
+  summary: {
+    total: number;
+  };
+}
+
 export interface ApiDebugResponse {
   request: {
     method: string;
     path: string;
     base_url: string;
     headers: Record<string, string>;
+    params: Record<string, string>;
     body: string;
+    body_type: string;
+    environment: ApiEnvironment;
     target_mode: string;
   };
   response: {
@@ -94,6 +113,42 @@ export interface ApiDebugResponse {
     passed: number;
     failed: number;
   };
+}
+
+export interface ApiSynthesizedCase {
+  name: string;
+  method: string;
+  path: string;
+  headers: Record<string, string>;
+  body: string;
+  expected_status: number;
+  json_assertions: Array<{
+    path: string;
+    operator: string;
+    expected?: string;
+  }>;
+}
+
+export interface ApiSynthesizeResponse {
+  source: string;
+  base_request: {
+    method: string;
+    path: string;
+    headers: Record<string, string>;
+    body: string;
+  };
+  cases: ApiSynthesizedCase[];
+  summary: {
+    total: number;
+    dimensions: string[];
+  };
+}
+
+export interface ApiOperationPlanResponse {
+  summary: string;
+  source: string;
+  context: Record<string, unknown>;
+  operations: Array<Record<string, unknown>>;
 }
 
 export interface AutomationScenario {

@@ -178,6 +178,71 @@ def test_api_testing_debug_endpoint_rejects_remote_target() -> None:
     assert "localhost" in response.json()["detail"]
 
 
+def test_api_testing_environments_endpoint_returns_presets() -> None:
+    response = _client().get("/api/api-testing/environments")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"]["total"] >= 2
+    assert {"mock-local", "local-api"}.issubset(
+        {item["environment_id"] for item in payload["items"]}
+    )
+
+
+def test_api_testing_synthesize_endpoint_returns_case_mutations() -> None:
+    response = _client().post(
+        "/api/api-testing/synthesize",
+        json={
+            "method": "POST",
+            "path": "/api/login",
+            "headers": {"Content-Type": "application/json"},
+            "body": '{"username": "tester", "password": "Passw0rd!"}',
+            "count": 4,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"]["total"] == 4
+    assert any(item["name"] == "错误密码" for item in payload["cases"])
+
+
+def test_api_testing_plan_endpoint_returns_operations() -> None:
+    response = _client().post(
+        "/api/api-testing/plan",
+        json={
+            "prompt": "创建环境，生成登录接口用例并执行",
+            "context": {"selected_endpoint_id": "login-success"},
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["source"] == "deterministic_planner"
+    assert {"create_environment", "create_collection", "create_case", "run_collection"}.issubset(
+        {item["type"] for item in payload["operations"]}
+    )
+
+
+def test_api_testing_curl_endpoint_exports_command() -> None:
+    response = _client().post(
+        "/api/api-testing/curl",
+        json={
+            "method": "POST",
+            "path": "/api/login",
+            "base_url": "http://127.0.0.1:9000",
+            "headers": {"Content-Type": "application/json"},
+            "params": {"trace": "demo"},
+            "body": '{"username": "tester", "password": "Passw0rd!"}',
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "curl -X POST" in payload["curl"]
+    assert "trace=demo" in payload["curl"]
+
+
 def test_automation_scenarios_endpoint_returns_runner_command() -> None:
     response = _client().get("/api/automation/scenarios")
 

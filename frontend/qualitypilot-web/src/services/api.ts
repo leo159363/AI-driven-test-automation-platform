@@ -1,6 +1,10 @@
 import type {
   ApiEndpointResponse,
   ApiDebugResponse,
+  ApiEnvironment,
+  ApiEnvironmentResponse,
+  ApiOperationPlanResponse,
+  ApiSynthesizeResponse,
   AutomationScenarioResponse,
   AutomationRunRecord,
   AutomationRunsResponse,
@@ -63,12 +67,20 @@ export function getApiEndpoints(): Promise<ApiEndpointResponse> {
   return getJson<ApiEndpointResponse>("/api/api-endpoints");
 }
 
+export function getApiTestingEnvironments(): Promise<ApiEnvironmentResponse> {
+  return getJson<ApiEnvironmentResponse>("/api/api-testing/environments");
+}
+
 export function sendApiDebugRequest(payload: {
   method: string;
   path: string;
   base_url: string;
   headers: Record<string, string>;
+  params: Record<string, string>;
   body: string;
+  body_type: string;
+  environment: Partial<ApiEnvironment>;
+  mock_config: Record<string, unknown>;
   expected_status: number | null;
   json_assertions: Array<{
     path: string;
@@ -78,6 +90,44 @@ export function sendApiDebugRequest(payload: {
   timeout_seconds: number;
 }): Promise<ApiDebugResponse> {
   return postJson<ApiDebugResponse>("/api/api-testing/debug", payload);
+}
+
+export function synthesizeApiCases(payload: {
+  method: string;
+  path: string;
+  headers: Record<string, string>;
+  body: string;
+  count: number;
+}): Promise<ApiSynthesizeResponse> {
+  return postJson<ApiSynthesizeResponse>("/api/api-testing/synthesize", payload);
+}
+
+export function planApiOperations(payload: {
+  prompt: string;
+  context: Record<string, unknown>;
+}): Promise<ApiOperationPlanResponse> {
+  return postJson<ApiOperationPlanResponse>("/api/api-testing/plan", payload);
+}
+
+export function exportApiCurl(payload: {
+  method: string;
+  path: string;
+  base_url: string;
+  headers: Record<string, string>;
+  params: Record<string, string>;
+  body: string;
+  body_type: string;
+  environment: Partial<ApiEnvironment>;
+  mock_config: Record<string, unknown>;
+  expected_status: number | null;
+  json_assertions: Array<{
+    path: string;
+    operator: string;
+    expected: string;
+  }>;
+  timeout_seconds: number;
+}): Promise<{ curl: string }> {
+  return postJson<{ curl: string }>("/api/api-testing/curl", payload);
 }
 
 export function getAutomationScenarios(): Promise<AutomationScenarioResponse> {

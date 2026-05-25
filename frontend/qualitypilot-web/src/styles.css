@@ -411,6 +411,10 @@ textarea {
   min-height: 128px;
 }
 
+.compact-editor-grid {
+  margin-top: 12px;
+}
+
 .code-editor {
   font-family: "Cascadia Code", Consolas, monospace;
   font-size: 12px;
@@ -434,6 +438,23 @@ textarea {
 
 .api-debug-section {
   margin-top: 14px;
+}
+
+.mock-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.api-action-bar {
+  margin-top: 12px;
+}
+
+.api-action-bar .primary-button,
+.api-action-bar .ghost-button {
+  flex: 1;
 }
 
 .markdown-preview {
