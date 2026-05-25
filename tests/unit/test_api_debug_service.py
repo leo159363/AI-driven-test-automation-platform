@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from urllib.error import URLError
+
 import pytest
 
+from src.api.services import api_debug_service
 from src.api.services.api_debug_service import (
     export_curl_command,
     generate_api_operation_plan,
@@ -72,6 +75,30 @@ def test_run_api_debug_request_rejects_remote_base_url() -> None:
             path="/api/health",
             base_url="https://example.com",
         )
+
+
+def test_run_api_debug_request_reports_local_http_connection_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_urlopen(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+        raise URLError("connection refused")
+
+    monkeypatch.setattr(api_debug_service, "urlopen", fake_urlopen)
+
+    result = run_api_debug_request(
+        method="POST",
+        path="/api/login",
+        base_url="http://127.0.0.1:9000",
+        headers={"Content-Type": "application/json"},
+        body='{"username": "tester", "password": "Passw0rd!"}',
+        expected_status=200,
+        json_assertions=[{"path": "token", "operator": "exists"}],
+    )
+
+    assert result["request"]["target_mode"] == "local_http_error"
+    assert result["response"]["status_code"] == 0
+    assert result["response"]["json"]["error"] == "local_http_connection_failed"
+    assert result["passed"] is False
 
 
 def test_run_api_debug_request_replaces_environment_variables() -> None:

@@ -65,7 +65,7 @@ def run_api_debug_request(
             body=effective_body,
             timeout_seconds=timeout_seconds,
         )
-        target_mode = "local_http"
+        target_mode = "local_http_error" if response.get("transport_error") else "local_http"
     else:
         response = _send_mock_request(
             method=normalized_method,
@@ -440,7 +440,7 @@ def _send_local_http_request(
         status_code = exc.code
         response_headers = dict(exc.headers.items())
     except URLError as exc:
-        raise ValueError(f"HTTP request failed: {exc.reason}") from exc
+        return _local_http_error_response(exc.reason, url)
 
     text = raw.decode("utf-8", errors="replace")
     json_body = _try_json(text)
@@ -585,6 +585,26 @@ def _json_response(status_code: int, payload: dict[str, Any]) -> dict[str, Any]:
         "headers": {"Content-Type": "application/json"},
         "body": json.dumps(payload, ensure_ascii=False),
         "json": payload,
+    }
+
+
+def _local_http_error_response(reason: Any, url: str) -> dict[str, Any]:
+    message = (
+        "本机 HTTP 服务连接失败。通常是因为你选择了“本机 API 环境”，"
+        "但没有在对应端口启动真实接口服务。演示时请切回“内置 Mock 环境”。"
+    )
+    payload = {
+        "error": "local_http_connection_failed",
+        "message": message,
+        "reason": str(reason),
+        "url": url,
+    }
+    return {
+        "status_code": 0,
+        "headers": {},
+        "body": json.dumps(payload, ensure_ascii=False),
+        "json": payload,
+        "transport_error": True,
     }
 
 

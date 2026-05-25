@@ -784,6 +784,48 @@ textarea {
   gap: 12px;
 }
 
+.request-feedback {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid #c7d2e3;
+  border-radius: 8px;
+  background: #f8fbff;
+  color: #41546d;
+  font-size: 13px;
+}
+
+.request-feedback.success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.request-feedback.error {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.inline-warning {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.text-button {
+  border: 0;
+  background: transparent;
+  color: #1d4ed8;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
 .path-text,
 .code-block {
   font-family: "Cascadia Code", Consolas, monospace;

@@ -50,6 +50,8 @@ const selectedEnvironmentId = ref("mock-local");
 const error = ref("");
 const loading = ref(false);
 const debugResponse = ref<ApiDebugResponse | null>(null);
+const requestFeedback = ref("当前默认使用内置 Mock 环境，直接点击发送即可。");
+const requestFeedbackType = ref<"info" | "success" | "error">("info");
 
 const targetBaseUrl = ref("");
 const headersEditor = ref("{}");
@@ -197,20 +199,35 @@ const selectedEndpointGuide = computed<EndpointGuide | undefined>(() => {
   return endpointId ? endpointGuides[endpointId] : undefined;
 });
 
+const isLocalHttpMode = computed(() => Boolean(targetBaseUrl.value.trim()));
+
 function selectEndpoint(endpointId: string): void {
   selectedEndpointId.value = endpointId;
   debugResponse.value = null;
   synthesizedCases.value = [];
   curlCommand.value = "";
   mockEnabled.value = false;
+  switchToMockEnvironment();
 }
 
 function resetCurrentExample(): void {
   syncEditor(selectedEndpoint.value);
-  syncEnvironment(selectedEnvironment.value);
+  switchToMockEnvironment();
   mockEnabled.value = false;
   curlCommand.value = "";
   debugResponse.value = null;
+  requestFeedback.value = "已恢复示例数据，并切回内置 Mock 环境。现在可以直接点击发送。";
+  requestFeedbackType.value = "info";
+}
+
+function switchToMockEnvironment(): void {
+  selectedEnvironmentId.value = "mock-local";
+  const mockEnvironment = environments.value.find((item) => item.environment_id === "mock-local");
+  if (mockEnvironment) {
+    syncEnvironment(mockEnvironment);
+  } else {
+    targetBaseUrl.value = "";
+  }
 }
 
 function syncEditor(endpoint: ApiEndpointItem | undefined): void {
@@ -339,10 +356,25 @@ function applySynthesizedCase(testCase: ApiSynthesizedCase): void {
 async function submitDebugRequest(): Promise<void> {
   loading.value = true;
   error.value = "";
+  debugResponse.value = null;
+  requestFeedback.value = "请求发送中，请等待响应结果。";
+  requestFeedbackType.value = "info";
   try {
     debugResponse.value = await sendApiDebugRequest(buildRequestPayload());
+    if (debugResponse.value.request.target_mode === "local_http_error") {
+      requestFeedback.value = "本机 API 连接失败。演示时请点击“切回内置 Mock”，然后重新发送。";
+      requestFeedbackType.value = "error";
+    } else if (debugResponse.value.passed) {
+      requestFeedback.value = "请求已完成，断言通过。下面可以查看响应体和断言结果。";
+      requestFeedbackType.value = "success";
+    } else {
+      requestFeedback.value = "请求已完成，但断言未通过。请查看下方响应与断言结果。";
+      requestFeedbackType.value = "error";
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err);
+    requestFeedback.value = "请求没有成功发出。请查看页面上方错误信息。";
+    requestFeedbackType.value = "error";
   } finally {
     loading.value = false;
   }
@@ -408,7 +440,7 @@ onMounted(async () => {
     endpoints.value = endpointData.items;
     environments.value = environmentData.items;
     selectedEndpointId.value = endpointData.items[0]?.endpoint_id ?? "";
-    selectedEnvironmentId.value = environmentData.items[0]?.environment_id ?? "mock-local";
+    switchToMockEnvironment();
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err);
   }
@@ -532,6 +564,9 @@ onMounted(async () => {
           <div class="api-request-line request-url-row">
             <span class="method-pill">{{ selectedEndpoint.method }}</span>
             <span class="path-text">{{ selectedEndpoint.path }}</span>
+            <button v-if="isLocalHttpMode" class="ghost-button" type="button" @click="switchToMockEnvironment">
+              切回内置 Mock
+            </button>
             <button class="primary-button" :disabled="loading" @click="submitDebugRequest">
               {{ loading ? "发送中..." : "发送" }}
             </button>
@@ -562,6 +597,22 @@ onMounted(async () => {
                 <option value="form">form</option>
               </select>
             </label>
+          </div>
+
+          <div
+            class="request-feedback"
+            :class="{
+              success: requestFeedbackType === 'success',
+              error: requestFeedbackType === 'error',
+            }"
+          >
+            {{ requestFeedback }}
+          </div>
+
+          <div v-if="isLocalHttpMode" class="inline-warning">
+            当前是本机 API 环境，会请求 {{ targetBaseUrl }}。如果你没有启动这个端口的真实接口服务，请点击
+            <button class="text-button" type="button" @click="switchToMockEnvironment">切回内置 Mock</button>
+            再发送。
           </div>
 
           <div class="request-tabs">
