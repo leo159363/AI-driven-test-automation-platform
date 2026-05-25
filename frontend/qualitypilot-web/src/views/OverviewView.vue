@@ -54,8 +54,8 @@ onMounted(async () => {
     </div>
 
     <div v-if="error" class="error-banner">
-      无法连接 FastAPI：{{ error }}。请先启动
-      <span class="path-text">python -m uvicorn src.api.main:app --reload</span>
+      无法连接 FastAPI：{{ error }}。建议在项目根目录运行
+      <span class="path-text">.\.venv\Scripts\python.exe scripts\start_fullstack.py</span>
     </div>
 
     <div class="metrics-grid">
@@ -103,4 +103,3 @@ onMounted(async () => {
     </div>
   </section>
 </template>
-

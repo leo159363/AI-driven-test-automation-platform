@@ -20,39 +20,74 @@ import type {
   RunReportResponse,
 } from "../types";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+
+function apiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`;
+}
 
 async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`);
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path));
+  } catch (error) {
+    throw new Error(buildNetworkErrorMessage(error));
+  }
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    throw new Error(await buildHttpErrorMessage(response));
   }
   return (await response.json()) as T;
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new Error(buildNetworkErrorMessage(error));
+  }
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    throw new Error(await buildHttpErrorMessage(response));
   }
   return (await response.json()) as T;
 }
 
 async function postForm<T>(path: string, body: FormData): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
-    body,
-  });
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      method: "POST",
+      body,
+    });
+  } catch (error) {
+    throw new Error(buildNetworkErrorMessage(error));
+  }
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    throw new Error(await buildHttpErrorMessage(response));
   }
   return (await response.json()) as T;
+}
+
+function buildNetworkErrorMessage(error: unknown): string {
+  const detail = error instanceof Error ? error.message : String(error);
+  return `无法连接 QualityPilot FastAPI 后端：${detail}。请在项目根目录运行 .\\.venv\\Scripts\\python.exe scripts\\start_fullstack.py，并确认不要只启动 Vue。`;
+}
+
+async function buildHttpErrorMessage(response: Response): Promise<string> {
+  let detail = "";
+  try {
+    const payload = (await response.json()) as { detail?: unknown };
+    detail = payload.detail ? `，详情：${String(payload.detail)}` : "";
+  } catch {
+    detail = "";
+  }
+  return `QualityPilot API 返回错误：${response.status} ${response.statusText}${detail}`;
 }
 
 export function getHealth(): Promise<HealthResponse> {

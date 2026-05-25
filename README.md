@@ -73,7 +73,29 @@ cd frontend\qualitypilot-web
 npm.cmd install
 ```
 
-### 3. 启动 FastAPI 后端
+### 3. 推荐：一键启动前后端
+
+在项目根目录执行：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\start_fullstack.py
+```
+
+启动成功后访问：
+
+```text
+http://127.0.0.1:5173
+```
+
+这个脚本会同时启动 FastAPI 和 Vue，并把 Vue 的 `/api` 请求代理到 FastAPI。不要只启动 Vue，否则页面会出现 `Failed to fetch` 或数据全是 0。
+
+如果 `8000` 或 `5173` 被其他程序占用，可以换端口：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\start_fullstack.py --api-port 8010 --web-port 5174
+```
+
+### 4. 手动启动 FastAPI 后端
 
 在项目根目录执行：
 
@@ -87,7 +109,7 @@ npm.cmd install
 http://127.0.0.1:8000/docs
 ```
 
-### 4. 启动 Vue 前端
+### 5. 手动启动 Vue 前端
 
 另开一个终端：
 
@@ -100,14 +122,6 @@ npm.cmd run dev
 
 ```text
 http://127.0.0.1:5173
-```
-
-### 5. 一键启动前后端
-
-如果本地依赖已经安装，也可以在项目根目录执行：
-
-```powershell
-.\.venv\Scripts\python.exe scripts\start_fullstack.py
 ```
 
 注意：开发服务需要保持终端不关闭。FastAPI 默认端口是 `8000`，Vue 默认端口是 `5173`。
