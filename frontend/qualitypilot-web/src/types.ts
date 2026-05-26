@@ -340,3 +340,140 @@ export interface KnowledgeUploadResponse {
   source: KnowledgeSource;
   message: string;
 }
+
+export interface PlatformProject {
+  project_id: string;
+  name: string;
+  description: string;
+  modules: string[];
+  stack: string[];
+}
+
+export interface WebTestScript {
+  script_id: string;
+  name: string;
+  module: string;
+  framework: string;
+  status: string;
+  priority: string;
+  target_url: string;
+  steps: string[];
+  assertions: string[];
+  pytest_target: string;
+  ai_capability: string;
+  rag_sources: string[];
+}
+
+export interface AppTestScript {
+  script_id: string;
+  name: string;
+  module: string;
+  platform: string;
+  status: string;
+  priority: string;
+  scope: string;
+  steps: string[];
+  assertions: string[];
+  ai_capability: string;
+}
+
+export interface PerformanceScenario {
+  scenario_id: string;
+  name: string;
+  module: string;
+  tool: string;
+  status: string;
+  users: number;
+  spawn_rate: number;
+  duration: string;
+  target: string;
+  metrics: Record<string, string | number>;
+  risk: string;
+  command: string;
+}
+
+export interface CicdJob {
+  job_id: string;
+  name: string;
+  trigger: string;
+  status: string;
+  stages: string[];
+  command: string;
+  quality_gate: string;
+}
+
+export interface TestingDocument {
+  doc_id: string;
+  title: string;
+  category: string;
+  path: string;
+  purpose: string;
+  rag_ready: boolean;
+}
+
+export interface PlatformSetting {
+  setting_id: string;
+  name: string;
+  value: string;
+  description: string;
+}
+
+export interface PlatformWorkspaceResponse {
+  project: PlatformProject;
+  web_tests: WebTestScript[];
+  app_tests: AppTestScript[];
+  performance: PerformanceScenario[];
+  cicd: CicdJob[];
+  documents: TestingDocument[];
+  settings: PlatformSetting[];
+  differentiation: string[];
+}
+
+export interface WebTestScriptsResponse {
+  items: WebTestScript[];
+  summary: {
+    total: number;
+    frameworks: string[];
+    modules: string[];
+  };
+}
+
+export interface AppTestScriptsResponse {
+  items: AppTestScript[];
+  summary: {
+    total: number;
+  };
+}
+
+export interface PerformanceScenariosResponse {
+  items: PerformanceScenario[];
+  summary: {
+    total: number;
+    tools: string[];
+    ready: number;
+  };
+}
+
+export interface CicdJobsResponse {
+  items: CicdJob[];
+  summary: {
+    total: number;
+    ready: number;
+  };
+}
+
+export interface TestingDocumentsResponse {
+  items: TestingDocument[];
+  summary: {
+    total: number;
+    rag_ready: number;
+    categories: string[];
+  };
+}
+
+export interface PlatformSettingsResponse {
+  items: PlatformSetting[];
+  summary: {
+    total: number;
+  };
+}

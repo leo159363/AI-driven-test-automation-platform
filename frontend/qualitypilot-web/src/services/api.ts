@@ -15,6 +15,13 @@ import type {
   KnowledgeSourceTypesResponse,
   KnowledgeSourcesResponse,
   KnowledgeUploadResponse,
+  AppTestScriptsResponse,
+  CicdJobsResponse,
+  PerformanceScenariosResponse,
+  PlatformSettingsResponse,
+  PlatformWorkspaceResponse,
+  TestingDocumentsResponse,
+  WebTestScriptsResponse,
   PromptTemplatesResponse,
   TestCaseCatalogResponse,
   RunReportResponse,
@@ -256,4 +263,32 @@ export function uploadKnowledgeDocument(payload: {
   body.append("source_type", payload.source_type);
   body.append("title", payload.title);
   return postForm<KnowledgeUploadResponse>("/api/knowledge/upload", body);
+}
+
+export function getPlatformWorkspace(): Promise<PlatformWorkspaceResponse> {
+  return getJson<PlatformWorkspaceResponse>("/api/platform/workspace");
+}
+
+export function getWebTestScripts(): Promise<WebTestScriptsResponse> {
+  return getJson<WebTestScriptsResponse>("/api/platform/web-tests/scripts");
+}
+
+export function getAppTestScripts(): Promise<AppTestScriptsResponse> {
+  return getJson<AppTestScriptsResponse>("/api/platform/app-tests/scripts");
+}
+
+export function getPerformanceScenarios(): Promise<PerformanceScenariosResponse> {
+  return getJson<PerformanceScenariosResponse>("/api/platform/performance/scenarios");
+}
+
+export function getCicdJobs(): Promise<CicdJobsResponse> {
+  return getJson<CicdJobsResponse>("/api/platform/cicd/jobs");
+}
+
+export function getTestingDocuments(): Promise<TestingDocumentsResponse> {
+  return getJson<TestingDocumentsResponse>("/api/platform/documents");
+}
+
+export function getPlatformSettings(): Promise<PlatformSettingsResponse> {
+  return getJson<PlatformSettingsResponse>("/api/platform/settings");
 }

@@ -22,6 +22,25 @@ def test_health_endpoint_returns_service_metadata() -> None:
     assert payload["docs"] == "/docs"
 
 
+def test_frontend_route_redirects_to_vue_dev_server() -> None:
+    response = _client().get("/api-testing", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "http://127.0.0.1:5173/api-testing"
+
+
+def test_platform_workspace_endpoint_returns_fullscope_modules() -> None:
+    response = _client().get("/api/platform/workspace")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["project"]["name"] == "QualityPilot Demo"
+    assert payload["web_tests"]
+    assert payload["performance"]
+    assert payload["cicd"]
+    assert any("MCP tools" in item for item in payload["differentiation"])
+
+
 def test_assistant_templates_endpoint_returns_prompt_templates() -> None:
     response = _client().get("/api/assistant/templates")
 

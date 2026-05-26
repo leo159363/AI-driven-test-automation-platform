@@ -4,11 +4,17 @@ import { computed, onMounted, ref } from "vue";
 const navItems = [
   { label: "首页", path: "/", icon: "home", group: "平台" },
   { label: "接口测试", path: "/api-testing", icon: "api", group: "测试工作台" },
+  { label: "Web 测试", path: "/web-testing", icon: "web", group: "测试工作台" },
+  { label: "App 测试", path: "/app-testing", icon: "app", group: "测试工作台" },
+  { label: "性能测试", path: "/performance", icon: "perf", group: "测试工作台" },
   { label: "测试用例", path: "/test-cases", icon: "case", group: "测试工作台" },
   { label: "自动化执行", path: "/automation", icon: "run", group: "执行与报告" },
   { label: "测试报告", path: "/reports", icon: "report", group: "执行与报告" },
+  { label: "CI/CD 定时任务", path: "/cicd", icon: "ci", group: "执行与报告" },
+  { label: "测试文档", path: "/documents", icon: "doc", group: "AI 与知识库" },
   { label: "AI 测试助手", path: "/assistant", icon: "ai", group: "AI 与知识库" },
   { label: "知识库管理", path: "/knowledge", icon: "kb", group: "AI 与知识库" },
+  { label: "系统设置", path: "/settings", icon: "set", group: "平台" },
 ];
 
 const navGroups = computed(() => {
