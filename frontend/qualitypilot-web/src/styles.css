@@ -2067,6 +2067,10 @@ textarea {
   width: 260px;
 }
 
+.app-case-filter {
+  min-width: 180px;
+}
+
 .env-table-card {
   border-radius: 14px;
 }
@@ -2092,6 +2096,10 @@ textarea {
 
 .env-table tbody tr:hover {
   background: #fbfdfc;
+}
+
+.env-table tbody tr.selected-row {
+  background: #eff8f6;
 }
 
 .env-form .ant-form-item {

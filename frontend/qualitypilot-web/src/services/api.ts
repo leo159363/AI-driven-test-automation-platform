@@ -18,6 +18,7 @@ import type {
   KnowledgeSourcesResponse,
   KnowledgeUploadResponse,
   GlobalSearchResponse,
+  AppTestScript,
   AppTestScriptsResponse,
   CicdJobsResponse,
   PerformanceScenariosResponse,
@@ -439,6 +440,53 @@ export function getWebTestScripts(): Promise<WebTestScriptsResponse> {
 
 export function getAppTestScripts(): Promise<AppTestScriptsResponse> {
   return getJson<AppTestScriptsResponse>("/api/platform/app-tests/scripts");
+}
+
+export function createAppTestScript(payload: {
+  name: string;
+  description: string;
+  platform: string;
+  automation_engine: string;
+  case_set: string;
+  priority: string;
+  device: string;
+  status: string;
+  pytest_target: string;
+  steps: string[];
+  assertions: string[];
+}): Promise<{ script: AppTestScript; message: string }> {
+  return postJson<{ script: AppTestScript; message: string }>(
+    "/api/platform/app-tests/scripts",
+    payload,
+  );
+}
+
+export function updateAppTestScript(
+  scriptId: string,
+  payload: {
+    name: string;
+    description: string;
+    platform: string;
+    automation_engine: string;
+    case_set: string;
+    priority: string;
+    device: string;
+    status: string;
+    pytest_target: string;
+    steps: string[];
+    assertions: string[];
+  },
+): Promise<{ script: AppTestScript; message: string }> {
+  return putJson<{ script: AppTestScript; message: string }>(
+    `/api/platform/app-tests/scripts/${encodeURIComponent(scriptId)}`,
+    payload,
+  );
+}
+
+export function deleteAppTestScript(scriptId: string): Promise<{ message: string }> {
+  return deleteJson<{ message: string }>(
+    `/api/platform/app-tests/scripts/${encodeURIComponent(scriptId)}`,
+  );
 }
 
 export function getPerformanceScenarios(): Promise<PerformanceScenariosResponse> {

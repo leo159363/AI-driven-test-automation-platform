@@ -426,15 +426,56 @@ def test_platform_run_actions_return_demo_records() -> None:
     client = _client()
 
     web_response = client.post("/api/platform/web-tests/scripts/web-login-smoke/run")
+    app_response = client.post("/api/platform/app-tests/scripts/app-login-contract/run")
     perf_response = client.post("/api/platform/performance/scenarios/perf-login-baseline/run")
     cicd_response = client.post("/api/platform/cicd/jobs/ci-quality-gate/run")
 
     assert web_response.status_code == 200
+    assert app_response.status_code == 200
     assert perf_response.status_code == 200
     assert cicd_response.status_code == 200
     assert web_response.json()["summary"]["passed"] >= 1
+    assert app_response.json()["module"] == "移动端登录"
     assert "metrics" in perf_response.json()
     assert cicd_response.json()["module"] == "CI/CD"
+
+
+def test_app_test_script_crud_flow() -> None:
+    client = _client()
+    payload = {
+        "name": "App 支付回调兼容性脚本",
+        "description": "覆盖 Android 和 iOS 的支付回调跳转链路。",
+        "platform": "Android / iOS",
+        "automation_engine": "Appium",
+        "case_set": "支付回调",
+        "priority": "P1",
+        "device": "真机云 / 模拟器",
+        "status": "draft",
+        "pytest_target": "",
+        "steps": ["打开支付页", "触发支付回调", "返回 App 结果页"],
+        "assertions": ["订单状态更新", "重复回调不重复扣款"],
+    }
+
+    create_response = client.post("/api/platform/app-tests/scripts", json=payload)
+
+    assert create_response.status_code == 200
+    created = create_response.json()["script"]
+    assert created["case_set"] == "支付回调"
+    assert created["automation_engine"] == "Appium"
+
+    list_response = client.get("/api/platform/app-tests/scripts")
+    assert list_response.status_code == 200
+    assert list_response.json()["summary"]["total"] >= 3
+
+    update_response = client.put(
+        f"/api/platform/app-tests/scripts/{created['script_id']}",
+        json={**payload, "status": "ready", "pytest_target": "tests/automation/test_app_payment.py"},
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["script"]["status"] == "ready"
+
+    delete_response = client.delete(f"/api/platform/app-tests/scripts/{created['script_id']}")
+    assert delete_response.status_code == 200
 
 
 def test_run_automation_endpoint_returns_execution_record(monkeypatch: pytest.MonkeyPatch) -> None:

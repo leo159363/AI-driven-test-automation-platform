@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/platform", tags=["platform"])
@@ -67,15 +67,41 @@ APP_TEST_SCRIPTS: list[dict[str, Any]] = [
         "script_id": "app-login-contract",
         "name": "App 登录接口契约检查",
         "module": "移动端登录",
-        "platform": "Android / iOS 接口层",
-        "status": "demo",
+        "case_set": "登录鉴权",
+        "platform": "Android",
+        "automation_engine": "UiAutomator2 (Android)",
+        "device": "Mock Android 13",
+        "status": "ready",
         "priority": "P2",
         "scope": "当前先不接真机，使用接口契约和 Mock 数据模拟移动端登录链路。",
         "steps": ["构造移动端登录请求", "校验 token 和 user schema", "校验错误密码分支"],
         "assertions": ["成功返回 token", "错误密码返回 401", "不泄露敏感字段"],
+        "pytest_target": "tests/automation/test_app_contract.py",
+        "last_run_at": "builtin",
+        "is_builtin": True,
         "ai_capability": "可根据 App 需求文档生成兼容性和弱网场景。",
-    }
+    },
+    {
+        "script_id": "app-upload-compat",
+        "name": "App 文件上传兼容性脚本",
+        "module": "移动端文件上传",
+        "case_set": "文件上传",
+        "platform": "Android / iOS",
+        "automation_engine": "Appium",
+        "device": "真机云 / 模拟器",
+        "status": "planned",
+        "priority": "P2",
+        "scope": "覆盖相册、拍照、断网重试和大文件上传兼容性。",
+        "steps": ["选择本地图片", "模拟弱网重试", "校验上传结果和错误提示"],
+        "assertions": ["上传成功返回 file_id", "超大文件有明确提示", "弱网重试不重复提交"],
+        "pytest_target": "tests/automation/test_app_upload_contract.py",
+        "last_run_at": "-",
+        "is_builtin": True,
+        "ai_capability": "可结合接口文档和历史 Bug 生成机型兼容性用例。",
+    },
 ]
+
+USER_APP_TEST_SCRIPTS: list[dict[str, Any]] = []
 
 PERFORMANCE_SCENARIOS: list[dict[str, Any]] = [
     {
@@ -214,8 +240,54 @@ class CopilotRequest(BaseModel):
     project_id: str = Field(default="qualitypilot-demo")
 
 
+class AppTestScriptSaveRequest(BaseModel):
+    """Request body for creating or updating one App automation script."""
+
+    name: str = Field(..., min_length=1)
+    description: str = Field(default="")
+    platform: str = Field(default="Android")
+    automation_engine: str = Field(default="UiAutomator2 (Android)")
+    case_set: str = Field(default="登录鉴权")
+    priority: str = Field(default="P2")
+    device: str = Field(default="Mock Android 13")
+    status: str = Field(default="draft")
+    pytest_target: str = Field(default="")
+    steps: list[str] = Field(default_factory=list)
+    assertions: list[str] = Field(default_factory=list)
+
+
 def _now() -> str:
     return datetime.now(UTC).isoformat()
+
+
+def _app_script_items() -> list[dict[str, Any]]:
+    return [*APP_TEST_SCRIPTS, *USER_APP_TEST_SCRIPTS]
+
+
+def _normalize_app_script_payload(
+    request: AppTestScriptSaveRequest,
+    *,
+    script_id: str,
+) -> dict[str, Any]:
+    return {
+        "script_id": script_id,
+        "name": request.name.strip(),
+        "module": request.case_set.strip() or "APP 自动化",
+        "case_set": request.case_set.strip() or "登录鉴权",
+        "platform": request.platform,
+        "automation_engine": request.automation_engine,
+        "device": request.device,
+        "status": request.status,
+        "priority": request.priority,
+        "scope": request.description.strip() or "自定义 APP 自动化测试脚本。",
+        "steps": [step.strip() for step in request.steps if step.strip()],
+        "assertions": [item.strip() for item in request.assertions if item.strip()],
+        "pytest_target": request.pytest_target.strip(),
+        "last_run_at": "-",
+        "is_builtin": False,
+        "ai_capability": "可结合 RAG 需求文档生成兼容性、弱网和异常场景。",
+        "updated_at": _now(),
+    }
 
 
 def _run_record(
@@ -263,7 +335,11 @@ def get_dashboard() -> dict[str, Any]:
     return {
         "api_tests": {"total": 4, "passed": 3, "failed": 1},
         "web_tests": {"total": len(WEB_TEST_SCRIPTS), "passed": 1, "failed": 0},
-        "app_tests": {"total": len(APP_TEST_SCRIPTS), "passed": 1, "failed": 0},
+        "app_tests": {
+            "total": len(_app_script_items()),
+            "passed": sum(1 for item in _app_script_items() if item["status"] in {"ready", "demo"}),
+            "failed": 0,
+        },
         "perf_tests": {"total": len(PERFORMANCE_SCENARIOS), "running": 0},
         "recent_runs": [
             {"name": "登录接口回归", "type": "api", "status": "passed", "time": "刚刚"},
@@ -327,19 +403,73 @@ def run_web_test_script(script_id: str, request: RunRequest | None = None) -> di
 @router.get("/app-tests/scripts")
 def get_app_test_scripts() -> dict[str, Any]:
     """Return App testing scripts or contract scenarios."""
-    return {"items": APP_TEST_SCRIPTS, "summary": {"total": len(APP_TEST_SCRIPTS)}}
+    items = _app_script_items()
+    return {
+        "items": items,
+        "summary": {
+            "total": len(items),
+            "platforms": sorted({item["platform"] for item in items}),
+            "engines": sorted({item["automation_engine"] for item in items}),
+            "case_sets": sorted({item["case_set"] for item in items}),
+            "ready": sum(1 for item in items if item["status"] in {"ready", "demo"}),
+        },
+    }
+
+
+@router.post("/app-tests/scripts")
+def create_app_test_script(request: AppTestScriptSaveRequest) -> dict[str, Any]:
+    """Create one App automation script draft."""
+    script_id = f"app-custom-{len(USER_APP_TEST_SCRIPTS) + 1:03d}"
+    script = _normalize_app_script_payload(request, script_id=script_id)
+    USER_APP_TEST_SCRIPTS.append(script)
+    return {"script": script, "message": "App 自动化脚本已创建"}
+
+
+@router.put("/app-tests/scripts/{script_id}")
+def update_app_test_script(script_id: str, request: AppTestScriptSaveRequest) -> dict[str, Any]:
+    """Update one custom App automation script."""
+    for index, script in enumerate(USER_APP_TEST_SCRIPTS):
+        if script["script_id"] == script_id:
+            updated = {
+                **_normalize_app_script_payload(request, script_id=script_id),
+                "last_run_at": script.get("last_run_at", "-"),
+            }
+            USER_APP_TEST_SCRIPTS[index] = updated
+            return {"script": updated, "message": "App 自动化脚本已更新"}
+    raise HTTPException(status_code=404, detail="只能编辑自定义 App 自动化脚本")
+
+
+@router.delete("/app-tests/scripts/{script_id}")
+def delete_app_test_script(script_id: str) -> dict[str, Any]:
+    """Delete one custom App automation script."""
+    for index, script in enumerate(USER_APP_TEST_SCRIPTS):
+        if script["script_id"] == script_id:
+            USER_APP_TEST_SCRIPTS.pop(index)
+            return {"message": "App 自动化脚本已删除"}
+    raise HTTPException(status_code=404, detail="只能删除自定义 App 自动化脚本")
 
 
 @router.post("/app-tests/scripts/{script_id}/run")
 def run_app_test_script(script_id: str, request: RunRequest | None = None) -> dict[str, Any]:
     """Run or preview one App test contract."""
-    script = next((item for item in APP_TEST_SCRIPTS if item["script_id"] == script_id), APP_TEST_SCRIPTS[0])
+    script = next((item for item in _app_script_items() if item["script_id"] == script_id), None)
+    if script is None:
+        return _run_record(
+            run_id=f"app-{script_id}-not-found",
+            target_id=script_id,
+            name="未知 App 脚本",
+            module="APP",
+            command="not found",
+            status="failed",
+        )
+    script["last_run_at"] = _now()
     return _run_record(
         run_id=f"app-{script_id}-demo",
         target_id=script_id,
         name=script["name"],
         module=script["module"],
-        command="pytest tests/automation/test_app_contract.py",
+        command=f"pytest {script.get('pytest_target') or 'tests/automation/test_app_contract.py'}",
+        status="passed" if script.get("pytest_target") or script["status"] in {"ready", "demo"} else "failed",
     )
 
 
@@ -445,6 +575,15 @@ def global_search(request: SearchRequest) -> dict[str, Any]:
                 "description": script["ai_capability"],
             }
         )
+    for script in _app_script_items():
+        candidates.append(
+            {
+                "type": "app_test",
+                "title": script["name"],
+                "path": "/app-testing",
+                "description": script["ai_capability"],
+            }
+        )
     for scenario in PERFORMANCE_SCENARIOS:
         candidates.append(
             {
@@ -507,7 +646,7 @@ def get_platform_workspace() -> dict[str, Any]:
     return {
         "project": PROJECTS[0],
         "web_tests": WEB_TEST_SCRIPTS,
-        "app_tests": APP_TEST_SCRIPTS,
+        "app_tests": _app_script_items(),
         "performance": PERFORMANCE_SCENARIOS,
         "cicd": CICD_JOBS,
         "documents": DOCUMENTS,

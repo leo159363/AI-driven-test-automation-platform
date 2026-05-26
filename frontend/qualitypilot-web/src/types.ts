@@ -446,13 +446,20 @@ export interface AppTestScript {
   script_id: string;
   name: string;
   module: string;
+  case_set?: string;
   platform: string;
+  automation_engine?: string;
+  device?: string;
   status: string;
   priority: string;
   scope: string;
   steps: string[];
   assertions: string[];
   ai_capability: string;
+  pytest_target?: string;
+  last_run_at?: string;
+  is_builtin?: boolean;
+  updated_at?: string;
 }
 
 export interface PerformanceScenario {
@@ -550,6 +557,10 @@ export interface AppTestScriptsResponse {
   items: AppTestScript[];
   summary: {
     total: number;
+    platforms?: string[];
+    engines?: string[];
+    case_sets?: string[];
+    ready?: number;
   };
 }
 
