@@ -8,6 +8,12 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from src.api.services.model_config_service import (
+    get_ai_model_config,
+    test_text_model_connection,
+    update_ai_model_config,
+)
+
 router = APIRouter(prefix="/api/platform", tags=["platform"])
 
 
@@ -290,6 +296,18 @@ class PlatformSettingSaveRequest(BaseModel):
     name: str = Field(..., min_length=1)
     value: str = Field(default="")
     description: str = Field(default="")
+
+
+class AiModelConfigRequest(BaseModel):
+    """OpenAI-compatible model configuration for the AI assistant."""
+
+    enabled: bool = Field(default=False)
+    base_url: str = Field(default="")
+    model: str = Field(default="")
+    api_key: str = Field(default="")
+    vision_base_url: str = Field(default="")
+    vision_model: str = Field(default="")
+    vision_api_key: str = Field(default="")
 
 
 def _now() -> str:
@@ -683,6 +701,25 @@ def sync_documents_to_knowledge() -> dict[str, Any]:
 def get_platform_settings() -> dict[str, Any]:
     """Return platform integration settings."""
     return {"items": SETTINGS, "summary": {"total": len(SETTINGS)}}
+
+
+@router.get("/settings/ai-model")
+def get_ai_model_settings() -> dict[str, Any]:
+    """Return masked AI model configuration."""
+    return {"config": get_ai_model_config(mask_secrets=True)}
+
+
+@router.put("/settings/ai-model")
+def update_ai_model_settings(request: AiModelConfigRequest) -> dict[str, Any]:
+    """Update OpenAI-compatible model configuration."""
+    config = update_ai_model_config(request.model_dump(), updated_at=_now())
+    return {"config": config, "message": "AI 助手模型配置已保存"}
+
+
+@router.post("/settings/ai-model/test")
+def test_ai_model_settings() -> dict[str, Any]:
+    """Test the configured text model connection."""
+    return test_text_model_connection(timeout_seconds=10)
 
 
 @router.post("/settings")

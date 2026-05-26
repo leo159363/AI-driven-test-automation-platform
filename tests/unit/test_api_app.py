@@ -68,6 +68,8 @@ def test_assistant_chat_endpoint_generates_test_cases() -> None:
     assert payload["result_type"] == "test_cases"
     assert payload["contexts"]
     assert payload["result"]["test_cases"]
+    assert payload["model_config"]["mode"] in {"deterministic_demo", "openai_compatible"}
+    assert "llm_call" in payload
 
 
 def test_knowledge_source_types_endpoint_returns_taxonomy() -> None:
@@ -534,6 +536,56 @@ def test_platform_setting_crud_flow() -> None:
 
     delete_response = client.delete(f"/api/platform/settings/{created['setting_id']}")
     assert delete_response.status_code == 200
+
+
+def test_ai_model_settings_flow_exposes_masked_runtime_config() -> None:
+    from src.api.services import model_config_service
+
+    client = _client()
+    original_config = dict(model_config_service.AI_MODEL_CONFIG)
+    model_config_service.AI_MODEL_CONFIG.update(
+        {
+            "enabled": False,
+            "base_url": "",
+            "model": "",
+            "api_key": "",
+            "vision_base_url": "",
+            "vision_model": "",
+            "vision_api_key": "",
+            "updated_at": "",
+        }
+    )
+
+    try:
+        incomplete_response = client.post("/api/platform/settings/ai-model/test")
+        assert incomplete_response.status_code == 200
+        assert incomplete_response.json()["configured"] is False
+
+        update_response = client.put(
+            "/api/platform/settings/ai-model",
+            json={
+                "enabled": True,
+                "base_url": "https://api.example.com/v1",
+                "model": "demo-model",
+                "api_key": "sk-test-123456",
+                "vision_base_url": "https://api.example.com/v1",
+                "vision_model": "vision-model",
+                "vision_api_key": "sk-vision-123456",
+            },
+        )
+
+        assert update_response.status_code == 200
+        config = update_response.json()["config"]
+        assert config["configured"] is True
+        assert config["vision_configured"] is True
+        assert config["has_api_key"] is True
+        assert config["api_key"] != "sk-test-123456"
+
+        get_response = client.get("/api/platform/settings/ai-model")
+        assert get_response.status_code == 200
+        assert get_response.json()["config"]["api_key"] == config["api_key"]
+    finally:
+        model_config_service.AI_MODEL_CONFIG.update(original_config)
 
 
 def test_run_automation_endpoint_returns_execution_record(monkeypatch: pytest.MonkeyPatch) -> None:

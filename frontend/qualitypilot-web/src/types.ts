@@ -361,6 +361,8 @@ export interface AssistantResponse {
   result_type: string;
   result: Record<string, unknown>;
   markdown: string;
+  model_config?: Record<string, unknown>;
+  llm_call?: Record<string, unknown>;
   recommended_next_steps: string[];
 }
 
@@ -508,6 +510,35 @@ export interface PlatformSetting {
   is_builtin?: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface AiModelConfig {
+  enabled: boolean;
+  base_url: string;
+  model: string;
+  api_key: string;
+  vision_base_url: string;
+  vision_model: string;
+  vision_api_key: string;
+  updated_at: string;
+  has_api_key: boolean;
+  has_vision_api_key: boolean;
+  configured: boolean;
+  vision_configured: boolean;
+}
+
+export interface AiModelConfigResponse {
+  config: AiModelConfig;
+  message?: string;
+}
+
+export interface AiModelTestResponse {
+  ok: boolean;
+  configured: boolean;
+  message: string;
+  model: string;
+  base_url: string;
+  sample?: string;
 }
 
 export interface PlatformWorkspaceResponse {

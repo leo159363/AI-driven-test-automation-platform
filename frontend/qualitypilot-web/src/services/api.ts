@@ -1,5 +1,7 @@
 import type {
   ApiEndpointResponse,
+  AiModelConfigResponse,
+  AiModelTestResponse,
   ApiCollectionsResponse,
   ApiDebugResponse,
   ApiEnvironment,
@@ -549,6 +551,26 @@ export function syncTestingDocuments(): Promise<{
 
 export function getPlatformSettings(): Promise<PlatformSettingsResponse> {
   return getJson<PlatformSettingsResponse>("/api/platform/settings");
+}
+
+export function getAiModelConfig(): Promise<AiModelConfigResponse> {
+  return getJson<AiModelConfigResponse>("/api/platform/settings/ai-model");
+}
+
+export function updateAiModelConfig(payload: {
+  enabled: boolean;
+  base_url: string;
+  model: string;
+  api_key: string;
+  vision_base_url: string;
+  vision_model: string;
+  vision_api_key: string;
+}): Promise<AiModelConfigResponse> {
+  return putJson<AiModelConfigResponse>("/api/platform/settings/ai-model", payload);
+}
+
+export function testAiModelConfig(): Promise<AiModelTestResponse> {
+  return postJson<AiModelTestResponse>("/api/platform/settings/ai-model/test", {});
 }
 
 export function createPlatformSetting(payload: {

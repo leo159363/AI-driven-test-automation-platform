@@ -6,6 +6,11 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from src.api.services.knowledge_service import search_knowledge_contexts
+from src.api.services.model_config_service import (
+    current_model_metadata,
+    generate_with_text_model,
+    is_text_model_enabled,
+)
 from src.mcp_server.tools.analyze_failure import analyze_failure_payload
 from src.mcp_server.tools.generate_bug_report import generate_bug_report_payload
 from src.mcp_server.tools.generate_test_cases import generate_test_cases_payload
@@ -198,6 +203,15 @@ async def build_assistant_response(
         result_type = "testability_review"
         markdown = _testability_markdown(payload)
 
+    llm_result = _maybe_refine_with_real_model(
+        template=template,
+        message=user_message,
+        contexts=contexts,
+        deterministic_markdown=markdown,
+    )
+    if llm_result.get("used_model") and llm_result.get("content"):
+        markdown = str(llm_result["content"])
+
     return {
         "template": asdict(template),
         "message": user_message,
@@ -209,8 +223,38 @@ async def build_assistant_response(
         "result_type": result_type,
         "result": payload,
         "markdown": markdown,
+        "model_config": current_model_metadata(),
+        "llm_call": llm_result,
         "recommended_next_steps": _recommended_next_steps(result_type),
     }
+
+
+def _maybe_refine_with_real_model(
+    *,
+    template: PromptTemplate,
+    message: str,
+    contexts: list[dict[str, Any]],
+    deterministic_markdown: str,
+) -> dict[str, Any]:
+    """Use the configured real model when enabled, otherwise keep deterministic output."""
+    if not is_text_model_enabled():
+        return {
+            "ok": False,
+            "used_model": False,
+            "message": "未启用真实模型，使用本地确定性生成。",
+        }
+    context_text = "\n\n".join(
+        f"[{item.get('source_type')}] {item.get('title')}\n{item.get('content')}"
+        for item in contexts[:4]
+    )
+    prompt = (
+        f"任务类型：{template.name}\n"
+        f"用户输入：{message}\n\n"
+        f"RAG 上下文：\n{context_text or '无'}\n\n"
+        f"本地工具已生成的草稿：\n{deterministic_markdown}\n\n"
+        "请在保留结构化信息的基础上，生成更自然、完整、适合测试开发面试讲解的中文结果。"
+    )
+    return generate_with_text_model(prompt)
 
 
 def retrieve_local_contexts(

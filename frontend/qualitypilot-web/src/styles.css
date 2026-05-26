@@ -1888,6 +1888,18 @@ textarea {
   margin-top: 12px;
 }
 
+.ai-config-card {
+  border-radius: 14px;
+}
+
+.setting-inline-tip {
+  display: inline-block;
+  margin-left: 10px;
+  color: #66788f;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .stat-card {
   border-radius: 12px;
 }
