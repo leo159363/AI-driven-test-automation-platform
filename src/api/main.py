@@ -16,6 +16,7 @@ from src.api.routers import (
     knowledge,
     platform,
     reports,
+    settings,
     test_cases,
 )
 
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(assistant.router)
     app.include_router(knowledge.router)
     app.include_router(platform.router)
+    app.include_router(settings.router)
     app.include_router(api_testing.router)
     app.include_router(test_cases.router)
     app.include_router(automation.router)
