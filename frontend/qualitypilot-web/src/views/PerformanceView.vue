@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { getPerformanceScenarios } from "../services/api";
-import type { PerformanceScenario } from "../types";
+import { getPerformanceScenarios, runPerformanceScenario } from "../services/api";
+import type { PerformanceScenario, PlatformRunRecord } from "../types";
 
 const scenarios = ref<PerformanceScenario[]>([]);
 const selectedScenarioId = ref("");
 const error = ref("");
+const loading = ref(false);
+const runRecord = ref<PlatformRunRecord | null>(null);
 
 const selectedScenario = computed(
   () => scenarios.value.find((item) => item.scenario_id === selectedScenarioId.value) ?? scenarios.value[0],
@@ -20,6 +22,21 @@ onMounted(async () => {
     error.value = err instanceof Error ? err.message : String(err);
   }
 });
+
+async function submitRunScenario(): Promise<void> {
+  if (!selectedScenario.value) {
+    return;
+  }
+  loading.value = true;
+  error.value = "";
+  try {
+    runRecord.value = await runPerformanceScenario(selectedScenario.value.scenario_id);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err);
+  } finally {
+    loading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -29,7 +46,9 @@ onMounted(async () => {
         <h2>性能测试</h2>
         <p>参考 Locust 压测模块，展示并发、阶梯压测、核心指标和风险分析。</p>
       </div>
-      <button class="primary-button">创建压测任务</button>
+      <button class="primary-button" :disabled="!selectedScenario || loading" @click="submitRunScenario">
+        {{ loading ? "启动中..." : "启动压测" }}
+      </button>
     </div>
 
     <div v-if="error" class="error-banner">性能测试模块加载失败：{{ error }}</div>
@@ -94,6 +113,11 @@ onMounted(async () => {
         <template v-if="selectedScenario">
           <p>{{ selectedScenario.risk }}</p>
           <pre class="code-block">{{ selectedScenario.command }}</pre>
+          <template v-if="runRecord">
+            <h3>运行结果</h3>
+            <span class="status-pill ok">{{ runRecord.status }}</span>
+            <pre class="mini-code">{{ JSON.stringify(runRecord.metrics, null, 2) }}</pre>
+          </template>
           <p class="muted">面试时可以讲：性能测试不只看平均耗时，还要看 p95、错误率、吞吐和瓶颈定位。</p>
         </template>
       </aside>

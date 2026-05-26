@@ -208,6 +208,36 @@ def test_api_testing_environments_endpoint_returns_presets() -> None:
     )
 
 
+def test_api_testing_collections_and_saved_cases_flow() -> None:
+    client = _client()
+    collections_response = client.get("/api/api-testing/collections")
+
+    assert collections_response.status_code == 200
+    collections_payload = collections_response.json()
+    assert collections_payload["summary"]["case_total"] >= 4
+
+    save_response = client.post(
+        "/api/api-testing/cases",
+        json={
+            "name": "登录成功草稿",
+            "method": "POST",
+            "path": "/api/login",
+            "collection_id": "auth",
+            "headers": {"Content-Type": "application/json"},
+            "body": '{"username": "tester", "password": "Passw0rd!"}',
+            "expected_status": 200,
+            "json_assertions": [{"path": "token", "operator": "exists"}],
+        },
+    )
+
+    assert save_response.status_code == 200
+    assert save_response.json()["case"]["source"] == "api_workbench"
+
+    run_response = client.post("/api/api-testing/collections/auth/run")
+    assert run_response.status_code == 200
+    assert run_response.json()["status"] == "passed"
+
+
 def test_api_testing_synthesize_endpoint_returns_case_mutations() -> None:
     response = _client().post(
         "/api/api-testing/synthesize",
@@ -270,6 +300,40 @@ def test_automation_scenarios_endpoint_returns_runner_command() -> None:
     scenario_ids = {item["scenario_id"] for item in payload["items"]}
     assert {"api_login", "api_file_upload", "ui_login_smoke"}.issubset(scenario_ids)
     assert all("run_automation_suite.py" in item["runner_command"] for item in payload["items"])
+
+
+def test_platform_dashboard_and_copilot_endpoints() -> None:
+    client = _client()
+    dashboard_response = client.get("/api/platform/dashboard")
+
+    assert dashboard_response.status_code == 200
+    dashboard = dashboard_response.json()
+    assert dashboard["api_tests"]["total"] >= 4
+    assert dashboard["qualitypilot_features"]
+
+    search_response = client.post("/api/platform/global-search", json={"keyword": "登录"})
+    assert search_response.status_code == 200
+    assert search_response.json()["summary"]["total"] >= 1
+
+    copilot_response = client.post("/api/platform/copilot/chat", json={"message": "帮我跑接口测试"})
+    assert copilot_response.status_code == 200
+    copilot = copilot_response.json()
+    assert any(item["type"] == "open_page" for item in copilot["operations"])
+
+
+def test_platform_run_actions_return_demo_records() -> None:
+    client = _client()
+
+    web_response = client.post("/api/platform/web-tests/scripts/web-login-smoke/run")
+    perf_response = client.post("/api/platform/performance/scenarios/perf-login-baseline/run")
+    cicd_response = client.post("/api/platform/cicd/jobs/ci-quality-gate/run")
+
+    assert web_response.status_code == 200
+    assert perf_response.status_code == 200
+    assert cicd_response.status_code == 200
+    assert web_response.json()["summary"]["passed"] >= 1
+    assert "metrics" in perf_response.json()
+    assert cicd_response.json()["module"] == "CI/CD"
 
 
 def test_run_automation_endpoint_returns_execution_record(monkeypatch: pytest.MonkeyPatch) -> None:

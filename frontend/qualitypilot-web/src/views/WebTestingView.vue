@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { getWebTestScripts } from "../services/api";
-import type { WebTestScript } from "../types";
+import { getWebTestScripts, runWebTestScript } from "../services/api";
+import type { PlatformRunRecord, WebTestScript } from "../types";
 
 const scripts = ref<WebTestScript[]>([]);
 const selectedScriptId = ref("");
 const loading = ref(false);
 const error = ref("");
+const runRecord = ref<PlatformRunRecord | null>(null);
 
 const selectedScript = computed(
   () => scripts.value.find((item) => item.script_id === selectedScriptId.value) ?? scripts.value[0],
@@ -26,6 +27,21 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+async function submitRunScript(): Promise<void> {
+  if (!selectedScript.value) {
+    return;
+  }
+  loading.value = true;
+  error.value = "";
+  try {
+    runRecord.value = await runWebTestScript(selectedScript.value.script_id);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err);
+  } finally {
+    loading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -35,7 +51,9 @@ onMounted(async () => {
         <h2>Web 自动化测试</h2>
         <p>参考 FullScopeTest 的 Web 测试模块，但这里强调 Playwright 脚本、pytest 映射和 AI 失败自愈。</p>
       </div>
-      <button class="primary-button" :disabled="!selectedScript">生成脚本草稿</button>
+      <button class="primary-button" :disabled="!selectedScript || loading" @click="submitRunScript">
+        {{ loading ? "运行中..." : "运行脚本" }}
+      </button>
     </div>
 
     <div v-if="error" class="error-banner">Web 测试模块加载失败：{{ error }}</div>
@@ -102,6 +120,14 @@ onMounted(async () => {
 
           <h3>pytest 映射</h3>
           <pre class="code-block">{{ selectedScript.pytest_target }}</pre>
+          <template v-if="runRecord">
+            <h3>执行结果</h3>
+            <div class="toolbar">
+              <span class="status-pill ok">{{ runRecord.status }}</span>
+              <span class="tag">passed {{ runRecord.summary.passed }}/{{ runRecord.summary.total }}</span>
+            </div>
+            <pre class="mini-code">{{ runRecord.command }}</pre>
+          </template>
         </template>
       </main>
 

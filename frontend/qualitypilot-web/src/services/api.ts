@@ -1,10 +1,12 @@
 import type {
   ApiEndpointResponse,
+  ApiCollectionsResponse,
   ApiDebugResponse,
   ApiEnvironment,
   ApiEnvironmentResponse,
   ApiOperationPlanResponse,
   ApiSynthesizeResponse,
+  CopilotResponse,
   AutomationScenarioResponse,
   AutomationRunRecord,
   AutomationRunsResponse,
@@ -15,11 +17,15 @@ import type {
   KnowledgeSourceTypesResponse,
   KnowledgeSourcesResponse,
   KnowledgeUploadResponse,
+  GlobalSearchResponse,
   AppTestScriptsResponse,
   CicdJobsResponse,
   PerformanceScenariosResponse,
   PlatformSettingsResponse,
+  PlatformDashboardResponse,
+  PlatformRunRecord,
   PlatformWorkspaceResponse,
+  SavedApiCasesResponse,
   TestingDocumentsResponse,
   WebTestScriptsResponse,
   PromptTemplatesResponse,
@@ -111,6 +117,35 @@ export function getApiEndpoints(): Promise<ApiEndpointResponse> {
 
 export function getApiTestingEnvironments(): Promise<ApiEnvironmentResponse> {
   return getJson<ApiEnvironmentResponse>("/api/api-testing/environments");
+}
+
+export function getApiCollections(): Promise<ApiCollectionsResponse> {
+  return getJson<ApiCollectionsResponse>("/api/api-testing/collections");
+}
+
+export function getSavedApiCases(): Promise<SavedApiCasesResponse> {
+  return getJson<SavedApiCasesResponse>("/api/api-testing/cases");
+}
+
+export function saveApiCase(payload: {
+  name: string;
+  method: string;
+  path: string;
+  collection_id: string;
+  headers: Record<string, string>;
+  body: string;
+  expected_status: number | null;
+  json_assertions: Array<{
+    path: string;
+    operator: string;
+    expected: string;
+  }>;
+}): Promise<{ case: unknown; message: string }> {
+  return postJson<{ case: unknown; message: string }>("/api/api-testing/cases", payload);
+}
+
+export function runApiCollection(collectionId: string): Promise<PlatformRunRecord> {
+  return postJson<PlatformRunRecord>(`/api/api-testing/collections/${collectionId}/run`, {});
 }
 
 export function sendApiDebugRequest(payload: {
@@ -269,6 +304,10 @@ export function getPlatformWorkspace(): Promise<PlatformWorkspaceResponse> {
   return getJson<PlatformWorkspaceResponse>("/api/platform/workspace");
 }
 
+export function getPlatformDashboard(): Promise<PlatformDashboardResponse> {
+  return getJson<PlatformDashboardResponse>("/api/platform/dashboard");
+}
+
 export function getWebTestScripts(): Promise<WebTestScriptsResponse> {
   return getJson<WebTestScriptsResponse>("/api/platform/web-tests/scripts");
 }
@@ -291,4 +330,28 @@ export function getTestingDocuments(): Promise<TestingDocumentsResponse> {
 
 export function getPlatformSettings(): Promise<PlatformSettingsResponse> {
   return getJson<PlatformSettingsResponse>("/api/platform/settings");
+}
+
+export function runWebTestScript(scriptId: string): Promise<PlatformRunRecord> {
+  return postJson<PlatformRunRecord>(`/api/platform/web-tests/scripts/${scriptId}/run`, {});
+}
+
+export function runAppTestScript(scriptId: string): Promise<PlatformRunRecord> {
+  return postJson<PlatformRunRecord>(`/api/platform/app-tests/scripts/${scriptId}/run`, {});
+}
+
+export function runPerformanceScenario(scenarioId: string): Promise<PlatformRunRecord> {
+  return postJson<PlatformRunRecord>(`/api/platform/performance/scenarios/${scenarioId}/run`, {});
+}
+
+export function runCicdJob(jobId: string): Promise<PlatformRunRecord> {
+  return postJson<PlatformRunRecord>(`/api/platform/cicd/jobs/${jobId}/run`, {});
+}
+
+export function globalSearch(keyword: string): Promise<GlobalSearchResponse> {
+  return postJson<GlobalSearchResponse>("/api/platform/global-search", { keyword });
+}
+
+export function sendCopilotMessage(message: string): Promise<CopilotResponse> {
+  return postJson<CopilotResponse>("/api/platform/copilot/chat", { message });
 }

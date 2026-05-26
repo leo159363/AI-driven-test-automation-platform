@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { getCicdJobs } from "../services/api";
-import type { CicdJob } from "../types";
+import { getCicdJobs, runCicdJob } from "../services/api";
+import type { CicdJob, PlatformRunRecord } from "../types";
 
 const jobs = ref<CicdJob[]>([]);
 const selectedJobId = ref("");
 const error = ref("");
+const loading = ref(false);
+const runRecord = ref<PlatformRunRecord | null>(null);
 
 const selectedJob = computed(() => jobs.value.find((item) => item.job_id === selectedJobId.value) ?? jobs.value[0]);
 
@@ -18,6 +20,21 @@ onMounted(async () => {
     error.value = err instanceof Error ? err.message : String(err);
   }
 });
+
+async function submitRunJob(): Promise<void> {
+  if (!selectedJob.value) {
+    return;
+  }
+  loading.value = true;
+  error.value = "";
+  try {
+    runRecord.value = await runCicdJob(selectedJob.value.job_id);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err);
+  } finally {
+    loading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -27,7 +44,9 @@ onMounted(async () => {
         <h2>CI/CD 与定时任务</h2>
         <p>把 ruff、pytest、自动化执行、Allure 产物和 AI 失败分析串成质量门禁。</p>
       </div>
-      <button class="primary-button">新建定时任务</button>
+      <button class="primary-button" :disabled="!selectedJob || loading" @click="submitRunJob">
+        {{ loading ? "执行中..." : "运行任务" }}
+      </button>
     </div>
 
     <div v-if="error" class="error-banner">CI/CD 模块加载失败：{{ error }}</div>
@@ -64,6 +83,11 @@ onMounted(async () => {
           <p>{{ selectedJob.quality_gate }}</p>
           <h3>命令</h3>
           <pre class="code-block">{{ selectedJob.command }}</pre>
+          <template v-if="runRecord">
+            <h3>执行结果</h3>
+            <span class="status-pill ok">{{ runRecord.status }}</span>
+            <pre class="mini-code">{{ JSON.stringify(runRecord.summary, null, 2) }}</pre>
+          </template>
         </template>
       </main>
     </div>

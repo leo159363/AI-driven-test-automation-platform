@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/platform", tags=["platform"])
 
@@ -192,10 +194,98 @@ SETTINGS: list[dict[str, Any]] = [
 ]
 
 
+class RunRequest(BaseModel):
+    """Generic run request for platform demo modules."""
+
+    target_id: str = Field(default="")
+    dry_run: bool = Field(default=True)
+
+
+class SearchRequest(BaseModel):
+    """Global search request."""
+
+    keyword: str = Field(..., min_length=1)
+
+
+class CopilotRequest(BaseModel):
+    """Global testing copilot request."""
+
+    message: str = Field(..., min_length=1)
+    project_id: str = Field(default="qualitypilot-demo")
+
+
+def _now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def _run_record(
+    *,
+    run_id: str,
+    target_id: str,
+    name: str,
+    module: str,
+    command: str,
+    status: str = "passed",
+) -> dict[str, Any]:
+    return {
+        "run_id": run_id,
+        "target_id": target_id,
+        "name": name,
+        "module": module,
+        "status": status,
+        "started_at": _now(),
+        "finished_at": _now(),
+        "command": command,
+        "summary": {
+            "total": 3,
+            "passed": 3 if status == "passed" else 2,
+            "failed": 0 if status == "passed" else 1,
+            "duration_seconds": 1.2,
+        },
+        "artifacts": [
+            "reports/api-runs/demo/junit.xml",
+            "reports/api-runs/demo/allure-results",
+            "reports/api-runs/demo/ai_failure_analysis.md",
+        ],
+        "ai_next_step": "如果失败，QualityPilot 会调用 analyze_failure 和 generate_bug_report MCP tools。",
+    }
+
+
 @router.get("/projects")
 def get_projects() -> dict[str, Any]:
     """Return available platform projects."""
     return {"items": PROJECTS, "summary": {"total": len(PROJECTS)}}
+
+
+@router.get("/dashboard")
+def get_dashboard() -> dict[str, Any]:
+    """Return dashboard statistics similar to a full testing platform."""
+    return {
+        "api_tests": {"total": 4, "passed": 3, "failed": 1},
+        "web_tests": {"total": len(WEB_TEST_SCRIPTS), "passed": 1, "failed": 0},
+        "app_tests": {"total": len(APP_TEST_SCRIPTS), "passed": 1, "failed": 0},
+        "perf_tests": {"total": len(PERFORMANCE_SCENARIOS), "running": 0},
+        "recent_runs": [
+            {"name": "登录接口回归", "type": "api", "status": "passed", "time": "刚刚"},
+            {"name": "接口工作台主流程", "type": "web", "status": "planned", "time": "10 分钟前"},
+            {"name": "登录接口基线压测", "type": "performance", "status": "passed", "time": "今天"},
+        ],
+        "trend": [
+            {"date": "05-20", "passed": 8, "failed": 1},
+            {"date": "05-21", "passed": 10, "failed": 0},
+            {"date": "05-22", "passed": 9, "failed": 2},
+            {"date": "05-23", "passed": 12, "failed": 1},
+            {"date": "05-24", "passed": 14, "failed": 1},
+            {"date": "05-25", "passed": 16, "failed": 0},
+            {"date": "05-26", "passed": 18, "failed": 1},
+        ],
+        "qualitypilot_features": [
+            "MCP tools 可被 Agent 调用",
+            "RAG 知识库按测试场景过滤",
+            "pytest 执行结果进入 Allure/JUnit 报告",
+            "失败用例可生成分析和 Bug 草稿",
+        ],
+    }
 
 
 @router.get("/web-tests/scripts")
@@ -211,10 +301,46 @@ def get_web_test_scripts() -> dict[str, Any]:
     }
 
 
+@router.post("/web-tests/scripts/{script_id}/run")
+def run_web_test_script(script_id: str, request: RunRequest | None = None) -> dict[str, Any]:
+    """Run or preview one Web automation script."""
+    script = next((item for item in WEB_TEST_SCRIPTS if item["script_id"] == script_id), None)
+    if script is None:
+        return _run_record(
+            run_id=f"web-{script_id}-not-found",
+            target_id=script_id,
+            name="未知 Web 脚本",
+            module="Web",
+            command="not found",
+            status="failed",
+        )
+    return _run_record(
+        run_id=f"web-{script_id}-demo",
+        target_id=script_id,
+        name=script["name"],
+        module=script["module"],
+        command=f"pytest {script['pytest_target']}",
+        status="passed" if script["status"] in {"ready", "planned"} else "failed",
+    )
+
+
 @router.get("/app-tests/scripts")
 def get_app_test_scripts() -> dict[str, Any]:
     """Return App testing scripts or contract scenarios."""
     return {"items": APP_TEST_SCRIPTS, "summary": {"total": len(APP_TEST_SCRIPTS)}}
+
+
+@router.post("/app-tests/scripts/{script_id}/run")
+def run_app_test_script(script_id: str, request: RunRequest | None = None) -> dict[str, Any]:
+    """Run or preview one App test contract."""
+    script = next((item for item in APP_TEST_SCRIPTS if item["script_id"] == script_id), APP_TEST_SCRIPTS[0])
+    return _run_record(
+        run_id=f"app-{script_id}-demo",
+        target_id=script_id,
+        name=script["name"],
+        module=script["module"],
+        command="pytest tests/automation/test_app_contract.py",
+    )
 
 
 @router.get("/performance/scenarios")
@@ -230,6 +356,28 @@ def get_performance_scenarios() -> dict[str, Any]:
     }
 
 
+@router.post("/performance/scenarios/{scenario_id}/run")
+def run_performance_scenario(
+    scenario_id: str, request: RunRequest | None = None
+) -> dict[str, Any]:
+    """Run or preview one performance scenario."""
+    scenario = next(
+        (item for item in PERFORMANCE_SCENARIOS if item["scenario_id"] == scenario_id),
+        PERFORMANCE_SCENARIOS[0],
+    )
+    return {
+        **_run_record(
+            run_id=f"perf-{scenario_id}-demo",
+            target_id=scenario_id,
+            name=scenario["name"],
+            module=scenario["module"],
+            command=scenario["command"],
+        ),
+        "metrics": scenario["metrics"],
+        "tool": scenario["tool"],
+    }
+
+
 @router.get("/cicd/jobs")
 def get_cicd_jobs() -> dict[str, Any]:
     """Return CI/CD and scheduled test jobs."""
@@ -240,6 +388,19 @@ def get_cicd_jobs() -> dict[str, Any]:
             "ready": sum(1 for item in CICD_JOBS if item["status"] == "ready"),
         },
     }
+
+
+@router.post("/cicd/jobs/{job_id}/run")
+def run_cicd_job(job_id: str, request: RunRequest | None = None) -> dict[str, Any]:
+    """Run or preview one CI/CD job."""
+    job = next((item for item in CICD_JOBS if item["job_id"] == job_id), CICD_JOBS[0])
+    return _run_record(
+        run_id=f"cicd-{job_id}-demo",
+        target_id=job_id,
+        name=job["name"],
+        module="CI/CD",
+        command=job["command"],
+    )
 
 
 @router.get("/documents")
@@ -259,6 +420,85 @@ def get_documents() -> dict[str, Any]:
 def get_platform_settings() -> dict[str, Any]:
     """Return platform integration settings."""
     return {"items": SETTINGS, "summary": {"total": len(SETTINGS)}}
+
+
+@router.post("/global-search")
+def global_search(request: SearchRequest) -> dict[str, Any]:
+    """Search across platform assets."""
+    keyword = request.keyword.lower()
+    candidates: list[dict[str, Any]] = []
+    for project in PROJECTS:
+        candidates.append(
+            {
+                "type": "project",
+                "title": project["name"],
+                "path": "/",
+                "description": project["description"],
+            }
+        )
+    for script in WEB_TEST_SCRIPTS:
+        candidates.append(
+            {
+                "type": "web_test",
+                "title": script["name"],
+                "path": "/web-testing",
+                "description": script["ai_capability"],
+            }
+        )
+    for scenario in PERFORMANCE_SCENARIOS:
+        candidates.append(
+            {
+                "type": "performance",
+                "title": scenario["name"],
+                "path": "/performance",
+                "description": scenario["risk"],
+            }
+        )
+    for document in DOCUMENTS:
+        candidates.append(
+            {
+                "type": "document",
+                "title": document["title"],
+                "path": "/documents",
+                "description": document["purpose"],
+            }
+        )
+    items = [
+        item
+        for item in candidates
+        if keyword in item["title"].lower() or keyword in item["description"].lower()
+    ]
+    return {"items": items, "summary": {"total": len(items), "keyword": request.keyword}}
+
+
+@router.post("/copilot/chat")
+def copilot_chat(request: CopilotRequest) -> dict[str, Any]:
+    """Return a deterministic platform copilot response."""
+    message = request.message.strip()
+    operations = []
+    if "性能" in message or "压测" in message:
+        operations.append({"type": "open_page", "path": "/performance", "reason": "需要查看性能场景"})
+        operations.append({"type": "run_scenario", "target": "perf-login-baseline"})
+    elif "失败" in message or "bug" in message.lower():
+        operations.append({"type": "retrieve_test_context", "target": "test_report/log/bug"})
+        operations.append({"type": "generate_bug_report", "target": "failed_cases"})
+    elif "接口" in message or "api" in message.lower():
+        operations.append({"type": "open_page", "path": "/api-testing", "reason": "需要进入接口测试工作台"})
+        operations.append({"type": "generate_test_cases", "target": "selected_endpoint"})
+    else:
+        operations.append({"type": "global_search", "target": message})
+    return {
+        "message": message,
+        "answer": "我已按 QualityPilot 的测试开发工作流生成操作计划。真实执行时会调用 MCP tools、RAG 检索和 pytest/Allure 链路。",
+        "operations": operations,
+        "recommended_tools": [
+            "retrieve_test_context",
+            "generate_test_cases",
+            "run_api_tests",
+            "analyze_failure",
+            "generate_bug_report",
+        ],
+    }
 
 
 @router.get("/workspace")

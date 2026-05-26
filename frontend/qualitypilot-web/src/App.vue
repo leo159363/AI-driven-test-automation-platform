@@ -1,46 +1,90 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { globalSearch, sendCopilotMessage } from "./services/api";
 
-const navItems = [
-  { label: "首页", path: "/", icon: "home", group: "平台" },
-  { label: "接口测试", path: "/api-testing", icon: "api", group: "测试工作台" },
-  { label: "Web 测试", path: "/web-testing", icon: "web", group: "测试工作台" },
-  { label: "App 测试", path: "/app-testing", icon: "app", group: "测试工作台" },
-  { label: "性能测试", path: "/performance", icon: "perf", group: "测试工作台" },
-  { label: "测试用例", path: "/test-cases", icon: "case", group: "测试工作台" },
-  { label: "自动化执行", path: "/automation", icon: "run", group: "执行与报告" },
-  { label: "测试报告", path: "/reports", icon: "report", group: "执行与报告" },
-  { label: "CI/CD 定时任务", path: "/cicd", icon: "ci", group: "执行与报告" },
-  { label: "测试文档", path: "/documents", icon: "doc", group: "AI 与知识库" },
-  { label: "AI 测试助手", path: "/assistant", icon: "ai", group: "AI 与知识库" },
-  { label: "知识库管理", path: "/knowledge", icon: "kb", group: "AI 与知识库" },
-  { label: "系统设置", path: "/settings", icon: "set", group: "平台" },
+interface MenuChild {
+  label: string;
+  path: string;
+}
+
+interface MenuItem {
+  label: string;
+  path?: string;
+  icon: string;
+  children?: MenuChild[];
+}
+
+const collapsed = ref(false);
+const openGroups = ref<string[]>(["接口测试", "性能测试"]);
+const searchKeyword = ref("");
+const searchResults = ref<Array<{ type: string; title: string; path: string; description: string }>>([]);
+const showSearchResults = ref(false);
+const copilotOpen = ref(false);
+const copilotInput = ref("帮我创建登录接口回归测试并分析失败风险");
+const copilotAnswer = ref("");
+const copilotOperations = ref<Array<Record<string, string>>>([]);
+const copilotLoading = ref(false);
+
+const menuItems: MenuItem[] = [
+  { label: "首页", path: "/", icon: "⌂" },
+  {
+    label: "接口测试",
+    icon: "⌁",
+    children: [
+      { label: "工作台", path: "/api-testing" },
+      { label: "用例管理", path: "/test-cases" },
+      { label: "环境配置", path: "/settings" },
+    ],
+  },
+  {
+    label: "Web测试",
+    icon: "◎",
+    children: [{ label: "脚本管理", path: "/web-testing" }],
+  },
+  {
+    label: "APP测试",
+    icon: "▯",
+    children: [{ label: "脚本管理", path: "/app-testing" }],
+  },
+  {
+    label: "性能测试",
+    icon: "⚡",
+    children: [
+      { label: "场景管理", path: "/performance" },
+      { label: "实时监控", path: "/performance" },
+      { label: "结果分析", path: "/reports" },
+    ],
+  },
+  { label: "测试报告", path: "/reports", icon: "▥" },
+  { label: "CI/CD与定时任务", path: "/cicd", icon: "⌘" },
+  { label: "测试文档", path: "/documents", icon: "▤" },
+  {
+    label: "AI 与知识库",
+    icon: "AI",
+    children: [
+      { label: "AI 测试助手", path: "/assistant" },
+      { label: "知识库管理", path: "/knowledge" },
+    ],
+  },
+  { label: "系统设置", path: "/settings", icon: "⚙" },
 ];
-
-const navGroups = computed(() => {
-  const groups = new Map<string, typeof navItems>();
-  for (const item of navItems) {
-    groups.set(item.group, [...(groups.get(item.group) ?? []), item]);
-  }
-  return Array.from(groups.entries());
-});
 
 const tourSteps = [
   {
     title: "欢迎来到 QualityPilot",
-    content: "这是一个测试开发平台原型。先看首页，再进入接口测试、自动化执行、报告、知识库和 AI 助手。",
+    content: "这是一个面向测试开发的自动化测试平台，布局参考常见测试平台工作台。",
   },
   {
     title: "先从接口测试开始",
-    content: "接口测试页已经准备好登录成功、登录失败、文件上传成功和参数错误 4 个固定用例。",
+    content: "进入接口测试 / 工作台，选择登录或上传用例，直接发送 Mock 请求。",
   },
   {
-    title: "再跑自动化和报告",
-    content: "自动化执行页触发 pytest，测试报告页查看 JUnit / Allure 产物。",
+    title: "再看自动化和报告",
+    content: "测试报告、CI/CD、Web 测试和性能测试用于展示测试开发完整能力。",
   },
   {
     title: "最后讲 AI + RAG + MCP",
-    content: "知识库和 AI 助手用于生成用例、失败分析和 Bug 报告，MCP tools 用于对接 Agent 工作流。",
+    content: "AI 助手和知识库是你的差异化，不是单纯仿照别人的测试管理平台。",
   },
 ];
 
@@ -48,6 +92,15 @@ const tourIndex = ref(0);
 const showTour = ref(false);
 
 const currentTourStep = computed(() => tourSteps[tourIndex.value]);
+
+function toggleGroup(label: string): void {
+  if (collapsed.value) {
+    collapsed.value = false;
+  }
+  openGroups.value = openGroups.value.includes(label)
+    ? openGroups.value.filter((item) => item !== label)
+    : [...openGroups.value, label];
+}
 
 function closeTour(): void {
   showTour.value = false;
@@ -71,57 +124,114 @@ function restartTour(): void {
   showTour.value = true;
 }
 
+async function submitGlobalSearch(): Promise<void> {
+  if (!searchKeyword.value.trim()) {
+    searchResults.value = [];
+    showSearchResults.value = false;
+    return;
+  }
+  const data = await globalSearch(searchKeyword.value);
+  searchResults.value = data.items;
+  showSearchResults.value = true;
+}
+
+async function submitCopilot(): Promise<void> {
+  if (!copilotInput.value.trim()) {
+    return;
+  }
+  copilotLoading.value = true;
+  try {
+    const data = await sendCopilotMessage(copilotInput.value);
+    copilotAnswer.value = data.answer;
+    copilotOperations.value = data.operations;
+  } finally {
+    copilotLoading.value = false;
+  }
+}
+
 onMounted(() => {
   showTour.value = localStorage.getItem("qualitypilot-tour-dismissed") !== "true";
 });
 </script>
 
 <template>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">Q</div>
-        <div>
-          <strong>QualityPilot</strong>
-          <span>AI 自动化测试平台</span>
-        </div>
+  <div class="fst-shell" :class="{ collapsed }">
+    <aside class="fst-sidebar">
+      <div class="fst-logo">
+        <div class="fst-logo-mark">Q</div>
+        <strong v-if="!collapsed">QualityPilot</strong>
       </div>
 
-      <nav class="nav-list">
-        <div v-for="[group, items] in navGroups" :key="group" class="nav-group">
-          <div class="nav-group-label">{{ group }}</div>
+      <nav class="fst-menu">
+        <template v-for="item in menuItems" :key="item.label">
           <RouterLink
-            v-for="item in items"
-            :key="item.path"
+            v-if="item.path"
             :to="item.path"
-            class="nav-item"
+            class="fst-menu-item"
+            :title="item.label"
           >
-            <span class="nav-icon">{{ item.icon }}</span>
-            <span>{{ item.label }}</span>
+            <span class="fst-menu-icon">{{ item.icon }}</span>
+            <span v-if="!collapsed">{{ item.label }}</span>
           </RouterLink>
-        </div>
-      </nav>
 
-      <div class="sidebar-footer">
-        <span>本地开发</span>
-        <strong>Vue + FastAPI</strong>
-      </div>
+          <div v-else class="fst-submenu">
+            <button class="fst-menu-item fst-submenu-title" type="button" @click="toggleGroup(item.label)">
+              <span class="fst-menu-icon">{{ item.icon }}</span>
+              <span v-if="!collapsed">{{ item.label }}</span>
+              <span v-if="!collapsed" class="fst-caret">
+                {{ openGroups.includes(item.label) ? "⌃" : "⌄" }}
+              </span>
+            </button>
+            <div v-if="!collapsed && openGroups.includes(item.label)" class="fst-submenu-list">
+              <RouterLink
+                v-for="child in item.children"
+                :key="child.path + child.label"
+                :to="child.path"
+                class="fst-submenu-link"
+              >
+                {{ child.label }}
+              </RouterLink>
+            </div>
+          </div>
+        </template>
+      </nav>
     </aside>
 
-    <main class="main-panel">
-      <header class="topbar">
-        <div class="topbar-left">
-          <button class="topbar-icon" type="button" @click="restartTour">guide</button>
-          <div class="project-selector">
-            <span>当前项目</span>
-            <strong>QualityPilot Demo</strong>
-          </div>
-          <label class="topbar-search">
-            <span>search</span>
-            <input placeholder="搜索接口、用例、报告" />
+    <main class="fst-main">
+      <header class="fst-header">
+        <div class="fst-header-left">
+          <button class="fst-icon-button" type="button" @click="collapsed = !collapsed">
+            {{ collapsed ? "☰" : "☷" }}
+          </button>
+          <select class="fst-project-select" value="qualitypilot-demo">
+            <option value="qualitypilot-demo">QualityPilot Demo</option>
+          </select>
+          <label class="fst-global-search">
+            <span>⌕</span>
+            <input
+              v-model="searchKeyword"
+              placeholder="搜索接口、用例、报告、文档"
+              @focus="showSearchResults = searchResults.length > 0"
+              @keydown.enter="submitGlobalSearch"
+            />
           </label>
+          <div v-if="showSearchResults" class="fst-search-popover">
+            <RouterLink
+              v-for="item in searchResults"
+              :key="`${item.type}-${item.title}`"
+              :to="item.path"
+              class="fst-search-result"
+              @click="showSearchResults = false"
+            >
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.type }} / {{ item.description }}</span>
+            </RouterLink>
+            <div v-if="!searchResults.length" class="empty-state">暂无搜索结果</div>
+          </div>
         </div>
-        <div class="topbar-actions">
+
+        <div class="fst-header-actions">
+          <button class="fst-link-icon" type="button" @click="restartTour">引导</button>
           <span class="topbar-badge">MCP</span>
           <span class="topbar-badge">RAG</span>
           <span class="topbar-badge">pytest</span>
@@ -129,8 +239,30 @@ onMounted(() => {
         </div>
       </header>
 
-      <RouterView />
+      <section class="fst-content">
+        <RouterView />
+      </section>
     </main>
+
+    <button class="fst-copilot-trigger" type="button" @click="copilotOpen = !copilotOpen">AI</button>
+    <aside v-if="copilotOpen" class="fst-copilot-panel">
+      <div class="item-title">
+        <h3>平台级 Copilot</h3>
+        <button class="tour-close" type="button" @click="copilotOpen = false">×</button>
+      </div>
+      <textarea v-model="copilotInput" class="assistant-textarea compact-textarea" rows="4" />
+      <button class="primary-button full-width" :disabled="copilotLoading" @click="submitCopilot">
+        {{ copilotLoading ? "规划中..." : "生成操作计划" }}
+      </button>
+      <p v-if="copilotAnswer" class="muted">{{ copilotAnswer }}</p>
+      <div v-if="copilotOperations.length" class="stack">
+        <pre
+          v-for="(operation, index) in copilotOperations"
+          :key="index"
+          class="mini-code"
+        >{{ JSON.stringify(operation, null, 2) }}</pre>
+      </div>
+    </aside>
 
     <div v-if="showTour" class="tour-overlay">
       <div class="tour-popover">

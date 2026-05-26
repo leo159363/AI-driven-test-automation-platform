@@ -151,6 +151,67 @@ export interface ApiOperationPlanResponse {
   operations: Array<Record<string, unknown>>;
 }
 
+export interface ApiCollection {
+  collection_id: string;
+  name: string;
+  description: string;
+  case_ids: string[];
+}
+
+export interface ApiCollectionsResponse {
+  items: ApiCollection[];
+  summary: {
+    total: number;
+    case_total: number;
+  };
+}
+
+export interface SavedApiCase {
+  case_id: string;
+  name: string;
+  method: string;
+  path: string;
+  collection_id: string;
+  headers: Record<string, string>;
+  body: string;
+  expected_status: number | null;
+  json_assertions: Array<{
+    path: string;
+    operator: string;
+    expected?: string;
+  }>;
+  automation_status: string;
+  source: string;
+}
+
+export interface SavedApiCasesResponse {
+  items: SavedApiCase[];
+  summary: {
+    total: number;
+  };
+}
+
+export interface PlatformRunRecord {
+  run_id: string;
+  target_id: string;
+  name: string;
+  module: string;
+  status: string;
+  started_at: string;
+  finished_at: string;
+  command: string;
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    duration_seconds: number;
+  };
+  artifacts: string[];
+  ai_next_step: string;
+  metrics?: Record<string, string | number>;
+  tool?: string;
+}
+
 export interface AutomationScenario {
   scenario_id: string;
   name: string;
@@ -427,6 +488,36 @@ export interface PlatformWorkspaceResponse {
   documents: TestingDocument[];
   settings: PlatformSetting[];
   differentiation: string[];
+}
+
+export interface PlatformDashboardResponse {
+  api_tests: { total: number; passed: number; failed: number };
+  web_tests: { total: number; passed: number; failed: number };
+  app_tests: { total: number; passed: number; failed: number };
+  perf_tests: { total: number; running: number };
+  recent_runs: Array<Record<string, string>>;
+  trend: Array<{ date: string; passed: number; failed: number }>;
+  qualitypilot_features: string[];
+}
+
+export interface GlobalSearchResponse {
+  items: Array<{
+    type: string;
+    title: string;
+    path: string;
+    description: string;
+  }>;
+  summary: {
+    total: number;
+    keyword: string;
+  };
+}
+
+export interface CopilotResponse {
+  message: string;
+  answer: string;
+  operations: Array<Record<string, string>>;
+  recommended_tools: string[];
 }
 
 export interface WebTestScriptsResponse {

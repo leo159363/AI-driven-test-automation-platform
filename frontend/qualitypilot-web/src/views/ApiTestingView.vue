@@ -2,18 +2,23 @@
 import { computed, onMounted, ref, watch } from "vue";
 import {
   exportApiCurl,
+  getApiCollections,
   getApiEndpoints,
   getApiTestingEnvironments,
   planApiOperations,
+  runApiCollection,
+  saveApiCase,
   sendApiDebugRequest,
   synthesizeApiCases,
 } from "../services/api";
 import type {
+  ApiCollection,
   ApiDebugResponse,
   ApiEndpointItem,
   ApiEnvironment,
   ApiOperationPlanResponse,
   ApiSynthesizedCase,
+  PlatformRunRecord,
 } from "../types";
 
 interface JsonAssertionEditor {
@@ -34,11 +39,12 @@ interface EndpointGuide {
   expected: string;
 }
 
-type RequestTab = "params" | "headers" | "body" | "assertions" | "mock" | "guide";
+type RequestTab = "params" | "headers" | "body" | "pre_script" | "post_script" | "mock" | "guide";
 type SidebarTab = "cases" | "collections";
 
 const endpoints = ref<ApiEndpointItem[]>([]);
 const environments = ref<ApiEnvironment[]>([]);
+const collections = ref<ApiCollection[]>([]);
 const selectedEndpointId = ref("");
 const selectedEnvironmentId = ref("mock-local");
 const moduleFilter = ref("all");
@@ -56,6 +62,8 @@ const paramsEditor = ref("{}");
 const variablesEditor = ref("{}");
 const environmentHeadersEditor = ref("{}");
 const bodyEditor = ref("");
+const preScriptEditor = ref("// 前置脚本示例：可以在这里准备 token、环境变量或动态参数。");
+const postScriptEditor = ref("// 后置断言示例：检查响应 schema、提取字段、写入变量。");
 const bodyType = ref("json");
 const expectedStatus = ref<number | null>(200);
 const jsonAssertions = ref<JsonAssertionEditor[]>([]);
@@ -68,6 +76,7 @@ const mockBody = ref('{"message": "mock response"}');
 const synthesizedCases = ref<ApiSynthesizedCase[]>([]);
 const planPrompt = ref("帮我为登录接口创建测试集合，生成正常登录和异常登录用例，并执行集合。");
 const operationPlan = ref<ApiOperationPlanResponse | null>(null);
+const collectionRun = ref<PlatformRunRecord | null>(null);
 const curlCommand = ref("");
 const activeRequestTab = ref<RequestTab>("body");
 
@@ -75,7 +84,8 @@ const requestTabs: Array<{ id: RequestTab; label: string }> = [
   { id: "params", label: "Params" },
   { id: "headers", label: "Headers" },
   { id: "body", label: "Body" },
-  { id: "assertions", label: "断言" },
+  { id: "pre_script", label: "前置脚本" },
+  { id: "post_script", label: "断言脚本" },
   { id: "mock", label: "Mock" },
   { id: "guide", label: "说明" },
 ];
@@ -177,6 +187,14 @@ const selectedEndpointGuide = computed<EndpointGuide | undefined>(() => {
 
 const isLocalHttpMode = computed(() => Boolean(targetBaseUrl.value.trim()));
 
+const activeCollection = computed<ApiCollection | undefined>(() => {
+  if (!selectedEndpoint.value) {
+    return collections.value[0];
+  }
+  const collectionId = selectedEndpoint.value.module.includes("上传") ? "upload" : "auth";
+  return collections.value.find((item) => item.collection_id === collectionId) ?? collections.value[0];
+});
+
 function selectEndpoint(endpointId: string): void {
   selectedEndpointId.value = endpointId;
   debugResponse.value = null;
@@ -213,6 +231,8 @@ function syncEditor(endpoint: ApiEndpointItem | undefined): void {
   }
   headersEditor.value = JSON.stringify(endpoint.headers, null, 2);
   paramsEditor.value = "{}";
+  preScriptEditor.value = "// 当前演示没有真实前置脚本。面试时可以说明这里可做登录 token 提取、变量初始化。";
+  postScriptEditor.value = "// 当前断言由右侧 JSON 断言表驱动。后续可扩展为 JS 脚本断言。";
   bodyEditor.value = endpoint.request_body.startsWith("<binary")
     ? "demo-binary-content"
     : endpoint.request_body;
@@ -328,7 +348,7 @@ function applySynthesizedCase(testCase: ApiSynthesizedCase): void {
     operator: item.operator,
     expected: item.expected ?? "",
   }));
-  activeRequestTab.value = "assertions";
+  activeRequestTab.value = "post_script";
 }
 
 async function submitDebugRequest(): Promise<void> {
@@ -406,17 +426,61 @@ async function submitCurlExport(): Promise<void> {
   }
 }
 
+async function submitSaveCase(): Promise<void> {
+  if (!selectedEndpoint.value) {
+    return;
+  }
+  error.value = "";
+  try {
+    const payload = buildRequestPayload();
+    const result = await saveApiCase({
+      name: selectedEndpoint.value.name,
+      method: payload.method,
+      path: payload.path,
+      collection_id: activeCollection.value?.collection_id ?? "auth",
+      headers: payload.headers,
+      body: payload.body,
+      expected_status: payload.expected_status,
+      json_assertions: payload.json_assertions,
+    });
+    requestFeedback.value = result.message;
+    requestFeedbackType.value = "success";
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err);
+  }
+}
+
+async function submitRunCollection(collectionId?: string): Promise<void> {
+  const targetCollectionId = collectionId ?? activeCollection.value?.collection_id;
+  if (!targetCollectionId) {
+    return;
+  }
+  loading.value = true;
+  error.value = "";
+  try {
+    collectionRun.value = await runApiCollection(targetCollectionId);
+    requestFeedback.value = `集合 ${collectionRun.value.name} 已执行：${collectionRun.value.summary.passed}/${collectionRun.value.summary.total} 通过。`;
+    requestFeedbackType.value = "success";
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err);
+  } finally {
+    loading.value = false;
+  }
+}
+
 watch(selectedEndpoint, (endpoint) => syncEditor(endpoint), { immediate: true });
 watch(selectedEnvironment, (environment) => syncEnvironment(environment), { immediate: true });
 
 onMounted(async () => {
   try {
-    const [endpointData, environmentData] = await Promise.all([
+    const [endpointData, environmentData, collectionData] = await Promise.all([
       getApiEndpoints(),
       getApiTestingEnvironments(),
+      getApiCollections(),
     ]);
     endpoints.value = endpointData.items;
     environments.value = environmentData.items;
+    collections.value = collectionData.items;
     selectedEndpointId.value = endpointData.items[0]?.endpoint_id ?? "";
     moduleFilter.value = endpointData.summary.modules[0] ?? "all";
     switchToMockEnvironment();
@@ -427,24 +491,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section>
-    <div class="page-title">
-      <div>
-        <h2>接口测试工作台</h2>
-        <p>仿照 Postman / Apifox 的使用方式：选择模块和用例，直接发送请求、查看响应、断言和自动化映射。</p>
-      </div>
-      <div class="toolbar">
-        <button class="ghost-button" type="button" @click="resetCurrentExample">重置示例</button>
-        <button class="primary-button" :disabled="loading || !selectedEndpoint" @click="submitDebugRequest">
-          {{ loading ? "发送中..." : "发送请求" }}
-        </button>
-      </div>
-    </div>
-
+  <section class="fst-api-page">
     <div v-if="error" class="error-banner">接口工作台错误：{{ error }}</div>
 
-    <div class="api-workbench-shell">
-      <aside class="panel api-side-panel">
+    <div class="fst-api-workspace">
+      <aside class="fst-api-sidebar">
         <div class="side-tabs">
           <button
             class="side-tab"
@@ -464,27 +515,24 @@ onMounted(async () => {
           </button>
         </div>
 
-        <label>
-          测试模块
-          <select v-model="moduleFilter" class="form-control">
-            <option v-for="item in moduleOptions" :key="item" :value="item">
-              {{ item === "all" ? "全部模块" : item }}
-            </option>
-          </select>
-        </label>
+        <div class="fst-sidebar-tools">
+          <input v-model="searchKeyword" class="form-control" placeholder="搜索用例..." />
+          <button class="ghost-button icon-only" type="button" @click="resetCurrentExample">↻</button>
+        </div>
 
-        <label>
-          搜索用例
-          <input v-model="searchKeyword" class="form-control" placeholder="输入接口、用例、路径" />
-        </label>
+        <select v-model="moduleFilter" class="form-control">
+          <option v-for="item in moduleOptions" :key="item" :value="item">
+            {{ item === "all" ? "全部模块" : item }}
+          </option>
+        </select>
 
-        <div v-if="sidebarTab === 'cases'" class="stack">
-          <div v-for="[folder, items] in folders" :key="folder" class="api-folder">
-            <strong>{{ folder }}</strong>
+        <div v-if="sidebarTab === 'cases'" class="fst-case-tree">
+          <div v-for="[folder, items] in folders" :key="folder" class="fst-case-folder">
+            <strong>▾ {{ folder }}</strong>
             <button
               v-for="endpoint in items.filter((item) => filteredEndpoints.includes(item))"
               :key="endpoint.endpoint_id"
-              class="tree-button"
+              class="fst-case-item"
               :class="{ active: endpoint.endpoint_id === selectedEndpoint?.endpoint_id }"
               type="button"
               @click="selectEndpoint(endpoint.endpoint_id)"
@@ -495,60 +543,64 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div v-else class="empty-state">
-          当前版本先以内置 API 集合演示为主，后续可以扩展为自定义集合、导入 Swagger 和批量运行。
+        <div v-else class="stack">
+          <article v-for="collection in collections" :key="collection.collection_id" class="context-card">
+            <div class="item-title">
+              <strong>{{ collection.name }}</strong>
+              <span class="tag">{{ collection.case_ids.length }} cases</span>
+            </div>
+            <p class="muted">{{ collection.description }}</p>
+            <button class="ghost-button" type="button" @click="submitRunCollection(collection.collection_id)">
+              运行集合
+            </button>
+          </article>
         </div>
       </aside>
 
-      <main class="panel api-editor-panel">
+      <main class="fst-request-console">
         <template v-if="selectedEndpoint">
-          <div class="api-editor-header">
-            <div>
-              <span class="tag">{{ selectedEndpoint.module }}</span>
-              <h3>{{ selectedEndpoint.name }}</h3>
-              <p>{{ selectedEndpoint.description }}</p>
-            </div>
-            <span class="status-pill ok">{{ selectedEndpoint.automation_status }}</span>
+          <div class="fst-request-toolbar">
+            <input class="form-control request-name-input" :value="selectedEndpoint.name" readonly />
+            <span class="toggle-row">
+              <input type="checkbox" checked disabled />
+              自动保存草稿
+            </span>
+            <button class="ghost-button" type="button" @click="resetCurrentExample">新建用例</button>
+            <button class="ghost-button" type="button" @click="submitSaveCase">保存</button>
+            <button class="ghost-button" type="button" @click="submitSynthesize">AI 扩充用例</button>
+            <button class="ghost-button" type="button" @click="submitRunCollection()">运行集合</button>
           </div>
 
-          <div class="api-request-builder">
+          <div class="fst-url-row">
             <select class="method-select" :value="selectedEndpoint.method" disabled>
               <option>{{ selectedEndpoint.method }}</option>
             </select>
             <input class="form-control request-path-input" :value="selectedEndpoint.path" readonly />
-            <button v-if="isLocalHttpMode" class="ghost-button" type="button" @click="switchToMockEnvironment">
-              切回内置 Mock
-            </button>
             <button class="primary-button" :disabled="loading" @click="submitDebugRequest">
               {{ loading ? "发送中..." : "发送" }}
             </button>
           </div>
 
-          <div class="assistant-form-grid">
-            <label>
-              环境
-              <select v-model="selectedEnvironmentId" class="form-control">
-                <option
-                  v-for="environment in environments"
-                  :key="environment.environment_id"
-                  :value="environment.environment_id"
-                >
-                  {{ environment.name }}
-                </option>
-              </select>
-            </label>
-            <label>
-              Base URL
-              <input v-model="targetBaseUrl" class="form-control" placeholder="留空使用内置 Mock" />
-            </label>
-            <label>
-              Body Type
-              <select v-model="bodyType" class="form-control">
-                <option value="json">json</option>
-                <option value="raw">raw</option>
-                <option value="form">form</option>
-              </select>
-            </label>
+          <div class="fst-env-row">
+            <span>环境:</span>
+            <select v-model="selectedEnvironmentId" class="form-control">
+              <option
+                v-for="environment in environments"
+                :key="environment.environment_id"
+                :value="environment.environment_id"
+              >
+                {{ environment.name }}
+              </option>
+            </select>
+            <input v-model="targetBaseUrl" class="form-control" placeholder="Base URL 留空使用内置 Mock" />
+            <select v-model="bodyType" class="form-control compact-select">
+              <option value="json">json</option>
+              <option value="raw">raw</option>
+              <option value="form">form</option>
+            </select>
+            <button v-if="isLocalHttpMode" class="ghost-button" type="button" @click="switchToMockEnvironment">
+              切回内置 Mock
+            </button>
           </div>
 
           <div
@@ -559,12 +611,6 @@ onMounted(async () => {
             }"
           >
             {{ requestFeedback }}
-          </div>
-
-          <div v-if="isLocalHttpMode" class="inline-warning">
-            当前会请求 {{ targetBaseUrl }}。如果你没有启动真实被测服务，请点击
-            <button class="text-button" type="button" @click="switchToMockEnvironment">切回内置 Mock</button>
-            再发送。
           </div>
 
           <div class="request-tabs">
@@ -580,24 +626,23 @@ onMounted(async () => {
             </button>
           </div>
 
-          <div class="request-tab-body">
+          <div class="fst-editor-area">
             <div v-if="activeRequestTab === 'params'" class="tab-panel">
               <label>
                 Query Params JSON
-                <textarea v-model="paramsEditor" class="assistant-textarea compact-textarea code-editor" rows="7" />
+                <textarea v-model="paramsEditor" class="assistant-textarea compact-textarea code-editor" rows="8" />
               </label>
-              <p class="muted">当前演示接口默认不需要 query 参数，保持 {} 即可。</p>
             </div>
 
             <div v-else-if="activeRequestTab === 'headers'" class="tab-panel">
               <div class="two-column compact-editor-grid">
                 <label>
                   环境公共 Headers JSON
-                  <textarea v-model="environmentHeadersEditor" class="assistant-textarea compact-textarea code-editor" rows="7" />
+                  <textarea v-model="environmentHeadersEditor" class="assistant-textarea compact-textarea code-editor" rows="8" />
                 </label>
                 <label>
                   请求 Headers JSON
-                  <textarea v-model="headersEditor" class="assistant-textarea compact-textarea code-editor" rows="7" />
+                  <textarea v-model="headersEditor" class="assistant-textarea compact-textarea code-editor" rows="8" />
                 </label>
               </div>
             </div>
@@ -609,15 +654,23 @@ onMounted(async () => {
               </label>
               <label>
                 Request Body
-                <textarea v-model="bodyEditor" class="assistant-textarea compact-textarea code-editor" rows="8" />
+                <textarea v-model="bodyEditor" class="assistant-textarea compact-textarea code-editor" rows="9" />
               </label>
             </div>
 
-            <div v-else-if="activeRequestTab === 'assertions'" class="tab-panel assertion-editor">
+            <div v-else-if="activeRequestTab === 'pre_script'" class="tab-panel">
+              <label>
+                前置脚本
+                <textarea v-model="preScriptEditor" class="assistant-textarea compact-textarea code-editor" rows="12" />
+              </label>
+            </div>
+
+            <div v-else-if="activeRequestTab === 'post_script'" class="tab-panel assertion-editor">
               <div class="item-title">
-                <h3>断言配置</h3>
+                <h3>断言脚本 / JSON 断言</h3>
                 <button class="ghost-button" type="button" @click="addAssertion">新增 JSON 断言</button>
               </div>
+              <textarea v-model="postScriptEditor" class="assistant-textarea compact-textarea code-editor" rows="5" />
               <label>
                 期望状态码
                 <input v-model.number="expectedStatus" class="small-input" type="number" />
@@ -654,11 +707,7 @@ onMounted(async () => {
                   <input v-model.number="mockDelayMs" class="small-input" type="number" />
                 </label>
               </div>
-              <textarea
-                v-model="mockBody"
-                class="assistant-textarea compact-textarea code-editor"
-                rows="7"
-              />
+              <textarea v-model="mockBody" class="assistant-textarea compact-textarea code-editor" rows="9" />
             </div>
 
             <div v-else class="tab-panel">
@@ -673,112 +722,110 @@ onMounted(async () => {
                 <table class="data-table compact-table guide-table">
                   <tbody>
                     <tr v-for="item in selectedEndpointGuide.fields" :key="item.field">
-                      <td>
-                        <strong>{{ item.field }}</strong>
-                      </td>
+                      <td><strong>{{ item.field }}</strong></td>
                       <td class="path-text">{{ item.fill }}</td>
                       <td>{{ item.why }}</td>
                     </tr>
                   </tbody>
                 </table>
-                <p class="expected-text">
-                  <strong>预期结果：</strong>{{ selectedEndpointGuide.expected }}
-                </p>
+                <p class="expected-text"><strong>预期结果：</strong>{{ selectedEndpointGuide.expected }}</p>
               </div>
             </div>
           </div>
 
-          <div class="toolbar api-action-bar">
-            <button class="primary-button" :disabled="loading" @click="submitDebugRequest">发送请求</button>
-            <button class="ghost-button" :disabled="loading" @click="submitSynthesize">AI 扩充用例</button>
-            <button class="ghost-button" @click="submitCurlExport">导出 cURL</button>
-          </div>
+          <section class="fst-response-panel">
+            <div class="item-title">
+              <h3>响应</h3>
+              <div class="toolbar" v-if="debugResponse">
+                <span class="status-pill" :class="debugResponse.passed ? 'ok' : 'warn'">
+                  {{ debugResponse.passed ? "通过" : "失败" }}
+                </span>
+                <span class="tag">status {{ debugResponse.response.status_code }}</span>
+                <span class="tag">{{ debugResponse.response.duration_ms }} ms</span>
+                <span class="tag">assert {{ debugResponse.summary.passed }}/{{ debugResponse.summary.total }}</span>
+              </div>
+            </div>
+            <template v-if="debugResponse">
+              <table class="data-table compact-table assertion-result-table">
+                <tbody>
+                  <tr v-for="assertion in debugResponse.assertions" :key="assertion.name">
+                    <td>
+                      <span class="status-pill" :class="assertion.passed ? 'ok' : 'warn'">
+                        {{ assertion.passed ? "PASS" : "FAIL" }}
+                      </span>
+                    </td>
+                    <td>{{ assertion.name }}</td>
+                    <td class="path-text">actual: {{ assertion.actual }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <pre class="code-block">{{ responsePreview }}</pre>
+            </template>
+            <div v-else class="empty-state">发送请求查看响应</div>
+          </section>
+
+          <section class="fst-lower-grid">
+            <div class="panel-lite">
+              <div class="item-title">
+                <h3>AI 扩充用例</h3>
+                <span class="tag">{{ synthesizedCases.length }} cases</span>
+              </div>
+              <div v-if="synthesizedCases.length" class="stack">
+                <article v-for="testCase in synthesizedCases" :key="testCase.name" class="endpoint-card">
+                  <div class="item-title">
+                    <strong>{{ testCase.name }}</strong>
+                    <span class="tag">expect {{ testCase.expected_status }}</span>
+                  </div>
+                  <pre class="mini-code">{{ testCase.body }}</pre>
+                  <button class="ghost-button" type="button" @click="applySynthesizedCase(testCase)">
+                    应用到调试器
+                  </button>
+                </article>
+              </div>
+              <div v-else class="empty-state">点击 AI 扩充用例，生成边界、异常、安全类接口用例。</div>
+            </div>
+
+            <div class="panel-lite">
+              <div class="item-title">
+                <h3>接口详情</h3>
+                <button class="ghost-button" type="button" @click="submitCurlExport">导出 cURL</button>
+              </div>
+              <p class="path-text">{{ selectedEndpoint.method }} {{ selectedEndpoint.path }}</p>
+              <p class="muted">{{ selectedEndpoint.description }}</p>
+              <span class="tag">{{ selectedEndpoint.related_case_id }}</span>
+              <pre class="mini-code">{{ selectedRunCommand }}</pre>
+              <pre v-if="curlCommand" class="mini-code">{{ curlCommand }}</pre>
+            </div>
+          </section>
+
+          <section v-if="collectionRun" class="panel-lite">
+            <div class="item-title">
+              <h3>集合执行结果</h3>
+              <span class="status-pill ok">{{ collectionRun.status }}</span>
+            </div>
+            <p class="muted">{{ collectionRun.ai_next_step }}</p>
+            <div class="toolbar">
+              <span class="tag">total {{ collectionRun.summary.total }}</span>
+              <span class="tag">passed {{ collectionRun.summary.passed }}</span>
+              <span class="tag">failed {{ collectionRun.summary.failed }}</span>
+            </div>
+            <pre class="mini-code">{{ collectionRun.command }}</pre>
+          </section>
+
+          <section class="panel-lite">
+            <div class="item-title">
+              <h3>AI 编排预览</h3>
+              <button class="ghost-button" :disabled="loading" @click="submitPlan">生成计划</button>
+            </div>
+            <textarea v-model="planPrompt" class="assistant-textarea compact-textarea" rows="4" />
+            <template v-if="operationPlan">
+              <p class="muted">{{ operationPlan.summary }} / {{ operationPlan.source }}</p>
+              <pre class="code-block">{{ JSON.stringify(operationPlan.operations, null, 2) }}</pre>
+            </template>
+          </section>
         </template>
         <div v-else class="empty-state">暂无接口数据</div>
       </main>
-
-      <aside class="panel api-right-panel">
-        <h3>接口说明</h3>
-        <template v-if="selectedEndpoint">
-          <p class="path-text">{{ selectedEndpoint.method }} {{ selectedEndpoint.path }}</p>
-          <p class="muted">{{ selectedEndpoint.description }}</p>
-          <h3>关联测试用例</h3>
-          <span class="tag">{{ selectedEndpoint.related_case_id }}</span>
-          <h3>pytest 自动化</h3>
-          <p class="path-text">{{ selectedEndpoint.pytest_target }}</p>
-          <pre class="mini-code">{{ selectedRunCommand }}</pre>
-          <h3>cURL</h3>
-          <pre v-if="curlCommand" class="mini-code">{{ curlCommand }}</pre>
-          <div v-else class="empty-state">点击导出 cURL 后显示。</div>
-        </template>
-      </aside>
-    </div>
-
-    <div class="two-column api-debug-section">
-      <div class="panel">
-        <h3>响应与断言结果</h3>
-        <template v-if="debugResponse">
-          <div class="toolbar">
-            <span class="status-pill" :class="debugResponse.passed ? 'ok' : 'warn'">
-              {{ debugResponse.passed ? "通过" : "失败" }}
-            </span>
-            <span class="tag">status {{ debugResponse.response.status_code }}</span>
-            <span class="tag">{{ debugResponse.response.duration_ms }} ms</span>
-            <span class="tag">{{ debugResponse.request.target_mode }}</span>
-            <span class="tag">assert {{ debugResponse.summary.passed }}/{{ debugResponse.summary.total }}</span>
-          </div>
-          <table class="data-table compact-table assertion-result-table">
-            <tbody>
-              <tr v-for="assertion in debugResponse.assertions" :key="assertion.name">
-                <td>
-                  <span class="status-pill" :class="assertion.passed ? 'ok' : 'warn'">
-                    {{ assertion.passed ? "PASS" : "FAIL" }}
-                  </span>
-                </td>
-                <td>{{ assertion.name }}</td>
-                <td class="path-text">actual: {{ assertion.actual }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <h3>Response Body</h3>
-          <pre class="code-block">{{ responsePreview }}</pre>
-        </template>
-        <div v-else class="empty-state">点击发送请求后，这里会展示响应体、耗时和断言结果。</div>
-      </div>
-
-      <div class="panel">
-        <div class="item-title">
-          <h3>AI 扩充用例</h3>
-          <span class="tag">{{ synthesizedCases.length }} cases</span>
-        </div>
-        <div v-if="synthesizedCases.length" class="stack">
-          <article v-for="testCase in synthesizedCases" :key="testCase.name" class="endpoint-card">
-            <div class="item-title">
-              <strong>{{ testCase.name }}</strong>
-              <span class="tag">expect {{ testCase.expected_status }}</span>
-            </div>
-            <p class="path-text">{{ testCase.method }} {{ testCase.path }}</p>
-            <pre class="mini-code">{{ testCase.body }}</pre>
-            <button class="ghost-button" type="button" @click="applySynthesizedCase(testCase)">
-              应用到调试器
-            </button>
-          </article>
-        </div>
-        <div v-else class="empty-state">点击 AI 扩充用例，生成边界、异常、安全类接口用例。</div>
-      </div>
-    </div>
-
-    <div class="panel api-debug-section">
-      <div class="item-title">
-        <h3>AI 编排预览</h3>
-        <button class="ghost-button" :disabled="loading" @click="submitPlan">生成计划</button>
-      </div>
-      <textarea v-model="planPrompt" class="assistant-textarea compact-textarea" rows="4" />
-      <template v-if="operationPlan">
-        <p class="muted">{{ operationPlan.summary }} / {{ operationPlan.source }}</p>
-        <pre class="code-block">{{ JSON.stringify(operationPlan.operations, null, 2) }}</pre>
-      </template>
-      <div v-else class="empty-state">输入自然语言目标，生成可执行的接口测试操作计划。</div>
     </div>
   </section>
 </template>
