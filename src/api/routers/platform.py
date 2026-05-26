@@ -173,6 +173,9 @@ DOCUMENTS: list[dict[str, Any]] = [
         "path": "README.md",
         "purpose": "用于 GitHub 首页展示项目定位、技术栈、启动方式和演示流程。",
         "rag_ready": True,
+        "template": "项目说明模板",
+        "is_builtin": True,
+        "updated_at": "builtin",
     },
     {
         "doc_id": "interview-guide",
@@ -181,6 +184,9 @@ DOCUMENTS: list[dict[str, Any]] = [
         "path": "docs/interview_qa.md",
         "purpose": "解释项目功能、测试点、自动化流程、性能测试和 AI 能力。",
         "rag_ready": True,
+        "template": "测试用例模板",
+        "is_builtin": True,
+        "updated_at": "builtin",
     },
     {
         "doc_id": "mcp-tools",
@@ -189,6 +195,9 @@ DOCUMENTS: list[dict[str, Any]] = [
         "path": "docs/mcp_tools.md",
         "purpose": "说明 retrieve_test_context、generate_test_cases、run_api_tests 等工具。",
         "rag_ready": True,
+        "template": "接口文档模板",
+        "is_builtin": True,
+        "updated_at": "builtin",
     },
 ]
 
@@ -198,24 +207,32 @@ SETTINGS: list[dict[str, Any]] = [
         "name": "LLM Provider",
         "value": "demo deterministic / optional OpenAI-compatible",
         "description": "当前默认使用确定性生成，后续可接入真实大模型。",
+        "is_builtin": True,
+        "updated_at": "builtin",
     },
     {
         "setting_id": "rag-store",
         "name": "RAG Knowledge Store",
         "value": "local keyword demo / vector store ready",
         "description": "知识库支持 project、module、version、source_type 元数据过滤。",
+        "is_builtin": True,
+        "updated_at": "builtin",
     },
     {
         "setting_id": "mcp-server",
         "name": "MCP Server",
         "value": "mcp-server console script",
         "description": "暴露测试上下文检索、用例生成、执行和失败分析工具。",
+        "is_builtin": True,
+        "updated_at": "builtin",
     },
     {
         "setting_id": "test-runner",
         "name": "Test Runner",
         "value": "pytest + Allure artifacts",
         "description": "自动化执行结果可解析 JUnit XML，并生成 Allure 结果目录。",
+        "is_builtin": True,
+        "updated_at": "builtin",
     },
 ]
 
@@ -256,6 +273,25 @@ class AppTestScriptSaveRequest(BaseModel):
     assertions: list[str] = Field(default_factory=list)
 
 
+class TestingDocumentSaveRequest(BaseModel):
+    """Request body for creating or updating one testing document entry."""
+
+    title: str = Field(..., min_length=1)
+    category: str = Field(default="测试用例")
+    template: str = Field(default="")
+    path: str = Field(default="")
+    purpose: str = Field(default="")
+    rag_ready: bool = Field(default=True)
+
+
+class PlatformSettingSaveRequest(BaseModel):
+    """Request body for creating or updating one platform setting."""
+
+    name: str = Field(..., min_length=1)
+    value: str = Field(default="")
+    description: str = Field(default="")
+
+
 def _now() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -286,6 +322,52 @@ def _normalize_app_script_payload(
         "last_run_at": "-",
         "is_builtin": False,
         "ai_capability": "可结合 RAG 需求文档生成兼容性、弱网和异常场景。",
+        "updated_at": _now(),
+    }
+
+
+def _slugify_identifier(value: str, fallback: str) -> str:
+    normalized = "".join(char.lower() if char.isalnum() else "-" for char in value.strip())
+    normalized = "-".join(part for part in normalized.split("-") if part)
+    return normalized or fallback
+
+
+def _normalize_document_payload(
+    request: TestingDocumentSaveRequest,
+    *,
+    doc_id: str,
+    is_builtin: bool = False,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    path = request.path.strip() or f"docs/{_slugify_identifier(request.title, doc_id)}.md"
+    return {
+        "doc_id": doc_id,
+        "title": request.title.strip(),
+        "category": request.category.strip() or "测试用例",
+        "template": request.template.strip(),
+        "path": path,
+        "purpose": request.purpose.strip() or "用于沉淀测试资产，并可同步为 RAG 知识来源。",
+        "rag_ready": request.rag_ready,
+        "is_builtin": is_builtin,
+        "created_at": created_at or _now(),
+        "updated_at": _now(),
+    }
+
+
+def _normalize_setting_payload(
+    request: PlatformSettingSaveRequest,
+    *,
+    setting_id: str,
+    is_builtin: bool = False,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "setting_id": setting_id,
+        "name": request.name.strip(),
+        "value": request.value.strip(),
+        "description": request.description.strip() or "自定义平台配置项。",
+        "is_builtin": is_builtin,
+        "created_at": created_at or _now(),
         "updated_at": _now(),
     }
 
@@ -542,7 +624,58 @@ def get_documents() -> dict[str, Any]:
             "total": len(DOCUMENTS),
             "rag_ready": sum(1 for item in DOCUMENTS if item["rag_ready"]),
             "categories": sorted({item["category"] for item in DOCUMENTS}),
+            "templates": ["测试计划模板", "测试用例模板", "接口文档模板", "测试报告模板"],
         },
+    }
+
+
+@router.post("/documents")
+def create_document(request: TestingDocumentSaveRequest) -> dict[str, Any]:
+    """Create one testing document entry."""
+    doc_id = f"doc-custom-{len([item for item in DOCUMENTS if not item.get('is_builtin')]) + 1:03d}"
+    document = _normalize_document_payload(request, doc_id=doc_id)
+    DOCUMENTS.append(document)
+    return {"document": document, "message": "测试文档已创建"}
+
+
+@router.put("/documents/{doc_id}")
+def update_document(doc_id: str, request: TestingDocumentSaveRequest) -> dict[str, Any]:
+    """Update one testing document entry."""
+    for index, document in enumerate(DOCUMENTS):
+        if document["doc_id"] == doc_id:
+            updated = _normalize_document_payload(
+                request,
+                doc_id=doc_id,
+                is_builtin=bool(document.get("is_builtin")),
+                created_at=document.get("created_at"),
+            )
+            DOCUMENTS[index] = updated
+            return {"document": updated, "message": "测试文档已更新"}
+    raise HTTPException(status_code=404, detail="测试文档不存在")
+
+
+@router.delete("/documents/{doc_id}")
+def delete_document(doc_id: str) -> dict[str, Any]:
+    """Delete one testing document entry."""
+    for index, document in enumerate(DOCUMENTS):
+        if document["doc_id"] == doc_id:
+            DOCUMENTS.pop(index)
+            return {"message": "测试文档已删除"}
+    raise HTTPException(status_code=404, detail="测试文档不存在")
+
+
+@router.post("/documents/sync")
+def sync_documents_to_knowledge() -> dict[str, Any]:
+    """Preview syncing document records to the RAG knowledge base."""
+    ready_items = [item for item in DOCUMENTS if item.get("rag_ready")]
+    return {
+        "message": "测试文档同步任务已提交",
+        "summary": {
+            "total": len(DOCUMENTS),
+            "synced": len(ready_items),
+            "skipped": len(DOCUMENTS) - len(ready_items),
+        },
+        "source_ids": [item["doc_id"] for item in ready_items],
     }
 
 
@@ -550,6 +683,43 @@ def get_documents() -> dict[str, Any]:
 def get_platform_settings() -> dict[str, Any]:
     """Return platform integration settings."""
     return {"items": SETTINGS, "summary": {"total": len(SETTINGS)}}
+
+
+@router.post("/settings")
+def create_platform_setting(request: PlatformSettingSaveRequest) -> dict[str, Any]:
+    """Create one platform setting."""
+    setting_id = f"custom-{_slugify_identifier(request.name, str(len(SETTINGS) + 1))}"
+    if any(item["setting_id"] == setting_id for item in SETTINGS):
+        setting_id = f"{setting_id}-{len(SETTINGS) + 1}"
+    setting = _normalize_setting_payload(request, setting_id=setting_id)
+    SETTINGS.append(setting)
+    return {"setting": setting, "message": "系统配置已创建"}
+
+
+@router.put("/settings/{setting_id}")
+def update_platform_setting(setting_id: str, request: PlatformSettingSaveRequest) -> dict[str, Any]:
+    """Update one platform setting."""
+    for index, setting in enumerate(SETTINGS):
+        if setting["setting_id"] == setting_id:
+            updated = _normalize_setting_payload(
+                request,
+                setting_id=setting_id,
+                is_builtin=bool(setting.get("is_builtin")),
+                created_at=setting.get("created_at"),
+            )
+            SETTINGS[index] = updated
+            return {"setting": updated, "message": "系统配置已更新"}
+    raise HTTPException(status_code=404, detail="系统配置不存在")
+
+
+@router.delete("/settings/{setting_id}")
+def delete_platform_setting(setting_id: str) -> dict[str, Any]:
+    """Delete one platform setting."""
+    for index, setting in enumerate(SETTINGS):
+        if setting["setting_id"] == setting_id:
+            SETTINGS.pop(index)
+            return {"message": "系统配置已删除"}
+    raise HTTPException(status_code=404, detail="系统配置不存在")
 
 
 @router.post("/global-search")

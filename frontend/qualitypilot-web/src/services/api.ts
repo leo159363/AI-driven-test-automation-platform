@@ -22,12 +22,14 @@ import type {
   AppTestScriptsResponse,
   CicdJobsResponse,
   PerformanceScenariosResponse,
+  PlatformSetting,
   PlatformSettingsResponse,
   PlatformDashboardResponse,
   PlatformProjectsResponse,
   PlatformRunRecord,
   PlatformWorkspaceResponse,
   SavedApiCasesResponse,
+  TestingDocument,
   TestingDocumentsResponse,
   WebTestScriptsResponse,
   PromptTemplatesResponse,
@@ -501,8 +503,80 @@ export function getTestingDocuments(): Promise<TestingDocumentsResponse> {
   return getJson<TestingDocumentsResponse>("/api/platform/documents");
 }
 
+export function createTestingDocument(payload: {
+  title: string;
+  category: string;
+  template: string;
+  path: string;
+  purpose: string;
+  rag_ready: boolean;
+}): Promise<{ document: TestingDocument; message: string }> {
+  return postJson<{ document: TestingDocument; message: string }>("/api/platform/documents", payload);
+}
+
+export function updateTestingDocument(
+  docId: string,
+  payload: {
+    title: string;
+    category: string;
+    template: string;
+    path: string;
+    purpose: string;
+    rag_ready: boolean;
+  },
+): Promise<{ document: TestingDocument; message: string }> {
+  return putJson<{ document: TestingDocument; message: string }>(
+    `/api/platform/documents/${encodeURIComponent(docId)}`,
+    payload,
+  );
+}
+
+export function deleteTestingDocument(docId: string): Promise<{ message: string }> {
+  return deleteJson<{ message: string }>(`/api/platform/documents/${encodeURIComponent(docId)}`);
+}
+
+export function syncTestingDocuments(): Promise<{
+  message: string;
+  summary: { total: number; synced: number; skipped: number };
+  source_ids: string[];
+}> {
+  return postJson<{
+    message: string;
+    summary: { total: number; synced: number; skipped: number };
+    source_ids: string[];
+  }>("/api/platform/documents/sync", {});
+}
+
 export function getPlatformSettings(): Promise<PlatformSettingsResponse> {
   return getJson<PlatformSettingsResponse>("/api/platform/settings");
+}
+
+export function createPlatformSetting(payload: {
+  name: string;
+  value: string;
+  description: string;
+}): Promise<{ setting: PlatformSetting; message: string }> {
+  return postJson<{ setting: PlatformSetting; message: string }>("/api/platform/settings", payload);
+}
+
+export function updatePlatformSetting(
+  settingId: string,
+  payload: {
+    name: string;
+    value: string;
+    description: string;
+  },
+): Promise<{ setting: PlatformSetting; message: string }> {
+  return putJson<{ setting: PlatformSetting; message: string }>(
+    `/api/platform/settings/${encodeURIComponent(settingId)}`,
+    payload,
+  );
+}
+
+export function deletePlatformSetting(settingId: string): Promise<{ message: string }> {
+  return deleteJson<{ message: string }>(
+    `/api/platform/settings/${encodeURIComponent(settingId)}`,
+  );
 }
 
 export function runWebTestScript(scriptId: string): Promise<PlatformRunRecord> {

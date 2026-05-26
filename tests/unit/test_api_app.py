@@ -478,6 +478,64 @@ def test_app_test_script_crud_flow() -> None:
     assert delete_response.status_code == 200
 
 
+def test_testing_document_crud_and_sync_flow() -> None:
+    client = _client()
+    payload = {
+        "title": "登录接口测试计划",
+        "category": "测试计划",
+        "template": "测试计划模板",
+        "path": "docs/login_test_plan.md",
+        "purpose": "沉淀登录接口测试范围、风险和执行安排。",
+        "rag_ready": True,
+    }
+
+    create_response = client.post("/api/platform/documents", json=payload)
+
+    assert create_response.status_code == 200
+    created = create_response.json()["document"]
+    assert created["category"] == "测试计划"
+    assert created["template"] == "测试计划模板"
+
+    update_response = client.put(
+        f"/api/platform/documents/{created['doc_id']}",
+        json={**payload, "category": "接口文档", "template": "接口文档模板"},
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["document"]["category"] == "接口文档"
+
+    sync_response = client.post("/api/platform/documents/sync")
+    assert sync_response.status_code == 200
+    assert sync_response.json()["summary"]["synced"] >= 1
+
+    delete_response = client.delete(f"/api/platform/documents/{created['doc_id']}")
+    assert delete_response.status_code == 200
+
+
+def test_platform_setting_crud_flow() -> None:
+    client = _client()
+    payload = {
+        "name": "Custom LLM Timeout",
+        "value": "30s",
+        "description": "控制 AI 测试助手请求超时时间。",
+    }
+
+    create_response = client.post("/api/platform/settings", json=payload)
+
+    assert create_response.status_code == 200
+    created = create_response.json()["setting"]
+    assert created["value"] == "30s"
+
+    update_response = client.put(
+        f"/api/platform/settings/{created['setting_id']}",
+        json={**payload, "value": "60s"},
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["setting"]["value"] == "60s"
+
+    delete_response = client.delete(f"/api/platform/settings/{created['setting_id']}")
+    assert delete_response.status_code == 200
+
+
 def test_run_automation_endpoint_returns_execution_record(monkeypatch: pytest.MonkeyPatch) -> None:
     from src.api.routers import automation
 

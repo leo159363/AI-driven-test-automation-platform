@@ -491,9 +491,13 @@ export interface TestingDocument {
   doc_id: string;
   title: string;
   category: string;
+  template?: string;
   path: string;
   purpose: string;
   rag_ready: boolean;
+  is_builtin?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface PlatformSetting {
@@ -501,6 +505,9 @@ export interface PlatformSetting {
   name: string;
   value: string;
   description: string;
+  is_builtin?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface PlatformWorkspaceResponse {
@@ -587,6 +594,7 @@ export interface TestingDocumentsResponse {
     total: number;
     rag_ready: number;
     categories: string[];
+    templates?: string[];
   };
 }
 

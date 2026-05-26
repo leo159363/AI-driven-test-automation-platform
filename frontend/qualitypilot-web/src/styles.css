@@ -2071,6 +2071,42 @@ textarea {
   min-width: 180px;
 }
 
+.doc-list {
+  display: grid;
+  gap: 10px;
+  max-height: 560px;
+  overflow: auto;
+}
+
+.doc-list-item {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #dfe8e5;
+  border-radius: 10px;
+  background: #fff;
+  color: #203a34;
+  cursor: pointer;
+  text-align: left;
+}
+
+.doc-list-item span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.doc-list-item.active {
+  border-color: #4c8f82;
+  background: #ecf7f4;
+  box-shadow: inset 3px 0 0 #4c8f82;
+}
+
+.setting-card {
+  min-height: 220px;
+  border-radius: 14px;
+}
+
 .env-table-card {
   border-radius: 14px;
 }
