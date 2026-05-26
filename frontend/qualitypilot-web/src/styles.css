@@ -2119,6 +2119,27 @@ textarea {
   border-radius: 14px;
 }
 
+.capability-card {
+  min-height: 300px;
+}
+
+.capability-summary {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f3f7f6;
+  color: #314b45;
+  font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.capability-description {
+  min-height: 48px;
+  margin-top: 10px;
+  line-height: 1.65;
+}
+
 .env-table-card {
   border-radius: 14px;
 }

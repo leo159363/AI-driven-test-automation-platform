@@ -21,6 +21,9 @@ import {
 } from "../services/api";
 import type { AiModelConfig, PlatformSetting } from "../types";
 
+type CapabilityType = "rag" | "mcp" | "runner" | "report" | "experimental" | "custom";
+type CapabilityStatus = "enabled" | "disabled" | "experimental";
+
 interface SettingForm {
   setting_id: string;
   name: string;
@@ -38,7 +41,113 @@ interface AiModelForm {
   vision_api_key: string;
 }
 
-const settings = ref<PlatformSetting[]>([]);
+interface CapabilitySetting extends PlatformSetting {
+  capability_type: CapabilityType;
+  status: CapabilityStatus;
+  summary: string;
+  is_default_capability: boolean;
+}
+
+const DEFAULT_CAPABILITIES: CapabilitySetting[] = [
+  {
+    setting_id: "capability-rag-store",
+    name: "RAG Knowledge Store",
+    capability_type: "rag",
+    status: "enabled",
+    summary: "store=local · top_k=5 · chunk_size=800 · source_type_filter=5",
+    value: formatJson({
+      enabled: true,
+      store: "local",
+      top_k: 5,
+      chunk_size: 800,
+      source_type_filter: ["requirement", "api_doc", "bug", "log", "report"],
+    }),
+    description:
+      "控制知识库检索参数。AI 生成测试用例、失败分析和 Bug 报告时，会优先从 RAG 知识库检索相关需求、接口文档、历史缺陷和日志。",
+    is_builtin: true,
+    is_default_capability: true,
+  },
+  {
+    setting_id: "capability-mcp-server",
+    name: "MCP Server",
+    capability_type: "mcp",
+    status: "enabled",
+    summary: "transport=stdio · tools=6",
+    value: formatJson({
+      enabled: true,
+      transport: "stdio",
+      tools: [
+        "retrieve_test_context",
+        "generate_test_cases",
+        "run_api_tests",
+        "get_test_report",
+        "analyze_failure",
+        "generate_bug_report",
+      ],
+    }),
+    description:
+      "控制 MCP 工具服务。后续 Agent 编排中心会通过这些工具完成上下文检索、用例生成、测试执行、报告读取和失败分析。",
+    is_builtin: true,
+    is_default_capability: true,
+  },
+  {
+    setting_id: "capability-test-runner",
+    name: "Test Runner",
+    capability_type: "runner",
+    status: "enabled",
+    summary: "framework=pytest · timeout=120s · artifacts=artifacts",
+    value: formatJson({
+      enabled: true,
+      framework: "pytest",
+      timeout_seconds: 120,
+      artifacts_dir: "artifacts",
+      junit_xml: "artifacts/junit.xml",
+      allure_results_dir: "artifacts/allure-results",
+    }),
+    description:
+      "控制自动化测试执行器参数。平台执行 API 测试、自动化用例和回归任务时，会使用这里的 pytest 和报告目录配置。",
+    is_builtin: true,
+    is_default_capability: true,
+  },
+  {
+    setting_id: "capability-allure-report",
+    name: "Allure Report",
+    capability_type: "report",
+    status: "enabled",
+    summary: "results=artifacts/allure-results · report=artifacts/allure-report · auto_parse=true",
+    value: formatJson({
+      enabled: true,
+      results_dir: "artifacts/allure-results",
+      report_dir: "artifacts/allure-report",
+      auto_parse: true,
+    }),
+    description:
+      "控制 Allure 报告解析。测试执行完成后，平台会读取 Allure results 并生成报告摘要、失败用例列表和趋势数据。",
+    is_builtin: true,
+    is_default_capability: true,
+  },
+  {
+    setting_id: "capability-agent-orchestration",
+    name: "Agent Orchestration",
+    capability_type: "experimental",
+    status: "experimental",
+    summary: "planner=rule-based · executor=mock · max_steps=8 · human_review=true",
+    value: formatJson({
+      enabled: false,
+      planner: "rule-based",
+      executor: "mock",
+      max_steps: 8,
+      human_review_required: true,
+    }),
+    description:
+      "控制测试任务编排能力。当前可用于规则型测试计划生成，后续将接入 MCP tools，实现自然语言目标到测试执行链路的自动编排。",
+    is_builtin: true,
+    is_default_capability: true,
+  },
+];
+
+const builtinCapabilities = ref<CapabilitySetting[]>(cloneDefaultCapabilities());
+const customSettings = ref<PlatformSetting[]>([]);
 const aiConfig = ref<AiModelConfig | null>(null);
 const searchKeyword = ref("");
 const loading = ref(false);
@@ -47,7 +156,9 @@ const testing = ref(false);
 const aiSaving = ref(false);
 const modalOpen = ref(false);
 const modalMode = ref<"create" | "edit">("create");
+const editingDefaultCapability = ref(false);
 const error = ref("");
+const jsonError = ref("");
 const testResult = ref("");
 
 const aiForm = reactive<AiModelForm>({
@@ -67,20 +178,34 @@ const form = reactive<SettingForm>({
   description: "",
 });
 
+const platformCapabilities = computed<CapabilitySetting[]>(() => [
+  ...builtinCapabilities.value,
+  ...customSettings.value.map(toCustomCapability),
+]);
+
 const filteredSettings = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase();
-  if (!keyword) return settings.value;
-  return settings.value.filter((setting) =>
-    `${setting.setting_id} ${setting.name} ${setting.value} ${setting.description}`
+  if (!keyword) return platformCapabilities.value;
+  return platformCapabilities.value.filter((setting) =>
+    [
+      setting.setting_id,
+      setting.name,
+      setting.capability_type,
+      setting.status,
+      setting.summary,
+      setting.value,
+      setting.description,
+    ]
+      .join(" ")
       .toLowerCase()
       .includes(keyword),
   );
 });
 
 const summary = computed(() => ({
-  total: settings.value.length,
-  builtin: settings.value.filter((item) => item.is_builtin).length,
-  custom: settings.value.filter((item) => !item.is_builtin).length,
+  total: builtinCapabilities.value.length + customSettings.value.length,
+  builtin: builtinCapabilities.value.length,
+  custom: customSettings.value.length,
 }));
 
 const aiConfigStatus = computed(() => {
@@ -88,6 +213,19 @@ const aiConfigStatus = computed(() => {
   if (!aiConfig.value.enabled) return { color: "blue", text: "已保存，未启用真实模型" };
   return { color: "green", text: "已启用真实模型" };
 });
+
+const modalTitle = computed(() => {
+  if (modalMode.value === "create") return "新增自定义配置";
+  return editingDefaultCapability.value ? "编辑平台能力配置" : "编辑自定义配置";
+});
+
+function formatJson(value: unknown): string {
+  return JSON.stringify(value, null, 2);
+}
+
+function cloneDefaultCapabilities(): CapabilitySetting[] {
+  return DEFAULT_CAPABILITIES.map((item) => ({ ...item }));
+}
 
 function applyAiConfig(config: AiModelConfig): void {
   aiConfig.value = config;
@@ -100,11 +238,73 @@ function applyAiConfig(config: AiModelConfig): void {
   aiForm.vision_api_key = "";
 }
 
+function toCustomCapability(setting: PlatformSetting): CapabilitySetting {
+  const parsed = parseJsonSafely(setting.value);
+  const status = inferStatus(parsed);
+  return {
+    ...setting,
+    capability_type: "custom",
+    status,
+    summary: summarizeCustomConfig(parsed),
+    is_builtin: false,
+    is_default_capability: false,
+  };
+}
+
+function parseJsonSafely(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function inferStatus(parsed: unknown): CapabilityStatus {
+  if (parsed && typeof parsed === "object" && "enabled" in parsed) {
+    return Boolean((parsed as { enabled?: unknown }).enabled) ? "enabled" : "disabled";
+  }
+  return "experimental";
+}
+
+function summarizeCustomConfig(parsed: unknown): string {
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return "custom JSON config";
+  }
+  const entries = Object.entries(parsed as Record<string, unknown>).slice(0, 3);
+  if (!entries.length) return "custom JSON config";
+  return entries
+    .map(([key, value]) => `${key}=${Array.isArray(value) ? `[${value.length}]` : String(value)}`)
+    .join(" · ");
+}
+
+function typeColor(type: CapabilityType): string {
+  const colors: Record<CapabilityType, string> = {
+    rag: "green",
+    mcp: "cyan",
+    runner: "blue",
+    report: "gold",
+    experimental: "purple",
+    custom: "default",
+  };
+  return colors[type];
+}
+
+function statusColor(status: CapabilityStatus): string {
+  const colors: Record<CapabilityStatus, string> = {
+    enabled: "success",
+    disabled: "default",
+    experimental: "warning",
+  };
+  return colors[status];
+}
+
 function resetForm(): void {
   form.setting_id = "";
   form.name = "";
   form.value = "";
   form.description = "";
+  jsonError.value = "";
+  editingDefaultCapability.value = false;
 }
 
 function openCreateModal(): void {
@@ -113,30 +313,49 @@ function openCreateModal(): void {
   modalOpen.value = true;
 }
 
-function openEditModal(setting: PlatformSetting): void {
+function openEditModal(setting: CapabilitySetting): void {
   form.setting_id = setting.setting_id;
   form.name = setting.name;
   form.value = setting.value;
   form.description = setting.description;
+  jsonError.value = "";
+  editingDefaultCapability.value = setting.is_default_capability;
   modalMode.value = "edit";
   modalOpen.value = true;
 }
 
-function buildPayload() {
+function buildPayload(): { name: string; value: string; description: string } {
+  const parsed = parseConfigJson(form.value);
   return {
     name: form.name.trim(),
-    value: form.value.trim(),
+    value: formatJson(parsed),
     description: form.description.trim(),
   };
+}
+
+function parseConfigJson(value: string): unknown {
+  try {
+    jsonError.value = "";
+    return JSON.parse(value);
+  } catch {
+    jsonError.value = '配置值必须是合法 JSON，例如 {"enabled": true}';
+    throw new Error(jsonError.value);
+  }
 }
 
 async function loadSettings(): Promise<void> {
   loading.value = true;
   error.value = "";
   try {
-    const [settingsData, modelData] = await Promise.all([getPlatformSettings(), getAiModelConfig()]);
-    settings.value = settingsData.items;
+    const modelData = await getAiModelConfig();
     applyAiConfig(modelData.config);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err);
+  }
+
+  try {
+    const settingsData = await getPlatformSettings();
+    customSettings.value = settingsData.items.filter((item) => !item.is_builtin);
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err);
   } finally {
@@ -200,32 +419,73 @@ async function submitSetting(): Promise<void> {
     if (!payload.name) {
       throw new Error("配置名称不能为空");
     }
-    if (modalMode.value === "edit") {
+    if (editingDefaultCapability.value) {
+      builtinCapabilities.value = builtinCapabilities.value.map((item) =>
+        item.setting_id === form.setting_id
+          ? {
+              ...item,
+              name: payload.name,
+              value: payload.value,
+              description: payload.description || item.description,
+              status: inferStatus(JSON.parse(payload.value)),
+              summary: summarizeDefaultConfig(item.capability_type, JSON.parse(payload.value)),
+            }
+          : item,
+      );
+      antMessage.success("平台能力配置已更新");
+    } else if (modalMode.value === "edit") {
       await updatePlatformSetting(form.setting_id, payload);
-      antMessage.success("系统配置已更新");
+      antMessage.success("自定义配置已更新");
+      await loadSettings();
     } else {
       await createGenericSetting(payload);
-      antMessage.success("系统配置已创建");
+      antMessage.success("自定义配置已创建");
+      await loadSettings();
     }
     modalOpen.value = false;
-    await loadSettings();
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err);
+    if (!jsonError.value) {
+      error.value = err instanceof Error ? err.message : String(err);
+    }
   } finally {
     saving.value = false;
   }
 }
 
-function confirmDelete(setting: PlatformSetting): void {
+function summarizeDefaultConfig(type: CapabilityType, parsed: unknown): string {
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return "invalid JSON";
+  }
+  const config = parsed as Record<string, unknown>;
+  if (type === "rag") {
+    return `store=${config.store ?? "-"} · top_k=${config.top_k ?? "-"} · chunk_size=${config.chunk_size ?? "-"}`;
+  }
+  if (type === "mcp") {
+    return `transport=${config.transport ?? "-"} · tools=${Array.isArray(config.tools) ? config.tools.length : 0}`;
+  }
+  if (type === "runner") {
+    return `framework=${config.framework ?? "-"} · timeout=${config.timeout_seconds ?? "-"}s · artifacts=${config.artifacts_dir ?? "-"}`;
+  }
+  if (type === "report") {
+    return `results=${config.results_dir ?? "-"} · report=${config.report_dir ?? "-"} · auto_parse=${config.auto_parse ?? "-"}`;
+  }
+  if (type === "experimental") {
+    return `planner=${config.planner ?? "-"} · executor=${config.executor ?? "-"} · max_steps=${config.max_steps ?? "-"}`;
+  }
+  return summarizeCustomConfig(parsed);
+}
+
+function confirmDelete(setting: CapabilitySetting): void {
+  if (setting.is_default_capability) return;
   Modal.confirm({
     title: `删除配置：${setting.name}`,
-    content: "删除后该配置会从系统设置列表移除。这里是演示平台配置，重启服务后内置配置会恢复。",
+    content: "删除后该自定义配置会从系统设置列表移除。内置平台能力配置不会被删除。",
     okText: "删除",
     okType: "danger",
     cancelText: "取消",
     async onOk() {
       await deletePlatformSetting(setting.setting_id);
-      antMessage.success("系统配置已删除");
+      antMessage.success("自定义配置已删除");
       await loadSettings();
     },
   });
@@ -339,9 +599,9 @@ onMounted(loadSettings);
 
     <div class="qp-page-heading section-gap">
       <div>
-        <p class="qp-eyebrow">ADVANCED SETTINGS</p>
-        <h1>高级配置</h1>
-        <p>保留 RAG、MCP、pytest、Allure 等平台配置项，便于面试时说明平台集成点。</p>
+        <p class="qp-eyebrow">PLATFORM CAPABILITY</p>
+        <h1>平台能力配置</h1>
+        <p>管理 RAG、MCP、pytest、Allure、Agent 编排等平台级能力的运行参数。</p>
       </div>
       <a-space>
         <a-input-search
@@ -356,7 +616,7 @@ onMounted(loadSettings);
         </a-button>
         <a-button type="primary" @click="openCreateModal">
           <template #icon><PlusOutlined /></template>
-          新建配置
+          新增自定义配置
         </a-button>
       </a-space>
     </div>
@@ -385,23 +645,32 @@ onMounted(loadSettings);
     <a-spin :spinning="loading">
       <a-row :gutter="[16, 16]" class="section-gap">
         <a-col v-for="setting in filteredSettings" :key="setting.setting_id" :xs="24" :lg="12">
-          <a-card class="setting-card" :bordered="false">
+          <a-card class="setting-card capability-card" :bordered="false">
             <div class="item-title">
               <h3>{{ setting.name }}</h3>
               <a-space>
-                <a-tag>{{ setting.setting_id }}</a-tag>
-                <a-tag v-if="setting.is_builtin" color="blue">内置</a-tag>
-                <a-tag v-else color="green">自定义</a-tag>
+                <a-tag :color="typeColor(setting.capability_type)">
+                  {{ setting.capability_type }}
+                </a-tag>
+                <a-tag :color="statusColor(setting.status)">
+                  {{ setting.status }}
+                </a-tag>
               </a-space>
             </div>
+            <p class="capability-summary">{{ setting.summary }}</p>
             <pre class="mini-code">{{ setting.value }}</pre>
-            <p class="muted">{{ setting.description }}</p>
+            <p class="muted capability-description">{{ setting.description }}</p>
             <a-space>
               <a-button size="small" type="primary" @click="openEditModal(setting)">
                 <template #icon><EditOutlined /></template>
-                修改
+                编辑
               </a-button>
-              <a-button size="small" danger @click="confirmDelete(setting)">
+              <a-button
+                v-if="!setting.is_default_capability"
+                size="small"
+                danger
+                @click="confirmDelete(setting)"
+              >
                 <template #icon><DeleteOutlined /></template>
                 删除
               </a-button>
@@ -414,25 +683,48 @@ onMounted(loadSettings);
 
     <a-modal
       v-model:open="modalOpen"
-      :title="modalMode === 'create' ? '新建配置' : '修改配置'"
+      :title="modalTitle"
       :confirm-loading="saving"
-      width="620px"
+      width="680px"
       ok-text="保存"
       cancel-text="取消"
       @ok="submitSetting"
     >
-      <a-form layout="vertical" class="env-form">
+      <a-alert
+        v-if="modalMode === 'create'"
+        class="section-gap-sm"
+        type="info"
+        show-icon
+        message="自定义配置说明"
+        description="自定义配置用于扩展平台运行参数，例如第三方服务地址、实验性功能开关或自定义报告路径。一般用户无需新增。"
+      />
+      <a-form layout="vertical" class="env-form section-gap-sm">
         <a-form-item label="配置名称" required>
-          <a-input v-model:value="form.name" placeholder="例如 LLM Provider" />
+          <a-input v-model:value="form.name" placeholder="例如 Custom Report Path" />
         </a-form-item>
-        <a-form-item label="配置值">
-          <a-textarea v-model:value="form.value" class="code-editor" :rows="5" />
+        <a-form-item
+          label="配置值 JSON"
+          required
+          :validate-status="jsonError ? 'error' : ''"
+          :help="jsonError || undefined"
+        >
+          <a-textarea
+            v-model:value="form.value"
+            class="code-editor"
+            :rows="8"
+            placeholder='例如 {"enabled": true}'
+            @change="jsonError = ''"
+          />
         </a-form-item>
         <a-form-item label="配置说明">
-          <a-textarea v-model:value="form.description" placeholder="说明这个配置影响哪些功能" :rows="3" />
+          <a-textarea
+            v-model:value="form.description"
+            placeholder="说明这个配置影响哪些功能"
+            :rows="3"
+          />
         </a-form-item>
         <div class="field-tip">
-          高级配置会保存到当前 FastAPI 进程内存中；AI 模型接入请优先使用上方专门的 AI 助手配置。
+          配置值必须是合法 JSON，例如 {"enabled": true}。内置平台能力配置只影响当前前端展示；自定义配置沿用现有 FastAPI 内存保存机制。
         </div>
       </a-form>
     </a-modal>
