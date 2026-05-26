@@ -314,6 +314,7 @@ def test_api_testing_collections_and_saved_cases_flow() -> None:
 
     assert collections_response.status_code == 200
     collections_payload = collections_response.json()
+    assert collections_payload["summary"]["total"] >= 6
     assert collections_payload["summary"]["case_total"] >= 4
 
     save_response = client.post(

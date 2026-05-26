@@ -93,10 +93,34 @@ API_COLLECTIONS: list[dict[str, Any]] = [
         "case_ids": ["api-login-success", "api-login-invalid-password"],
     },
     {
+        "collection_id": "user",
+        "name": "用户中心",
+        "description": "用户资料、账号状态、权限角色和敏感字段校验接口用例。",
+        "case_ids": [],
+    },
+    {
         "collection_id": "upload",
         "name": "文件上传",
         "description": "二进制上传和参数校验接口用例。",
         "case_ids": ["api-upload-success", "api-upload-missing-filename"],
+    },
+    {
+        "collection_id": "order",
+        "name": "订单流程",
+        "description": "创建订单、订单状态流转、幂等提交和库存扣减接口用例。",
+        "case_ids": [],
+    },
+    {
+        "collection_id": "payment",
+        "name": "支付回调",
+        "description": "支付下单、回调验签、重复通知和金额一致性接口用例。",
+        "case_ids": [],
+    },
+    {
+        "collection_id": "system",
+        "name": "系统公共接口",
+        "description": "健康检查、配置读取、字典接口和错误码规范用例。",
+        "case_ids": [],
     },
 ]
 

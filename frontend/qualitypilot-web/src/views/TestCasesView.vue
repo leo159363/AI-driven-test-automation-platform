@@ -63,14 +63,21 @@ const form = reactive<TestCaseForm>({
 });
 
 const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE"];
-const testTypeOptions = ["接口测试", "界面测试", "Web测试", "APP测试", "性能测试"];
 const priorityOptions = ["P0", "P1", "P2", "P3"];
+const defaultCollectionOptions = [
+  { label: "登录鉴权", value: "auth" },
+  { label: "用户中心", value: "user" },
+  { label: "文件上传", value: "upload" },
+  { label: "订单流程", value: "order" },
+  { label: "支付回调", value: "payment" },
+  { label: "系统公共接口", value: "system" },
+];
 
 const filteredCases = computed<TestCaseItem[]>(() => {
-  const items = data.value?.items ?? [];
+  const items = (data.value?.items ?? []).filter((item) => item.test_type === "接口测试");
   const keyword = searchKeyword.value.trim().toLowerCase();
   return items.filter((item) => {
-    const typeMatched = filterType.value === "全部" || item.test_type === filterType.value;
+    const typeMatched = filterType.value === "全部" || item.module === filterType.value;
     const keywordMatched =
       !keyword ||
       `${item.case_id} ${item.title} ${item.module} ${item.path ?? ""} ${item.pytest_target}`
@@ -81,11 +88,11 @@ const filteredCases = computed<TestCaseItem[]>(() => {
 });
 
 const summary = computed(() => {
-  const items = data.value?.items ?? [];
+  const items = (data.value?.items ?? []).filter((item) => item.test_type === "接口测试");
   return {
     total: items.length,
-    api: items.filter((item) => item.test_type === "接口测试").length,
-    ui: items.filter((item) => item.test_type === "界面测试").length,
+    auth: items.filter((item) => item.module === "登录鉴权").length,
+    upload: items.filter((item) => item.module === "文件上传").length,
     custom: items.filter((item) => !item.is_builtin).length,
   };
 });
@@ -97,10 +104,14 @@ const collectionOptions = computed(() => {
       value: item.collection_id,
     }));
   }
-  return [
-    { label: "登录鉴权", value: "auth" },
-    { label: "文件上传", value: "upload" },
-  ];
+  return defaultCollectionOptions;
+});
+
+const moduleFilterOptions = computed(() => {
+  if (collections.value.length) {
+    return ["全部", ...collections.value.map((item) => item.name)];
+  }
+  return ["全部", ...defaultCollectionOptions.map((item) => item.label)];
 });
 
 function resetForm(): void {
@@ -156,6 +167,34 @@ function syncCollectionDefaults(collectionId: string): void {
     form.scenario_name = "API: 文件上传接口";
     return;
   }
+  if (collectionId === "user") {
+    form.module = "用户中心";
+    form.path = "/api/users";
+    form.scenario_id = "api_user";
+    form.scenario_name = "API: 用户中心接口";
+    return;
+  }
+  if (collectionId === "order") {
+    form.module = "订单流程";
+    form.path = "/api/orders";
+    form.scenario_id = "api_order";
+    form.scenario_name = "API: 订单流程接口";
+    return;
+  }
+  if (collectionId === "payment") {
+    form.module = "支付回调";
+    form.path = "/api/payments/callback";
+    form.scenario_id = "api_payment";
+    form.scenario_name = "API: 支付回调接口";
+    return;
+  }
+  if (collectionId === "system") {
+    form.module = "系统公共接口";
+    form.path = "/api/health";
+    form.scenario_id = "api_system";
+    form.scenario_name = "API: 系统公共接口";
+    return;
+  }
   form.module = "登录鉴权";
   form.path = "/api/login";
   form.scenario_id = "api_login";
@@ -169,7 +208,7 @@ function handleCollectionChange(value: string | number): void {
 function buildPayload() {
   return {
     title: form.title.trim(),
-    test_type: form.test_type,
+    test_type: "接口测试",
     module: form.module.trim(),
     priority: form.priority,
     method: form.method,
@@ -250,7 +289,7 @@ onMounted(loadData);
       <div>
         <p class="qp-eyebrow">TEST CASE MANAGEMENT</p>
         <h1>用例管理</h1>
-        <p>这里不是只读清单。你可以新增接口用例草稿，选择所属集合、请求方法、路径、断言和 pytest 目标。</p>
+        <p>这里是接口测试下的用例管理，只创建 API 用例。Web、APP、性能测试用例应在各自模块中维护。</p>
       </div>
       <a-space>
         <a-input-search
@@ -288,14 +327,14 @@ onMounted(loadData);
       </a-col>
       <a-col :xs="24" :md="6">
         <a-card class="stat-card">
-          <span>接口测试</span>
-          <strong>{{ summary.api }}</strong>
+          <span>登录鉴权</span>
+          <strong>{{ summary.auth }}</strong>
         </a-card>
       </a-col>
       <a-col :xs="24" :md="6">
         <a-card class="stat-card">
-          <span>界面测试</span>
-          <strong>{{ summary.ui }}</strong>
+          <span>文件上传</span>
+          <strong>{{ summary.upload }}</strong>
         </a-card>
       </a-col>
       <a-col :xs="24" :md="6">
@@ -309,20 +348,13 @@ onMounted(loadData);
     <a-card class="section-gap env-table-card" :bordered="false">
       <template #title>
         <a-space>
-          <a-button :type="filterType === '全部' ? 'primary' : 'default'" @click="filterType = '全部'">
-            全部
-          </a-button>
           <a-button
-            :type="filterType === '接口测试' ? 'primary' : 'default'"
-            @click="filterType = '接口测试'"
+            v-for="type in moduleFilterOptions"
+            :key="type"
+            :type="filterType === type ? 'primary' : 'default'"
+            @click="filterType = type"
           >
-            接口测试
-          </a-button>
-          <a-button
-            :type="filterType === '界面测试' ? 'primary' : 'default'"
-            @click="filterType = '界面测试'"
-          >
-            界面测试
+            {{ type }}
           </a-button>
         </a-space>
       </template>
@@ -431,22 +463,12 @@ onMounted(loadData);
         <a-form-item label="请求路径">
           <a-input v-model:value="form.path" placeholder="请输入请求路径，例如 /api/login" />
         </a-form-item>
-        <a-row :gutter="12">
-          <a-col :span="12">
-            <a-form-item label="测试类型">
-              <a-select v-model:value="form.test_type">
-                <a-select-option v-for="type in testTypeOptions" :key="type" :value="type">
-                  {{ type }}
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="业务模块">
-              <a-input v-model:value="form.module" />
-            </a-form-item>
-          </a-col>
-        </a-row>
+        <a-form-item label="测试类型">
+          <a-input value="接口测试" disabled />
+        </a-form-item>
+        <a-form-item label="业务模块">
+          <a-input v-model:value="form.module" disabled />
+        </a-form-item>
         <a-form-item label="描述">
           <a-textarea v-model:value="form.description" placeholder="请输入用例描述" :rows="3" />
         </a-form-item>
