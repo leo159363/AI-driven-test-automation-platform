@@ -22,6 +22,7 @@ from src.api.routers import (
 FRONTEND_ROUTES = {
     "/",
     "/api-testing",
+    "/api-environments",
     "/test-cases",
     "/automation",
     "/reports",

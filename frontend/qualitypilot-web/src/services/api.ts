@@ -23,6 +23,7 @@ import type {
   PerformanceScenariosResponse,
   PlatformSettingsResponse,
   PlatformDashboardResponse,
+  PlatformProjectsResponse,
   PlatformRunRecord,
   PlatformWorkspaceResponse,
   SavedApiCasesResponse,
@@ -30,6 +31,7 @@ import type {
   WebTestScriptsResponse,
   PromptTemplatesResponse,
   TestCaseCatalogResponse,
+  TestCaseItem,
   RunReportResponse,
 } from "../types";
 
@@ -61,6 +63,40 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new Error(buildNetworkErrorMessage(error));
+  }
+  if (!response.ok) {
+    throw new Error(await buildHttpErrorMessage(response));
+  }
+  return (await response.json()) as T;
+}
+
+async function putJson<T>(path: string, body: unknown): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new Error(buildNetworkErrorMessage(error));
+  }
+  if (!response.ok) {
+    throw new Error(await buildHttpErrorMessage(response));
+  }
+  return (await response.json()) as T;
+}
+
+async function deleteJson<T>(path: string): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      method: "DELETE",
     });
   } catch (error) {
     throw new Error(buildNetworkErrorMessage(error));
@@ -111,12 +147,97 @@ export function getTestCases(): Promise<TestCaseCatalogResponse> {
   return getJson<TestCaseCatalogResponse>("/api/test-cases");
 }
 
+export function createTestCase(payload: {
+  title: string;
+  test_type: string;
+  module: string;
+  priority: string;
+  method: string;
+  path: string;
+  collection_id: string;
+  description: string;
+  scenario_id: string;
+  scenario_name: string;
+  automation_status: string;
+  pytest_target: string;
+  assertion: string;
+  related_report: string;
+}): Promise<{ case: TestCaseItem; message: string }> {
+  return postJson<{ case: TestCaseItem; message: string }>("/api/test-cases", payload);
+}
+
+export function updateTestCase(
+  caseId: string,
+  payload: {
+    title: string;
+    test_type: string;
+    module: string;
+    priority: string;
+    method: string;
+    path: string;
+    collection_id: string;
+    description: string;
+    scenario_id: string;
+    scenario_name: string;
+    automation_status: string;
+    pytest_target: string;
+    assertion: string;
+    related_report: string;
+  },
+): Promise<{ case: TestCaseItem; message: string }> {
+  return putJson<{ case: TestCaseItem; message: string }>(
+    `/api/test-cases/${encodeURIComponent(caseId)}`,
+    payload,
+  );
+}
+
+export function deleteTestCase(caseId: string): Promise<{ message: string }> {
+  return deleteJson<{ message: string }>(`/api/test-cases/${encodeURIComponent(caseId)}`);
+}
+
 export function getApiEndpoints(): Promise<ApiEndpointResponse> {
   return getJson<ApiEndpointResponse>("/api/api-endpoints");
 }
 
 export function getApiTestingEnvironments(): Promise<ApiEnvironmentResponse> {
   return getJson<ApiEnvironmentResponse>("/api/api-testing/environments");
+}
+
+export function createApiTestingEnvironment(payload: {
+  name: string;
+  base_url: string;
+  description: string;
+  variables: Record<string, string>;
+  headers: Record<string, string>;
+  is_default: boolean;
+}): Promise<{ environment: ApiEnvironment; message: string }> {
+  return postJson<{ environment: ApiEnvironment; message: string }>(
+    "/api/api-testing/environments",
+    payload,
+  );
+}
+
+export function updateApiTestingEnvironment(
+  environmentId: string,
+  payload: {
+    name: string;
+    base_url: string;
+    description: string;
+    variables: Record<string, string>;
+    headers: Record<string, string>;
+    is_default: boolean;
+  },
+): Promise<{ environment: ApiEnvironment; message: string }> {
+  return putJson<{ environment: ApiEnvironment; message: string }>(
+    `/api/api-testing/environments/${encodeURIComponent(environmentId)}`,
+    payload,
+  );
+}
+
+export function deleteApiTestingEnvironment(environmentId: string): Promise<{ message: string }> {
+  return deleteJson<{ message: string }>(
+    `/api/api-testing/environments/${encodeURIComponent(environmentId)}`,
+  );
 }
 
 export function getApiCollections(): Promise<ApiCollectionsResponse> {
@@ -302,6 +423,10 @@ export function uploadKnowledgeDocument(payload: {
 
 export function getPlatformWorkspace(): Promise<PlatformWorkspaceResponse> {
   return getJson<PlatformWorkspaceResponse>("/api/platform/workspace");
+}
+
+export function getPlatformProjects(): Promise<PlatformProjectsResponse> {
+  return getJson<PlatformProjectsResponse>("/api/platform/projects");
 }
 
 export function getPlatformDashboard(): Promise<PlatformDashboardResponse> {

@@ -11,12 +11,19 @@ export interface TestCaseItem {
   test_type: string;
   module: string;
   priority: string;
+  method?: string;
+  path?: string;
+  collection_id?: string;
+  description?: string;
   scenario_id: string;
   scenario_name: string;
   automation_status: string;
   pytest_target: string;
   assertion: string;
   related_report: string;
+  is_builtin?: boolean;
+  source?: string;
+  updated_at?: string;
 }
 
 export interface TestCaseSummary {
@@ -78,6 +85,9 @@ export interface ApiEnvironment {
   base_url: string;
   variables: Record<string, string>;
   headers: Record<string, string>;
+  is_builtin?: boolean;
+  is_default?: boolean;
+  updated_at?: string;
 }
 
 export interface ApiEnvironmentResponse {
@@ -408,6 +418,13 @@ export interface PlatformProject {
   description: string;
   modules: string[];
   stack: string[];
+}
+
+export interface PlatformProjectsResponse {
+  items: PlatformProject[];
+  summary: {
+    total: number;
+  };
 }
 
 export interface WebTestScript {

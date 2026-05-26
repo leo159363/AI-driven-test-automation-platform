@@ -144,6 +144,61 @@ def test_test_cases_endpoint_returns_catalog_and_summary() -> None:
     assert "pytest_target" in payload["items"][0]
 
 
+def test_test_case_crud_flow() -> None:
+    client = _client()
+
+    create_response = client.post(
+        "/api/test-cases",
+        json={
+            "title": "登录接口-自定义边界用例",
+            "test_type": "接口测试",
+            "module": "登录鉴权",
+            "priority": "P2",
+            "method": "POST",
+            "path": "/api/login",
+            "collection_id": "auth",
+            "description": "自定义创建的接口测试用例",
+            "scenario_id": "api_login",
+            "scenario_name": "API: 登录接口",
+            "automation_status": "草稿",
+            "pytest_target": "",
+            "assertion": "缺少 password 时返回 400",
+            "related_report": "",
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()["case"]
+    assert created["case_id"].startswith("TC-CUSTOM-")
+    assert created["is_builtin"] is False
+
+    update_response = client.put(
+        f"/api/test-cases/{created['case_id']}",
+        json={
+            "title": "登录接口-自定义边界用例更新",
+            "test_type": "接口测试",
+            "module": "登录鉴权",
+            "priority": "P1",
+            "method": "POST",
+            "path": "/api/login",
+            "collection_id": "auth",
+            "description": "更新后的接口测试用例",
+            "scenario_id": "api_login",
+            "scenario_name": "API: 登录接口",
+            "automation_status": "草稿",
+            "pytest_target": "",
+            "assertion": "缺少 username 时返回 400",
+            "related_report": "",
+        },
+    )
+
+    assert update_response.status_code == 200
+    assert update_response.json()["case"]["title"].endswith("更新")
+
+    delete_response = client.delete(f"/api/test-cases/{created['case_id']}")
+    assert delete_response.status_code == 200
+
+
 def test_api_endpoints_are_linked_to_test_cases() -> None:
     response = _client().get("/api/api-endpoints")
 
@@ -206,6 +261,51 @@ def test_api_testing_environments_endpoint_returns_presets() -> None:
     assert {"mock-local", "local-api"}.issubset(
         {item["environment_id"] for item in payload["items"]}
     )
+
+
+def test_api_testing_environment_crud_flow() -> None:
+    client = _client()
+
+    create_response = client.post(
+        "/api/api-testing/environments",
+        json={
+            "name": "Staging API",
+            "base_url": "http://127.0.0.1:9000",
+            "description": "staging demo",
+            "variables": {"token": "demo-token"},
+            "headers": {"Content-Type": "application/json"},
+            "is_default": True,
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()["environment"]
+    assert created["name"] == "Staging API"
+    assert created["is_default"] is True
+
+    list_response = client.get("/api/api-testing/environments")
+    assert list_response.status_code == 200
+    assert created["environment_id"] in {
+        item["environment_id"] for item in list_response.json()["items"]
+    }
+
+    update_response = client.put(
+        f"/api/api-testing/environments/{created['environment_id']}",
+        json={
+            "name": "Staging API Updated",
+            "base_url": "http://127.0.0.1:9001",
+            "description": "updated",
+            "variables": {"token": "updated-token"},
+            "headers": {"Content-Type": "application/json"},
+            "is_default": False,
+        },
+    )
+
+    assert update_response.status_code == 200
+    assert update_response.json()["environment"]["name"] == "Staging API Updated"
+
+    delete_response = client.delete(f"/api/api-testing/environments/{created['environment_id']}")
+    assert delete_response.status_code == 200
 
 
 def test_api_testing_collections_and_saved_cases_flow() -> None:

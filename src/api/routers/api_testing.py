@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -73,6 +74,17 @@ class ApiCaseSaveRequest(BaseModel):
     json_assertions: list[JsonPathAssertionRequest] = Field(default_factory=list)
 
 
+class ApiEnvironmentSaveRequest(BaseModel):
+    """Request body for creating or updating one API environment."""
+
+    name: str = Field(..., min_length=1)
+    base_url: str = Field(default="")
+    description: str = Field(default="")
+    variables: dict[str, str] = Field(default_factory=dict)
+    headers: dict[str, str] = Field(default_factory=dict)
+    is_default: bool = Field(default=False)
+
+
 API_COLLECTIONS: list[dict[str, Any]] = [
     {
         "collection_id": "auth",
@@ -89,6 +101,49 @@ API_COLLECTIONS: list[dict[str, Any]] = [
 ]
 
 SAVED_API_CASES: list[dict[str, Any]] = []
+USER_API_ENVIRONMENTS: list[dict[str, Any]] = []
+
+
+def _now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def _environment_items() -> list[dict[str, Any]]:
+    user_default_exists = any(item.get("is_default") for item in USER_API_ENVIRONMENTS)
+    builtins = []
+    for item in list_api_environments():
+        builtins.append(
+            {
+                **item,
+                "is_builtin": True,
+                "is_default": item["environment_id"] == "mock-local" and not user_default_exists,
+                "updated_at": "builtin",
+            }
+        )
+    return [*builtins, *USER_API_ENVIRONMENTS]
+
+
+def _normalize_environment_payload(
+    request: ApiEnvironmentSaveRequest,
+    *,
+    environment_id: str,
+) -> dict[str, Any]:
+    return {
+        "environment_id": environment_id,
+        "name": request.name,
+        "description": request.description,
+        "base_url": request.base_url,
+        "variables": {str(key): str(value) for key, value in request.variables.items()},
+        "headers": {str(key): str(value) for key, value in request.headers.items()},
+        "is_builtin": False,
+        "is_default": request.is_default,
+        "updated_at": _now(),
+    }
+
+
+def _apply_default_environment(environment_id: str) -> None:
+    for item in USER_API_ENVIRONMENTS:
+        item["is_default"] = item["environment_id"] == environment_id
 
 
 @router.post("/debug")
@@ -116,11 +171,53 @@ def debug_api(request: ApiDebugRequest) -> dict[str, Any]:
 @router.get("/environments")
 def get_api_environments() -> dict[str, Any]:
     """Return lightweight environment presets."""
-    items = list_api_environments()
+    items = _environment_items()
     return {
         "items": items,
         "summary": {"total": len(items)},
     }
+
+
+@router.post("/environments")
+def create_api_environment(request: ApiEnvironmentSaveRequest) -> dict[str, Any]:
+    """Create one API environment in the in-memory demo store."""
+    environment_id = f"env-{len(USER_API_ENVIRONMENTS) + 1:03d}"
+    environment = _normalize_environment_payload(request, environment_id=environment_id)
+    USER_API_ENVIRONMENTS.append(environment)
+    if environment["is_default"]:
+        _apply_default_environment(environment_id)
+    return {
+        "environment": environment,
+        "message": "环境已创建。当前为内存演示版，后续可替换为数据库持久化。",
+    }
+
+
+@router.put("/environments/{environment_id}")
+def update_api_environment(
+    environment_id: str,
+    request: ApiEnvironmentSaveRequest,
+) -> dict[str, Any]:
+    """Update one user-created API environment."""
+    for index, item in enumerate(USER_API_ENVIRONMENTS):
+        if item["environment_id"] == environment_id:
+            environment = _normalize_environment_payload(request, environment_id=environment_id)
+            USER_API_ENVIRONMENTS[index] = environment
+            if environment["is_default"]:
+                _apply_default_environment(environment_id)
+            return {"environment": environment, "message": "环境已更新。"}
+    raise HTTPException(status_code=404, detail=f"Unknown environment_id: {environment_id}")
+
+
+@router.delete("/environments/{environment_id}")
+def delete_api_environment(environment_id: str) -> dict[str, str]:
+    """Delete one user-created API environment."""
+    for index, item in enumerate(USER_API_ENVIRONMENTS):
+        if item["environment_id"] == environment_id:
+            del USER_API_ENVIRONMENTS[index]
+            return {"message": "环境已删除。"}
+    if environment_id in {item["environment_id"] for item in list_api_environments()}:
+        raise HTTPException(status_code=400, detail="Built-in environments cannot be deleted")
+    raise HTTPException(status_code=404, detail=f"Unknown environment_id: {environment_id}")
 
 
 @router.get("/collections")

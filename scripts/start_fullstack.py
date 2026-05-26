@@ -47,6 +47,7 @@ def _start_fastapi(host: str, port: int) -> subprocess.Popen:
             host,
             "--port",
             str(port),
+            "--reload",
         ],
         cwd=REPO_ROOT,
     )
@@ -88,6 +89,10 @@ def _qualitypilot_api_ok(url: str) -> bool:
         return False
 
 
+def _qualitypilot_api_routes_ok(api_base_url: str) -> bool:
+    return _http_status_ok(f"{api_base_url.rstrip('/')}/api/api-testing/collections")
+
+
 def _qualitypilot_web_proxy_ok(web_url: str) -> bool:
     return _qualitypilot_api_ok(f"{web_url.rstrip('/')}/api/health")
 
@@ -119,11 +124,22 @@ def main() -> int:
         web_url = f"http://{args.host}:{args.web_port}"
 
         if _qualitypilot_api_ok(api_health_url):
+            if not _qualitypilot_api_routes_ok(api_base_url):
+                raise RuntimeError(
+                    f"FastAPI is already running on port {args.api_port}, "
+                    "but /api/api-testing/collections is missing. "
+                    "This usually means an old backend process is still running. "
+                    "Stop the old terminal process, then rerun this script."
+                )
             print(f"FastAPI already running: {api_health_url}")
         else:
             api_process = _start_fastapi(args.host, args.api_port)
             processes.append(api_process)
-            if not _wait_for(lambda: _qualitypilot_api_ok(api_health_url), api_process):
+            if not _wait_for(
+                lambda: _qualitypilot_api_ok(api_health_url)
+                and _qualitypilot_api_routes_ok(api_base_url),
+                api_process,
+            ):
                 raise RuntimeError(
                     "FastAPI did not start correctly. "
                     f"Check whether port {args.api_port} is occupied by another service, "

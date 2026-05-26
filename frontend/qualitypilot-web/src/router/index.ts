@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import OverviewView from "../views/OverviewView.vue";
 import ApiTestingView from "../views/ApiTestingView.vue";
+import ApiEnvironmentsView from "../views/ApiEnvironmentsView.vue";
 import TestCasesView from "../views/TestCasesView.vue";
 import AutomationView from "../views/AutomationView.vue";
 import ReportsView from "../views/ReportsView.vue";
@@ -18,6 +19,7 @@ const router = createRouter({
   routes: [
     { path: "/", name: "overview", component: OverviewView },
     { path: "/api-testing", name: "api-testing", component: ApiTestingView },
+    { path: "/api-environments", name: "api-environments", component: ApiEnvironmentsView },
     { path: "/web-testing", name: "web-testing", component: WebTestingView },
     { path: "/app-testing", name: "app-testing", component: AppTestingView },
     { path: "/performance", name: "performance", component: PerformanceView },
