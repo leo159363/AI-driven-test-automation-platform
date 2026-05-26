@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 const navItems = [
   { label: "首页", path: "/", icon: "home", group: "平台" },
-  { label: "API 测试", path: "/api-testing", icon: "api", group: "测试工作台" },
+  { label: "接口测试", path: "/api-testing", icon: "api", group: "测试工作台" },
   { label: "测试用例", path: "/test-cases", icon: "case", group: "测试工作台" },
   { label: "自动化执行", path: "/automation", icon: "run", group: "执行与报告" },
   { label: "测试报告", path: "/reports", icon: "report", group: "执行与报告" },
@@ -22,11 +22,11 @@ const navGroups = computed(() => {
 const tourSteps = [
   {
     title: "欢迎来到 QualityPilot",
-    content: "这是一个测试开发平台原型。先看首页，再进入 API 测试、自动化执行、报告、知识库和 AI 助手。",
+    content: "这是一个测试开发平台原型。先看首页，再进入接口测试、自动化执行、报告、知识库和 AI 助手。",
   },
   {
-    title: "先从 API 测试开始",
-    content: "API 测试页已经准备好登录成功、登录失败、文件上传成功和参数错误 4 个固定用例。",
+    title: "先从接口测试开始",
+    content: "接口测试页已经准备好登录成功、登录失败、文件上传成功和参数错误 4 个固定用例。",
   },
   {
     title: "再跑自动化和报告",
