@@ -188,6 +188,14 @@ onMounted(loadEnvironments);
       :description="error"
     />
 
+    <a-alert
+      class="section-gap"
+      type="info"
+      show-icon
+      message="这个页面是给 API 测试工作台选择运行环境用的"
+      description="内置 Mock 环境不请求真实服务，适合演示；本机 API 环境会请求 http://127.0.0.1:9000，适合你本地启动了被测服务时使用；自定义环境可以保存测试/预发环境的 Base URL、公共 Headers 和 token 变量。"
+    />
+
     <a-row :gutter="[16, 16]" class="section-gap">
       <a-col :xs="24" :md="6">
         <a-card class="stat-card">
@@ -210,7 +218,7 @@ onMounted(loadEnvironments);
       <a-col :xs="24" :md="6">
         <a-card class="stat-card">
           <span>Mock 可用</span>
-          <strong>Yes</strong>
+          <strong>是</strong>
         </a-card>
       </a-col>
     </a-row>
@@ -285,12 +293,18 @@ onMounted(loadEnvironments);
         </a-form-item>
         <a-form-item label="Base URL" required>
           <a-input v-model:value="form.base_url" placeholder="https://api.example.com" />
+          <div class="field-tip">
+            如果是真实接口环境，填写接口服务根地址，例如 http://127.0.0.1:9000；如果只是演示，优先使用内置 Mock 环境。
+          </div>
         </a-form-item>
         <a-form-item label="描述">
           <a-textarea v-model:value="form.description" placeholder="请输入环境描述" :rows="3" />
         </a-form-item>
         <a-form-item label="环境变量 JSON">
           <a-textarea v-model:value="form.variables_json" class="code-editor" :rows="7" />
+          <div class="field-tip">
+            这里保存 token、userId 等变量，API 测试页可以用 <code>&#123;&#123;token&#125;&#125;</code> 引用，避免每个接口重复填写。
+          </div>
         </a-form-item>
         <a-form-item label="公共 Headers JSON">
           <a-textarea v-model:value="form.headers_json" class="code-editor" :rows="4" />

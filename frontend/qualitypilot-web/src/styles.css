@@ -2024,6 +2024,13 @@ textarea {
   font-size: 12px;
 }
 
+.field-tip {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .code-block {
   max-height: 420px;
   overflow: auto;

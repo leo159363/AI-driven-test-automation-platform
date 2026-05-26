@@ -205,6 +205,20 @@ function handleCollectionChange(value: string | number): void {
   syncCollectionDefaults(String(value));
 }
 
+function automationStateText(testCase: TestCaseItem): string {
+  if (testCase.pytest_target) {
+    return testCase.automation_status || "已绑定自动化脚本";
+  }
+  return "仅用例草稿";
+}
+
+function automationDetailText(testCase: TestCaseItem): string {
+  if (testCase.pytest_target) {
+    return testCase.pytest_target;
+  }
+  return "还没有关联 pytest 脚本，暂不能在自动化执行页直接运行";
+}
+
 function buildPayload() {
   return {
     title: form.title.trim(),
@@ -367,7 +381,7 @@ onMounted(loadData);
               <th>方法 / 路径</th>
               <th>所属集合</th>
               <th>优先级</th>
-              <th>自动化</th>
+              <th>自动化状态</th>
               <th>更新时间</th>
               <th>操作</th>
             </tr>
@@ -387,8 +401,10 @@ onMounted(loadData);
               <td>{{ testCase.collection_id || testCase.module }}</td>
               <td><a-tag>{{ testCase.priority }}</a-tag></td>
               <td>
-                <div>{{ testCase.automation_status }}</div>
-                <div class="path-text">{{ testCase.pytest_target || "暂未绑定 pytest" }}</div>
+                <a-tag :color="testCase.pytest_target ? 'green' : 'orange'">
+                  {{ automationStateText(testCase) }}
+                </a-tag>
+                <div class="path-text">{{ automationDetailText(testCase) }}</div>
               </td>
               <td>{{ testCase.updated_at ?? "-" }}</td>
               <td>
@@ -480,6 +496,9 @@ onMounted(loadData);
             v-model:value="form.pytest_target"
             placeholder="例如 tests/automation/test_api_login.py::test_api_login_success"
           />
+          <div class="field-tip">
+            可选。为空时表示这是一条测试设计用例；填写后才表示它已经和真实 pytest 自动化脚本绑定。
+          </div>
         </a-form-item>
       </a-form>
     </a-modal>
