@@ -1,6 +1,7 @@
 # QualityPilot
 
 [![CI](https://github.com/leo159363/AI-driven-test-automation-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/leo159363/AI-driven-test-automation-platform/actions/workflows/ci.yml)
+[![SafeSkill 87/100](https://img.shields.io/badge/SafeSkill-87%2F100_Passes%20with%20Notes-yellow)](https://safeskill.dev/scan/leo159363-ai-driven-test-automation-platform)
 
 QualityPilot 是一个面向测试开发场景的 **MCP + RAG 智能自动化测试平台**。项目目标是做成接近真实测试平台的全栈项目：既有接口测试、测试用例、自动化执行、报告中心、AI 助手和知识库，也保留 MCP / RAG 作为差异化能力。
 
