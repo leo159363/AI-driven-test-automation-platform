@@ -196,6 +196,7 @@ async function submitCopilot(): Promise<void> {
 }
 
 function handleTourClose(): void {
+  tourOpen.value = false;
   localStorage.setItem("qualitypilot-tour-dismissed", "true");
 }
 
@@ -339,6 +340,7 @@ onMounted(async () => {
       v-model:open="tourOpen"
       :steps="tourSteps"
       @close="handleTourClose"
+      @finish="handleTourClose"
     />
   </a-layout>
 </template>

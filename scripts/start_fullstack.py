@@ -90,7 +90,12 @@ def _qualitypilot_api_ok(url: str) -> bool:
 
 
 def _qualitypilot_api_routes_ok(api_base_url: str) -> bool:
-    return _http_status_ok(f"{api_base_url.rstrip('/')}/api/api-testing/collections")
+    base_url = api_base_url.rstrip("/")
+    required_routes = [
+        "/api/api-testing/collections",
+        "/api/settings/platform-configs",
+    ]
+    return all(_http_status_ok(f"{base_url}{route}") for route in required_routes)
 
 
 def _qualitypilot_web_proxy_ok(web_url: str) -> bool:
