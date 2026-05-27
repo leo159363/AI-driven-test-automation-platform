@@ -635,3 +635,27 @@ export interface PlatformSettingsResponse {
     total: number;
   };
 }
+
+export type PlatformConfigType = "rag" | "mcp" | "runner" | "report" | "experimental" | "custom";
+export type PlatformConfigStatus = "enabled" | "disabled" | "experimental";
+
+export interface PlatformConfigItem {
+  key: string;
+  name: string;
+  type: PlatformConfigType;
+  builtin: boolean;
+  enabled: boolean;
+  status: PlatformConfigStatus;
+  summary: string;
+  value: Record<string, unknown>;
+  description: string;
+}
+
+export interface PlatformConfigsResponse {
+  items: PlatformConfigItem[];
+  summary: {
+    total: number;
+    builtin: number;
+    custom: number;
+  };
+}

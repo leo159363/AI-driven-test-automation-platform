@@ -26,6 +26,9 @@ import type {
   PerformanceScenariosResponse,
   PlatformSetting,
   PlatformSettingsResponse,
+  PlatformConfigItem,
+  PlatformConfigsResponse,
+  PlatformConfigType,
   PlatformDashboardResponse,
   PlatformProjectsResponse,
   PlatformRunRecord,
@@ -598,6 +601,43 @@ export function updatePlatformSetting(
 export function deletePlatformSetting(settingId: string): Promise<{ message: string }> {
   return deleteJson<{ message: string }>(
     `/api/platform/settings/${encodeURIComponent(settingId)}`,
+  );
+}
+
+export function getPlatformConfigs(): Promise<PlatformConfigsResponse> {
+  return getJson<PlatformConfigsResponse>("/api/settings/platform-configs");
+}
+
+export function createPlatformConfig(payload: {
+  key: string;
+  name: string;
+  type: PlatformConfigType;
+  enabled: boolean;
+  value: Record<string, unknown>;
+  description: string;
+}): Promise<{ config: PlatformConfigItem }> {
+  return postJson<{ config: PlatformConfigItem }>("/api/settings/platform-configs", payload);
+}
+
+export function updatePlatformConfig(
+  configKey: string,
+  payload: {
+    name?: string;
+    type?: PlatformConfigType;
+    enabled?: boolean;
+    value?: Record<string, unknown>;
+    description?: string;
+  },
+): Promise<{ config: PlatformConfigItem }> {
+  return putJson<{ config: PlatformConfigItem }>(
+    `/api/settings/platform-configs/${encodeURIComponent(configKey)}`,
+    payload,
+  );
+}
+
+export function deletePlatformConfig(configKey: string): Promise<{ message: string }> {
+  return deleteJson<{ message: string }>(
+    `/api/settings/platform-configs/${encodeURIComponent(configKey)}`,
   );
 }
 
